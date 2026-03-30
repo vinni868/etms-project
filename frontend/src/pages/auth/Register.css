@@ -1,0 +1,208 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+.etms-register-container {
+  font-family: 'Inter', sans-serif;
+  background-color: #f8fafc;
+  min-height: calc(100vh - 120px); /* Adjusts for navbar height */
+  display: flex;
+  justify-content: center;
+  align-items: flex-start;
+  padding: 10px 20px;
+}
+
+.etms-register-card {
+  background: #ffffff;
+  width: 100%;
+  max-width: 420px;
+  padding: 40px;
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05), 0 8px 10px -6px rgba(0, 0, 0, 0.05);
+}
+
+.etms-register-header {
+  text-align: center;
+  margin-bottom: 30px;
+}
+
+.etms-register-header img {
+  height: 48px;
+  margin-bottom: 12px;
+}
+
+.etms-register-header h1 {
+  font-size: 24px;
+  font-weight: 700;
+  color: #0f172a;
+  margin: 0;
+}
+
+.etms-register-header p {
+  font-size: 14px;
+  color: #64748b;
+  margin-top: 5px;
+}
+
+.etms-alert {
+  padding: 12px;
+  border-radius: 8px;
+  font-size: 13px;
+  text-align: center;
+  margin-bottom: 20px;
+  border-width: 1px;
+  border-style: solid;
+}
+
+.etms-alert.error {
+  background: #fef2f2;
+  color: #991b1b;
+  border-color: #fee2e2;
+}
+
+.etms-alert.success {
+  background: #f0fdf4;
+  color: #166534;
+  border-color: #dcfce7;
+}
+
+.etms-register-form {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.etms-input-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.etms-input-group label {
+  font-size: 14px;
+  font-weight: 600;
+  color: #1e293b;
+}
+
+.etms-input-group input {
+  padding: 12px 14px;
+  border: 1px solid #cbd5e1;
+  border-radius: 8px;
+  font-size: 14px;
+  transition: all 0.2s;
+  background-color: #fbfcfd;
+}
+
+.etms-input-group input:focus {
+  outline: none;
+  border-color: #2563eb;
+  background-color: #fff;
+  box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1);
+}
+
+.etms-submit-btn {
+  background-color: #2563eb;
+  color: white;
+  padding: 14px;
+  border-radius: 8px;
+  border: none;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  margin-top: 10px;
+  transition: background 0.2s;
+}
+
+.etms-submit-btn:hover {
+  background-color: #1d4ed8;
+}
+
+.etms-submit-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.etms-register-footer {
+  margin-top: 25px;
+  text-align: center;
+  font-size: 14px;
+  color: #64748b;
+}
+
+.etms-register-footer a {
+  color: #2563eb;
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.etms-register-footer a:hover {
+  text-decoration: underline;
+}
+
+/* ── Google Verified Badge ── */
+.etms-google-badge {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: linear-gradient(135deg, #f0fdf4, #dcfce7);
+  border: 1px solid #86efac;
+  border-radius: 10px;
+  padding: 10px 16px;
+  margin-bottom: 20px;
+  font-size: 13px;
+  font-weight: 600;
+  color: #166534;
+}
+.etms-google-badge-icon {
+  width: 18px;
+  height: 18px;
+}
+.etms-check-icon {
+  width: 18px;
+  height: 18px;
+}
+
+/* ── Locked Email Field ── */
+.etms-locked-badge {
+  margin-left: 8px;
+  font-size: 11px;
+  font-weight: 600;
+  color: #4f46e5;
+  background: #ede9fe;
+  padding: 2px 8px;
+  border-radius: 20px;
+  vertical-align: middle;
+}
+
+.etms-input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+.etms-input-wrapper input {
+  width: 100%;
+}
+.etms-input-wrapper.locked input {
+  background-color: #f8fafc !important;
+  color: #334155;
+  border-color: #c7d2fe;
+  cursor: not-allowed;
+  padding-right: 40px;
+}
+.etms-lock-icon {
+  position: absolute;
+  right: 12px;
+  font-size: 14px;
+  pointer-events: none;
+  user-select: none;
+}
+.etms-email-locked {
+  background-color: #f8fafc !important;
+  color: #334155 !important;
+  cursor: not-allowed !important;
+}
+.etms-email-hint {
+  font-size: 12px;
+  color: #6366f1;
+  margin: 0;
+}

@@ -1,0 +1,108 @@
+import { useState, useEffect } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import api from "../../api/axiosConfig";
+import { FaLock, FaCheckCircle } from "react-icons/fa";
+import "./Auth.css";
+
+const ResetPassword = () => {
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState(false);
+  const navigate = useNavigate();
+  
+  const email = sessionStorage.getItem("resetEmail");
+  const otp = sessionStorage.getItem("resetOtp");
+
+  useEffect(() => {
+    if (!email || !otp) navigate("/forgot-password");
+  }, [email, otp, navigate]);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (newPassword !== confirmPassword) {
+      setError("Passwords do not match.");
+      return;
+    }
+
+    setLoading(true);
+    setError("");
+
+    try {
+      await api.post("/auth/reset-password", { email, otp, newPassword });
+      setSuccess(true);
+      sessionStorage.removeItem("resetEmail");
+      sessionStorage.removeItem("resetOtp");
+      setTimeout(() => navigate("/login"), 3000);
+    } catch (err) {
+      setError(err.response?.data?.message || "Reset failed. Please restart the process.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (success) {
+    return (
+      <div className="auth-container">
+        <div className="auth-card" style={{ textAlign: 'center' }}>
+          <FaCheckCircle style={{ fontSize: '4rem', color: '#4ade80', marginBottom: '1.5rem' }} />
+          <h1>Success!</h1>
+          <p>Your password has been reset. Redirecting to login...</p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="auth-container">
+      <div className="auth-card">
+        <div className="auth-header">
+          <div className="auth-icon-circle">
+            <FaLock className="auth-icon" />
+          </div>
+          <h1>Reset Password</h1>
+          <p>Create a strong new password for your account.</p>
+        </div>
+
+        <form onSubmit={handleSubmit} className="auth-form">
+          <div className="form-group">
+            <label>New Password</label>
+            <div className="input-with-icon">
+          
+              <input
+                type="password"
+                placeholder="••••••••"
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                required
+              />
+            </div>
+          </div>
+
+          <div className="form-group">
+            <label>Confirm Password</label>
+            <div className="input-with-icon">
+              
+              <input
+                type="password"
+                placeholder="••••••••"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                required
+              />
+            </div>
+          </div>
+
+          {error && <div className="auth-error">{error}</div>}
+
+          <button type="submit" className="auth-btn" disabled={loading}>
+            {loading ? "Resetting..." : "Reset Password"}
+          </button>
+        </form>
+      </div>
+    </div>
+  );
+};
+
+export default ResetPassword;

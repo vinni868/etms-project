@@ -1,0 +1,212 @@
+:root {
+  --deep-navy: #1a365d;
+  --royal-blue: #2b6cb0;
+  --medium-blue: #3182ce;
+  --sky-blue: #ebf8ff;
+  --white: #ffffff;
+  --footer-border: rgba(255, 255, 255, 0.1);
+}
+
+.main-footer {
+  background: var(--deep-navy);
+  color: var(--white);
+  padding-top: 70px;
+}
+
+.footer-container {
+  max-width: 1300px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: 1.5fr 1fr 1fr 1.2fr;
+  gap: 50px;
+  padding: 0 40px;
+  width: 100%;
+}
+
+/* Brand Section */
+.footer-logo { font-size: 30px; font-weight: 800; margin-bottom: 20px; }
+.brand-desc { 
+  font-size: 14px; 
+  line-height: 1.8; 
+  color: #cbd5e0; /* Soft Blue-Gray */
+  margin-bottom: 25px;
+}
+
+.footer-logo-wrap {
+  background: white;
+  padding: 10px 15px;
+  border-radius: 8px;
+  display: inline-flex;
+  align-items: center;
+  margin-bottom: 25px;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+  border: 1px solid rgba(255,255,255,0.1);
+}
+
+.footer-logo-img {
+  height: 48px;
+  width: auto;
+  object-fit: contain;
+}
+
+/* App Store Buttons */
+.app-download-links {
+  display: flex;
+  gap: 12px;
+  margin-top: 20px;
+}
+
+.store-btn {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid var(--footer-border);
+  padding: 8px 15px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  transition: 0.3s;
+}
+
+.store-btn:hover {
+  background: var(--royal-blue);
+  border-color: var(--royal-blue);
+}
+
+.store-icon { font-size: 20px; }
+.store-btn span { font-size: 12px; font-weight: 600; }
+
+/* Links Section */
+.footer-col h3 {
+  font-size: 17px;
+  font-weight: 700;
+  margin-bottom: 25px;
+  color: var(--white);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.footer-links {
+  list-style: none;
+  padding: 0;
+}
+
+.footer-links li {
+  margin-bottom: 12px;
+}
+
+.footer-links a {
+  text-decoration: none;
+  color: #cbd5e0;
+  font-size: 14px;
+  transition: 0.3s;
+}
+
+.footer-links a:hover {
+  color: var(--white);
+  padding-left: 5px;
+}
+
+/* Newsletter Section */
+.newsletter-box {
+  display: flex;
+  background: var(--white);
+  padding: 5px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+}
+
+.newsletter-box input {
+  flex: 1;
+  border: none;
+  padding: 10px;
+  outline: none;
+  font-size: 14px;
+}
+
+.newsletter-box button {
+  background: var(--royal-blue);
+  color: var(--white);
+  border: none;
+  padding: 8px 20px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 700;
+}
+
+/* Contact & Global Section */
+.footer-contact-info p {
+  font-size: 14px;
+  color: #cbd5e0;
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.blue-icon { color: var(--medium-blue); }
+
+.language-selector {
+  margin-top: 20px;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  background: rgba(255, 255, 255, 0.05);
+  padding: 8px 15px;
+  border-radius: 5px;
+  border: 1px solid var(--footer-border);
+}
+
+.language-selector select {
+  background: transparent;
+  color: var(--white);
+  border: none;
+  outline: none;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+/* Social Icons */
+.social-links-row { display: flex; gap: 15px; margin-bottom: 20px; }
+.social-circle {
+  color: var(--white);
+  font-size: 18px;
+  transition: 0.3s;
+}
+.social-circle:hover { color: var(--medium-blue); transform: translateY(-3px); }
+
+/* Divider */
+.footer-divider {
+  height: 1px;
+  background: var(--footer-border);
+  margin-top: 50px;
+}
+
+/* Bottom Bar */
+.footer-bottom {
+  padding: 30px 0;
+  font-size: 13px;
+  color: #a0aec0;
+}
+
+.bottom-flex {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0 10px;
+}
+
+.bottom-links { display: flex; gap: 20px; }
+.bottom-links a { text-decoration: none; color: #a0aec0; }
+.bottom-links a:hover { color: var(--white); }
+.highlight { color: var(--white); font-weight: 600; }
+
+/* Responsive */
+@media (max-width: 1024px) {
+  .footer-container { grid-template-columns: 1fr 1fr; }
+}
+
+@media (max-width: 600px) {
+  .footer-container { grid-template-columns: 1fr; }
+  .bottom-flex { flex-direction: column; text-align: center; gap: 15px; }
+}

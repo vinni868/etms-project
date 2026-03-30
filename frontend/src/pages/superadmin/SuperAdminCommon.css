@@ -1,0 +1,235 @@
+/* ═══════════════════════════════════════════════════════════
+   SuperAdminCommon.css — EtMS SuperAdmin Design System
+   Ref: Based on CreateUser.css (Premium Theme)
+   ═══════════════════════════════════════════════════════════ */
+
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=Outfit:wght@500;600;700;800;900&display=swap');
+
+:root {
+  /* Colors */
+  --sa-blue:         #2347c5;
+  --sa-blue-dark:    #1a3499;
+  --sa-blue-mid:     #2f59e0;
+  --sa-blue-light:   #eef2fd;
+  --sa-blue-soft:    rgba(35, 71, 197, 0.08);
+
+  --sa-green:        #16a34a;
+  --sa-green-light:  #dcfce7;
+  --sa-green-soft:   rgba(22, 163, 74, 0.1);
+
+  --sa-gold:         #f59e0b;
+  --sa-gold-light:   #fffbeb;
+
+  --sa-orange:       #f97316;
+  --sa-orange-light: #fff7ed;
+  --sa-orange-soft:  rgba(249, 115, 22, 0.1);
+
+  --sa-purple:       #7c3aed;
+  --sa-purple-light: #f5f3ff;
+  --sa-purple-soft:  rgba(124, 58, 237, 0.1);
+
+  --sa-red:          #ef4444;
+  --sa-red-light:    #fef2f2;
+
+  --sa-bg:           #f0f3fa;
+  --sa-white:        #ffffff;
+  --sa-border:       #e2e8f0;
+  --sa-border-focus: #2347c5;
+
+  --sa-text:         #1e293b;
+  --sa-text-mid:     #475569;
+  --sa-text-muted:   #94a3b8;
+
+  /* Shadows & Radius */
+  --sa-shadow:       0 2px 12px rgba(35, 71, 197, 0.08), 0 1px 4px rgba(0,0,0,0.04);
+  --sa-shadow-lg:    0 12px 40px rgba(35, 71, 197, 0.14), 0 4px 12px rgba(0,0,0,0.06);
+
+  --sa-side-bg:      linear-gradient(160deg, #1a3499 0%, #2347c5 55%, #3d6ee8 100%);
+  --sa-radius:       14px;
+  --sa-radius-sm:    10px;
+
+  /* Fonts */
+  --font-body:       'Poppins', sans-serif;
+  --font-display:    'Outfit', sans-serif;
+}
+
+/* ── Base ──────────────────────────────────────────── */
+.sa-page {
+  min-height: 100vh;
+  background: var(--sa-bg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 1rem 2rem 1rem;
+  font-family: var(--font-body);
+}
+
+.sa-wrapper {
+  display: grid;
+  grid-template-columns: 300px 1fr;
+  width: 100%;
+  max-width: 1450px; /* Increased from 1100px to solve side gaps */
+  background: var(--sa-white);
+  border-radius: 22px;
+  box-shadow: var(--sa-shadow-lg);
+  overflow: hidden;
+  animation: saSlideUp 0.45s ease-out both;
+}
+
+/* Left Sidebar Panel */
+.sa-side-panel {
+  background: var(--sa-side-bg);
+  padding: 2.5rem 2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  position: relative;
+  overflow: hidden;
+  color: #fff;
+}
+
+.sa-side-panel::before {
+  content: '';
+  position: absolute;
+  width: 280px;
+  height: 280px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.05);
+  top: -80px;
+  right: -80px;
+  pointer-events: none;
+}
+.sa-side-panel::after {
+  content: '';
+  position: absolute;
+  width: 180px;
+  height: 180px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.04);
+  bottom: -60px;
+  left: -50px;
+  pointer-events: none;
+}
+
+/* Generic Entry Animation */
+@keyframes saSlideUp {
+  from { opacity: 0; transform: translateY(24px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes saFadeIn {
+  from { opacity: 0; transform: translateY(-6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ── Shared Content Layout ─────────────────────────────── */
+.sa-content {
+  padding: 2rem;
+  background: var(--sa-bg);
+  min-height: 100vh;
+  font-family: var(--font-body);
+}
+
+.sa-hero {
+  display: flex;
+  align-items: flex-start;
+  gap: 2rem;
+  margin-bottom: 2rem;
+  flex-wrap: wrap;
+}
+
+.sa-hero-eyebrow {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--sa-blue);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin: 0 0 0.5rem;
+}
+
+.sa-hero-heading {
+  font-family: var(--font-display);
+  font-size: 1.8rem;
+  font-weight: 800;
+  color: var(--sa-text);
+  margin: 0 0 0.5rem;
+}
+
+.sa-hero-desc {
+  color: var(--sa-text-muted);
+  margin: 0;
+  font-size: 0.95rem;
+}
+
+/* ── Card ─────────────────────────────────────────────── */
+.sa-card {
+  background: var(--sa-white);
+  border-radius: var(--sa-radius);
+  border: 1px solid var(--sa-border);
+  padding: 1.75rem 2rem;
+  box-shadow: var(--sa-shadow);
+}
+
+/* ── Buttons ─────────────────────────────────────────── */
+.sa-btn-primary {
+  background: var(--sa-blue);
+  color: #fff;
+  border: none;
+  border-radius: var(--sa-radius-sm);
+  padding: 0.65rem 1.5rem;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: var(--font-body);
+  transition: background 0.2s;
+}
+
+.sa-btn-primary:hover:not(:disabled) {
+  background: var(--sa-blue-dark);
+}
+
+.sa-btn-primary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* ── Form helpers ────────────────────────────────────── */
+.settings-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 1.25rem;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+
+.form-group label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--sa-text);
+}
+
+.form-group input,
+.form-group select,
+.form-group textarea {
+  border: 1px solid var(--sa-border);
+  border-radius: var(--sa-radius-sm);
+  padding: 0.6rem 0.85rem;
+  font-size: 0.9rem;
+  color: var(--sa-text);
+  font-family: var(--font-body);
+  transition: border-color 0.15s;
+  background: #fff;
+}
+
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+  outline: none;
+  border-color: var(--sa-blue);
+  box-shadow: 0 0 0 3px var(--sa-blue-soft);
+}
+

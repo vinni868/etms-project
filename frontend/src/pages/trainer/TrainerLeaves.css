@@ -1,0 +1,352 @@
+/* Trainer Leave Page - Premium Redesign */
+:root {
+  --tl-navy: #0f172a;
+  --tl-blue: #2563eb;
+  --tl-blue-light: #eff6ff;
+  --tl-slate: #64748b;
+  --tl-slate-light: #f8fafc;
+  --tl-border: #e2e8f0;
+  --tl-success: #10b981;
+  --tl-warning: #f59e0b;
+  --tl-danger: #ef4444;
+  --tl-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+  --tl-radius: 12px;
+}
+
+.tl-container {
+  padding: 2rem;
+  max-width: 1400px;
+  margin: 0 auto;
+  min-height: calc(100vh - 80px);
+  background-color: #f8fafc;
+}
+
+/* Header Section */
+.tl-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2.5rem;
+  padding: 1.5rem 2rem;
+  background: white;
+  border-radius: var(--tl-radius);
+  box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1);
+}
+
+.tl-header__info {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+}
+
+.tl-header__icon {
+  width: 3.5rem;
+  height: 3.5rem;
+  background: var(--tl-blue-light);
+  color: var(--tl-blue);
+  border-radius: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+}
+
+.tl-header__text h1 {
+  font-size: 1.75rem;
+  font-weight: 800;
+  color: var(--tl-navy);
+  margin: 0;
+  letter-spacing: -0.025em;
+}
+
+.tl-header__text p {
+  color: var(--tl-slate);
+  font-size: 0.95rem;
+  margin: 0.25rem 0 0;
+}
+
+.tl-btn-new {
+  padding: 0.75rem 1.5rem;
+  background: var(--tl-blue);
+  color: white;
+  border: none;
+  border-radius: 10px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 10px -2px rgba(37, 99, 235, 0.4);
+}
+
+.tl-btn-new:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 12px -2px rgba(37, 99, 235, 0.5);
+  background: #1d4ed8;
+}
+
+/* Card & Table */
+.tl-card {
+  background: white;
+  border-radius: var(--tl-radius);
+  box-shadow: 0 1px 3px 0 rgb(0 0 0 / 0.1);
+  border: 1px solid var(--tl-border);
+  overflow: hidden;
+}
+
+.tl-table-wrapper {
+  overflow-x: auto;
+}
+
+.tl-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.tl-table th {
+  background: #f8fafc;
+  padding: 1rem 1.5rem;
+  text-align: left;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--tl-slate);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  border-bottom: 2px solid #f1f5f9;
+}
+
+.tl-table td {
+  padding: 1.25rem 1.5rem;
+  border-bottom: 1px solid #f1f5f9;
+  vertical-align: middle;
+}
+
+.tl-table tr:hover td {
+  background-color: #f8fafc;
+}
+
+.tl-table tr:last-child td {
+  border-bottom: none;
+}
+
+.tl-type-box {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.tl-type-label {
+  font-weight: 700;
+  font-size: 0.9rem;
+}
+
+.tl-type-label--leave { color: #b45309; }
+.tl-type-label--online { color: #1d4ed8; }
+
+.tl-category-tag {
+  display: inline-block;
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  padding: 0.15rem 0.5rem;
+  border-radius: 4px;
+  background: #f1f5f9;
+  color: var(--tl-slate);
+}
+
+/* Date Display */
+.tl-date-range {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+}
+
+.tl-date-full {
+  font-weight: 600;
+  color: var(--tl-navy);
+  font-size: 0.9rem;
+}
+
+.tl-date-days {
+  font-size: 0.75rem;
+  color: var(--tl-slate);
+}
+
+/* Detail Box */
+.tl-reason-text {
+  font-size: 0.9rem;
+  color: #1e293b;
+  line-height: 1.5;
+  margin-bottom: 0.5rem;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.tl-meta-info {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.tl-meta-item {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.75rem;
+  color: var(--tl-slate);
+}
+
+.tl-meta-item strong {
+  color: var(--tl-navy);
+}
+
+/* Status Badges */
+.tl-status-pill {
+  padding: 0.35rem 0.75rem;
+  border-radius: 2rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  display: inline-flex;
+}
+
+.tl-status-pill--pending { background: #fef3c7; color: #92400e; }
+.tl-status-pill--approved { background: #d1fae5; color: #065f46; }
+.tl-status-pill--rejected { background: #fee2e2; color: #991b1b; }
+
+/* Standard Delete Button */
+.tl-btn-delete {
+  padding: 0.5rem 1rem;
+  background: #fef2f2;
+  color: #dc2626;
+  border: 1px solid #fee2e2;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.tl-btn-delete:hover {
+  background: #fee2e2;
+  color: #b91c1c;
+  border-color: #fca5a5;
+}
+
+/* Fix Dropdown Clipping */
+.aa-finput {
+  width: 100%;
+  padding: 10px 14px;
+  border-radius: 10px;
+  border: 1px solid #cbd5e1;
+  background: #fff;
+  font-size: 0.9rem;
+  outline: none;
+  min-height: 45px;
+  line-height: normal;
+}
+
+.form-group label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #475569;
+  margin-bottom: 8px;
+  display: block;
+}
+
+/* Empty state */
+.tl-empty {
+  padding: 4rem 2rem;
+  text-align: center;
+  color: var(--tl-slate);
+}
+
+.tl-empty svg {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+  opacity: 0.5;
+}
+
+/* Modal Stacking */
+.tl-type-grid {
+  display: flex; 
+  gap: 20px; 
+  margin-top: 10px;
+}
+
+@media (max-width: 768px) {
+  .tl-header { 
+    flex-direction: column; 
+    align-items: stretch; 
+    gap: 1.5rem; 
+    padding: 1rem; 
+  }
+  
+  .tl-container { 
+    padding: 1rem; 
+  }
+
+  /* Table to Card Transformation */
+  .tl-table thead {
+    display: none;
+  }
+
+  .tl-table, .tl-table tbody, .tl-table tr, .tl-table td {
+    display: block;
+    width: 100%;
+  }
+
+  .tl-table tr {
+    margin-bottom: 1rem;
+    border: 1px solid var(--tl-border);
+    border-radius: var(--tl-radius);
+    background: white;
+    padding: 0.5rem;
+  }
+
+  .tl-table td {
+    border: none;
+    padding: 0.75rem 1rem;
+    position: relative;
+    border-bottom: 1px solid #f1f5f9;
+  }
+
+  .tl-table td:last-child {
+    border-bottom: none;
+    text-align: left !important;
+  }
+
+  /* Labels for Card Fields */
+  .tl-table td::before {
+    content: attr(data-label);
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    color: var(--tl-slate);
+    display: block;
+    margin-bottom: 0.25rem;
+  }
+
+  .tl-reason-text {
+    -webkit-line-clamp: 4;
+    line-clamp: 4;
+  }
+
+  .tl-type-grid {
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .modal-content {
+    width: 98% !important;
+    margin: 5px;
+  }
+}

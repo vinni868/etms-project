@@ -1,0 +1,193 @@
+/* index.css */
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: 'Segoe UI', Roboto, sans-serif;
+}
+
+body {
+  background-color: #f8fafc;
+  color: #1e293b;
+}
+
+#root {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh; /* Ensures footer stays at the bottom */
+}
+
+/* Main Content Area - Fixed the gap issue here */
+.main-content-wrapper {
+  flex: 1; 
+  display: flex;
+  flex-direction: column;
+  justify-content: center; /* Vertically centers content if space allows */
+  align-items: center;
+  padding: 10px 20px; /* Reduced vertical gap */
+}
+
+/* Professional Footer */
+footer {
+  background-color: #0f172a; 
+  color: #cbd5e1;
+  text-align: center;
+  padding: 20px 0;
+  font-size: 0.9rem;
+  border-top: 1px solid #1e293b;
+}
+
+/* ================================================== */
+/*        GLOBAL RESPONSIVE SWEEP (MOBILE & TABLET)   */
+/* ================================================== */
+@media (max-width: 992px) {
+  /* 1. Global Scale Downs */
+  body {
+    font-size: 14px;
+  }
+  
+  .main-content-wrapper {
+    padding: 10px 10px;
+  }
+
+  /* 2. Global Data Table Safeties */
+  /* By setting display: block, tables become horizontal scrollers intrinsically on mobile without wrapper divs */
+  table {
+    display: block !important;
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    width: 100% !important;
+    white-space: nowrap !important;
+    border: none !important;
+  }
+  
+  /* --- Table to Card Transformation (Premium Mobile UI) --- */
+@media (max-width: 768px) {
+  .responsive-card-table {
+    display: block;
+    width: 100%;
+    background: transparent !important;
+    box-shadow: none !important;
+  }
+  .responsive-card-table thead, .responsive-card-table colgroup {
+    display: none; /* Hide headers and column widths on mobile */
+  }
+  .responsive-card-table tbody {
+    display: block;
+    width: 100%;
+  }
+  .responsive-card-table tr {
+    display: block;
+    background: white;
+    margin-bottom: 20px;
+    border-radius: 12px;
+    padding: 15px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.06);
+    border: 1px solid #edf2f7;
+  }
+  .responsive-card-table td {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 0;
+    border-bottom: 1px solid #f7fafc;
+    text-align: right;
+    font-size: 14px;
+    width: 100% !important;
+    min-width: 0 !important;
+  }
+    .responsive-card-table td:last-child {
+        border-bottom: 0;
+        padding-top: 15px;
+        flex-direction: column;
+        align-items: stretch;
+        gap: 10px;
+    }
+
+    /* Action buttons in card view - specifically for cells labeled 'Actions' */
+    .responsive-card-table td[data-label*="Action"] {
+        display: flex;
+        justify-content: flex-end;
+        align-items: center;
+        gap: 10px;
+        padding-top: 15px;
+        margin-top: 5px;
+        border-top: 1px solid #f1f5f9;
+        flex-direction: row; /* Keep actions in a row if possible, or allow wrap */
+        flex-wrap: wrap;
+    }
+
+    .responsive-card-table td[data-label*="Action"]::before {
+        display: none; /* Hide label for actions as buttons are self-explanatory */
+    }
+
+    .responsive-card-table td[data-label*="Action"] button,
+    .responsive-card-table td[data-label*="Action"] a {
+        padding: 10px 16px;
+        font-size: 14px;
+        border-radius: 8px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        min-height: 44px; /* Optimal touch target */
+        flex: 1;
+        min-width: 120px;
+    }
+
+    .responsive-card-table td::before {
+        content: attr(data-label);
+        font-weight: 700;
+        color: #4a5568;
+        text-align: left;
+        font-size: 12px;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+    }
+
+    .responsive-card-table td:first-child::before {
+        display: none; /* Usually the primary identifer, don't label it */
+    }
+
+    .responsive-card-table td:first-child {
+        justify-content: center;
+        border-bottom: 2px solid #edf2f7;
+        padding-bottom: 15px;
+        margin-bottom: 5px;
+        font-weight: 800;
+        font-size: 1.1rem;
+        background: #f8fafc;
+        border-radius: 12px 12px 0 0;
+    }
+}
+  
+  /* 3. Global CSS Grid Collapse */
+  /* Any explicit 2+ column grids naturally collapse to 1 column */
+  .um-form-row, .ca-form-row, .ad-form-row, .pf-grid {
+    grid-template-columns: 1fr !important;
+    display: flex !important;
+    flex-direction: column !important;
+  }
+  
+  /* 4. Layout Wrapper Overrides */
+  .sa-wrapper, .um-wrapper-extra, .sl-wrapper-extra {
+    grid-template-columns: 1fr !important;
+    margin: 10px !important;
+    border-radius: 12px !important;
+  }
+
+  .sa-side-panel {
+    display: none !important; /* Hide left-side brand strips on mobile */
+  }
+
+  .um-main-panel, .sl-main-panel {
+    padding: 15px !important;
+  }
+
+  .um-header {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 10px !important;
+  }
+}

@@ -1,0 +1,649 @@
+/* =========================================================
+   StudentCourses.css  –  Professional LMS Student UI
+   ========================================================= */
+
+@import url('https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,400&display=swap');
+
+:root {
+  --navy:     #0f172a;
+  --navy-80:  #1e293b;
+  --indigo:   #4f46e5;
+  --indigo-l: #6366f1;
+  --teal:     #0d9488;
+  --teal-l:   #14b8a6;
+  --amber:    #f59e0b;
+  --rose:     #f43f5e;
+  --surface:  #ffffff;
+  --surface-2:#f8fafc;
+  --border:   #e2e8f0;
+  --muted:    #64748b;
+  --text:     #0f172a;
+  --radius:   14px;
+  --shadow-sm:0 1px 3px rgba(0,0,0,.07), 0 1px 2px rgba(0,0,0,.05);
+  --shadow-md:0 4px 16px rgba(0,0,0,.08), 0 1px 4px rgba(0,0,0,.04);
+  --shadow-lg:0 12px 32px rgba(0,0,0,.1), 0 4px 8px rgba(0,0,0,.06);
+}
+
+/* ── RESET ── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+button { font-family: inherit; cursor: pointer; }
+ul { list-style: none; }
+
+/* ── ROOT ── */
+.sc-root {
+  font-family: 'DM Sans', sans-serif;
+  background: var(--surface-2);
+  min-height: 100vh;
+  padding-bottom: 4rem;
+  color: var(--text);
+}
+
+/* =========================================================
+   HERO
+   ========================================================= */
+.sc-hero {
+  position: relative;
+  background: var(--navy);
+  padding: 3rem 2.5rem 2.5rem;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 2rem;
+  flex-wrap: wrap;
+}
+
+.sc-hero-bg {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.sc-orb {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(70px);
+  opacity: 0.22;
+}
+
+.sc-orb-1 {
+  width: 380px; height: 380px;
+  background: var(--indigo);
+  top: -120px; left: -80px;
+}
+
+.sc-orb-2 {
+  width: 260px; height: 260px;
+  background: var(--teal);
+  bottom: -100px; right: 80px;
+}
+
+.sc-hero-content {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  z-index: 1;
+}
+
+.sc-avatar {
+  width: 64px; height: 64px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--indigo-l), var(--teal-l));
+  color: #fff;
+  font-family: 'Sora', sans-serif;
+  font-size: 1.6rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  box-shadow: 0 0 0 3px rgba(255,255,255,.15);
+}
+
+.sc-hero-eyebrow {
+  font-size: 0.75rem;
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--teal-l);
+  margin-bottom: 0.3rem;
+}
+
+.sc-hero-title {
+  font-family: 'Sora', sans-serif;
+  font-size: clamp(1.5rem, 3vw, 2rem);
+  font-weight: 700;
+  color: #fff;
+  line-height: 1.2;
+}
+
+.sc-hero-title span {
+  background: linear-gradient(90deg, var(--indigo-l), var(--teal-l));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.sc-hero-sub {
+  font-size: 0.9rem;
+  color: rgba(255,255,255,.55);
+  margin-top: 0.4rem;
+}
+
+.sc-hero-stats {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  background: rgba(255,255,255,.07);
+  border: 1px solid rgba(255,255,255,.12);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+  border-radius: var(--radius);
+  padding: 1.25rem 2rem;
+  flex-shrink: 0;
+}
+
+.sc-stat {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  color: rgba(255,255,255,.8);
+}
+
+.sc-stat svg { font-size: 1.2rem; color: var(--teal-l); }
+
+.sc-stat strong {
+  display: block;
+  font-family: 'Sora', sans-serif;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #fff;
+  line-height: 1;
+}
+
+.sc-stat span {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: rgba(255,255,255,.45);
+}
+
+.sc-stat-divider {
+  width: 1px;
+  height: 36px;
+  background: rgba(255,255,255,.15);
+}
+
+/* =========================================================
+   ERROR
+   ========================================================= */
+.sc-error {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  background: #fff0f3;
+  border-left: 4px solid var(--rose);
+  color: #9f1239;
+  font-size: 0.9rem;
+  padding: 1rem 1.5rem;
+  margin: 1.5rem 2.5rem 0;
+  border-radius: 0 var(--radius) var(--radius) 0;
+}
+
+/* =========================================================
+   TABS
+   ========================================================= */
+.sc-tabs {
+  display: flex;
+  gap: 0.25rem;
+  padding: 1.5rem 2.5rem 0;
+  border-bottom: 2px solid var(--border);
+}
+
+.sc-tab {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  background: transparent;
+  border: none;
+  border-bottom: 3px solid transparent;
+  margin-bottom: -2px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--muted);
+  transition: color 0.2s, border-color 0.2s;
+  border-radius: 6px 6px 0 0;
+}
+
+.sc-tab:hover { color: var(--indigo); background: rgba(79,70,229,.05); }
+
+.sc-tab.active {
+  color: var(--indigo);
+  border-bottom-color: var(--indigo);
+  font-weight: 600;
+}
+
+.sc-tab-count {
+  background: var(--indigo);
+  color: #fff;
+  font-size: 0.65rem;
+  font-weight: 700;
+  padding: 1px 7px;
+  border-radius: 20px;
+}
+
+.sc-tab:not(.active) .sc-tab-count {
+  background: var(--border);
+  color: var(--muted);
+}
+
+/* =========================================================
+   PANEL & GRID
+   ========================================================= */
+.sc-panel { padding: 2rem 2.5rem; }
+
+.sc-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+  gap: 1.5rem;
+}
+
+/* =========================================================
+   CARDS (shared)
+   ========================================================= */
+.sc-course-card,
+.sc-batch-card {
+  background: var(--surface);
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-sm);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  transition: box-shadow 0.25s, transform 0.25s;
+  animation: sc-fadeUp 0.4s ease both;
+  animation-delay: var(--delay, 0ms);
+}
+
+@keyframes sc-fadeUp {
+  from { opacity: 0; transform: translateY(18px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+.sc-course-card:hover,
+.sc-batch-card:hover {
+  box-shadow: var(--shadow-lg);
+  transform: translateY(-3px);
+}
+
+.sc-card-stripe {
+  height: 4px;
+  background: linear-gradient(90deg, var(--indigo), var(--indigo-l));
+}
+
+.batch-stripe {
+  background: linear-gradient(90deg, var(--teal), var(--teal-l));
+}
+
+.sc-card-body {
+  padding: 1.5rem;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.sc-card-footer {
+  padding: 1rem 1.5rem;
+  border-top: 1px solid var(--border);
+  background: var(--surface-2);
+}
+
+/* =========================================================
+   COURSE CARD SPECIFICS
+   ========================================================= */
+.sc-card-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.sc-duration-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--indigo);
+  background: #eef2ff;
+  padding: 4px 10px;
+  border-radius: 20px;
+}
+
+.sc-status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  padding: 3px 10px;
+  border-radius: 20px;
+  text-transform: uppercase;
+}
+
+.sc-status-pill.ongoing  { background: #dcfce7; color: #15803d; }
+.sc-status-pill.completed{ background: #f1f5f9; color: #475569; }
+.sc-status-pill.upcoming { background: #fef9c3; color: #854d0e; }
+
+.sc-card-title {
+  font-family: 'Sora', sans-serif;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--text);
+  line-height: 1.35;
+}
+
+.sc-card-desc {
+  font-size: 0.875rem;
+  color: var(--muted);
+  line-height: 1.6;
+  flex: 1;
+}
+
+.sc-no-syllabus {
+  font-size: 0.8rem;
+  color: #94a3b8;
+  font-style: italic;
+}
+
+/* =========================================================
+   BATCH CARD SPECIFICS
+   ========================================================= */
+.sc-batch-header {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+}
+
+.sc-batch-icon {
+  width: 42px; height: 42px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #ccfbf1, #99f6e4);
+  color: var(--teal);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1rem;
+  flex-shrink: 0;
+}
+
+.sc-batch-live-pill {
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  color: var(--teal);
+  margin-top: 3px;
+  display: block;
+}
+
+/* ── SCHEDULE ── */
+.sc-schedule-section {
+  background: #f8fafc;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 1rem;
+  flex: 1;
+}
+
+.sc-schedule-heading {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 0.875rem;
+}
+
+.sc-schedule-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.625rem;
+}
+
+.sc-schedule-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 0.875rem;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: #fff;
+  transition: border-color 0.2s, background 0.2s;
+  position: relative;
+}
+
+.sc-schedule-item.today {
+  border-color: var(--teal-l);
+  background: #f0fdfa;
+}
+
+.sc-schedule-dot {
+  width: 24px; height: 24px;
+  border-radius: 50%;
+  background: #e2e8f0;
+  color: var(--muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.sc-schedule-item.today .sc-schedule-dot {
+  background: var(--teal);
+  color: #fff;
+}
+
+.sc-schedule-info {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  flex: 1;
+  min-width: 0;
+}
+
+.sc-schedule-date {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--text);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sc-schedule-time {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.75rem;
+  color: var(--muted);
+}
+
+.sc-today-badge {
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  background: var(--teal);
+  color: #fff;
+  padding: 2px 7px;
+  border-radius: 20px;
+  flex-shrink: 0;
+}
+
+.sc-no-classes {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #94a3b8;
+  font-size: 0.82rem;
+  padding: 0.5rem 0;
+}
+
+/* =========================================================
+   BUTTONS
+   ========================================================= */
+.sc-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 0.65rem 1.25rem;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  border: none;
+  transition: background 0.2s, transform 0.15s, box-shadow 0.2s;
+  width: 100%;
+}
+
+.sc-btn:active { transform: scale(0.98); }
+
+.sc-btn-primary {
+  background: linear-gradient(135deg, var(--indigo), var(--indigo-l));
+  color: #fff;
+  box-shadow: 0 2px 10px rgba(79,70,229,.3);
+}
+
+.sc-btn-primary:hover {
+  box-shadow: 0 4px 18px rgba(79,70,229,.45);
+  transform: translateY(-1px);
+}
+
+.sc-btn-outline {
+  background: transparent;
+  border: 1.5px solid var(--border);
+  color: var(--text);
+}
+
+.sc-btn-outline:hover {
+  border-color: var(--indigo);
+  color: var(--indigo);
+  background: #eef2ff;
+}
+
+.sc-btn-disabled {
+  background: #f1f5f9;
+  color: #94a3b8;
+  cursor: not-allowed;
+  border: 1.5px dashed var(--border);
+}
+
+/* =========================================================
+   EMPTY STATES
+   ========================================================= */
+.sc-empty {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  padding: 4rem 2rem;
+  text-align: center;
+}
+
+.sc-empty-icon {
+  width: 70px; height: 70px;
+  border-radius: 50%;
+  background: #eef2ff;
+  color: var(--indigo);
+  font-size: 1.6rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.sc-empty h3 {
+  font-family: 'Sora', sans-serif;
+  font-size: 1.15rem;
+  color: var(--text);
+}
+
+.sc-empty p {
+  font-size: 0.9rem;
+  color: var(--muted);
+  max-width: 300px;
+}
+
+/* =========================================================
+   LOADER
+   ========================================================= */
+.sc-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 70vh;
+  gap: 1.25rem;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.sc-spinner {
+  position: relative;
+  width: 56px; height: 56px;
+}
+
+.sc-spinner-ring {
+  position: absolute;
+  inset: 0;
+  border: 3px solid #e2e8f0;
+  border-top-color: var(--indigo);
+  border-radius: 50%;
+  animation: sc-spin 0.9s linear infinite;
+}
+
+.sc-spinner-icon {
+  position: absolute;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  color: var(--indigo);
+  font-size: 1.1rem;
+}
+
+@keyframes sc-spin {
+  to { transform: rotate(360deg); }
+}
+
+/* =========================================================
+   RESPONSIVE
+   ========================================================= */
+@media (max-width: 720px) {
+  .sc-hero {
+    padding: 2rem 1.25rem 1.75rem;
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .sc-hero-stats {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .sc-tabs, .sc-panel { padding-left: 1.25rem; padding-right: 1.25rem; }
+
+  .sc-grid {
+    grid-template-columns: 1fr;
+  }
+}

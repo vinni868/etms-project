@@ -1,0 +1,171 @@
+.trainer-announcements {
+  max-width: 900px;
+  margin: 20px auto;
+  padding: 20px;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.header h2 {
+  margin: 0;
+  font-size: 1.8rem;
+  color: #333;
+}
+
+.create-btn {
+  background-color: #4f46e5;
+  color: #fff;
+  border: none;
+  padding: 10px 16px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: background-color 0.3s;
+}
+
+.create-btn:hover {
+  background-color: #4338ca;
+}
+
+.section-title {
+  margin-top: 30px;
+  margin-bottom: 10px;
+  font-size: 1.3rem;
+  color: #111827;
+  border-bottom: 1px solid #ddd;
+  padding-bottom: 5px;
+}
+
+.announcement-list {
+  list-style: none;
+  padding: 0;
+}
+
+.announcement-card {
+  border: 1px solid #ddd;
+  padding: 16px;
+  border-radius: 10px;
+  margin-bottom: 15px;
+  background-color: #fafafa;
+  transition: transform 0.2s;
+}
+
+.announcement-card:hover {
+  transform: translateY(-3px);
+}
+
+.admin-card {
+  border-left: 4px solid #f59e0b; /* Amber */
+}
+
+.trainer-card {
+  border-left: 4px solid #4f46e5; /* Indigo */
+}
+
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.card-header h3 {
+  margin: 0;
+  font-size: 1.2rem;
+  color: #111827;
+}
+
+.date {
+  font-size: 0.9rem;
+  color: #6b7280;
+}
+
+.content {
+  margin-top: 8px;
+  font-size: 1rem;
+  color: #374151;
+}
+
+.no-announcements {
+  text-align: center;
+  color: #6b7280;
+  font-style: italic;
+}
+
+/* ================= MODAL ================= */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0,0,0,0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 999;
+}
+
+.modal {
+  background-color: #fff;
+  padding: 20px;
+  border-radius: 10px;
+  width: 400px;
+  max-width: 90%;
+}
+
+.modal input, .modal textarea {
+  width: 100%;
+  margin: 10px 0;
+  padding: 10px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  font-size: 1rem;
+}
+
+.modal textarea {
+  resize: vertical;
+  height: 100px;
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+
+.modal-actions .btn {
+  background-color: #4f46e5;
+  color: #fff;
+  border: none;
+  padding: 8px 14px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.modal-actions .btn:hover {
+  background-color: #4338ca;
+}
+
+.modal-actions .cancel {
+  background-color: #ef4444;
+}
+
+.modal-actions .cancel:hover {
+  background-color: #dc2626;
+}
+.header {
+  display: flex;
+  flex-direction: column;
+}
+
+.create-btn {
+  margin-top: 10px;
+  align-self: flex-start;
+}

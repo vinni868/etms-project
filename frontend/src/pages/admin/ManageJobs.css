@@ -1,0 +1,259 @@
+.mj-page {
+  padding: 30px;
+  background-color: #f1f5f9;
+  min-height: 100vh;
+  font-family: 'Outfit', sans-serif;
+  color: #0f172a;
+}
+
+.mj-header {
+  margin-bottom: 24px;
+}
+
+.mj-header h1 {
+  font-size: 24px;
+  font-weight: 700;
+  color: #1e3a8a;
+  margin: 0 0 8px 0;
+}
+
+.mj-header p {
+  color: #64748b;
+  margin: 0;
+}
+
+.mj-card {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+  overflow: hidden;
+}
+
+.mj-msg {
+  padding: 12px 16px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+  font-weight: 500;
+}
+
+.mj-msg.success { background: #dcfce7; color: #166534; }
+.mj-msg.error { background: #fee2e2; color: #991b1b; }
+
+.mj-table-container {
+  overflow-x: auto;
+}
+
+.mj-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.mj-table th {
+  background: #f8fafc;
+  padding: 16px;
+  text-align: left;
+  font-size: 13px;
+  font-weight: 600;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.mj-table td {
+  padding: 16px;
+  border-bottom: 1px solid #f1f5f9;
+  vertical-align: middle;
+  font-size: 14px;
+  color: #334155;
+}
+
+.mj-title-td strong {
+  color: #0f172a;
+  font-size: 15px;
+}
+
+.mj-loc {
+  font-size: 12px;
+  color: #64748b;
+  margin-top: 4px;
+}
+
+.mj-type-badge {
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.mj-type-badge.FULL_TIME { background: #dbeafe; color: #1e40af; }
+.mj-type-badge.INTERNSHIP { background: #fef3c7; color: #b45309; }
+.mj-type-badge.PART_TIME { background: #e0e7ff; color: #4338ca; }
+
+.mj-status {
+  font-size: 12px;
+  font-weight: 600;
+}
+.mj-status.on { color: #10b981; }
+.mj-status.off { color: #64748b; }
+
+.mj-btn-applicants {
+  background: #eff6ff;
+  color: #2563eb;
+  border: 1px solid #bfdbfe;
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.2s;
+}
+.mj-btn-applicants:hover {
+  background: #dbeafe;
+}
+
+.mj-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.mj-btn-delete {
+  background: #fee2e2;
+  color: #dc2626;
+  border: none;
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.mj-btn-delete:hover {
+  background: #f87171;
+  color: white;
+}
+
+/* Modal */
+.mj-modal-overlay {
+  position: fixed;
+  top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(15, 23, 42, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  backdrop-filter: blur(4px);
+}
+
+.mj-modal {
+  background: white;
+  width: 600px;
+  max-width: 90vw;
+  max-height: 80vh;
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1);
+}
+
+.mj-modal-header {
+  padding: 20px 24px;
+  border-bottom: 1px solid #e2e8f0;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.mj-modal-header h2 {
+  margin: 0;
+  font-size: 18px;
+  color: #0f172a;
+}
+
+.mj-close-btn {
+  background: none;
+  border: none;
+  font-size: 20px;
+  color: #94a3b8;
+  cursor: pointer;
+  transition: 0.2s;
+}
+.mj-close-btn:hover { color: #dc2626; }
+
+.mj-modal-body {
+  padding: 24px;
+  overflow-y: auto;
+}
+
+.mj-app-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.mj-app-card {
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.mj-app-name {
+  font-weight: 600;
+  color: #0f172a;
+  font-size: 15px;
+}
+
+.mj-app-email {
+  font-size: 13px;
+  color: #64748b;
+  margin-top: 4px;
+}
+
+.mj-app-date {
+  font-size: 12px;
+  color: #94a3b8;
+  margin-top: 6px;
+}
+
+.mj-app-right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 10px;
+}
+
+.mj-app-status-badge {
+  background: #f1f5f9;
+  color: #475569;
+  padding: 4px 10px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.mj-app-controls {
+  display: flex;
+  gap: 6px;
+}
+
+.mj-app-controls button {
+  padding: 6px 10px;
+  border: none;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  color: white;
+}
+
+.mj-btn-shortlist { background: #3b82f6; }
+.mj-btn-select { background: #10b981; }
+.mj-btn-reject { background: #ef4444; }

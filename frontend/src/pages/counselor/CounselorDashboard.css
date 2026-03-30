@@ -1,0 +1,29 @@
+/* CounselorDashboard.css */
+.admin-page { padding: 24px; }
+.sessions-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.session-card {
+  background: #fff;
+  border-radius: 12px;
+  padding: 20px;
+  border: 1px solid #e2e8f0;
+  border-left: 4px solid #3b82f6;
+  box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
+}
+.session-card.st-completed { border-left-color: #10b981; opacity: 0.8; }
+.session-card.st-cancelled { border-left-color: #ef4444; opacity: 0.6; }
+
+.scard-header {
+  display: flex; justify-content: space-between; align-items: flex-start;
+  margin-bottom: 16px; border-bottom: 1px solid #f1f5f9; padding-bottom: 12px;
+}
+.scard-header h3 { margin: 0 0 4px 0; font-size: 18px; color: #0f172a; }
+
+.scard-details { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 12px; font-size: 14px; margin-bottom: 16px; }
+.scard-details p { margin: 0; color: #475569; }
+.scard-details strong { color: #1e293b; }
+
+.scard-actions { display: flex; justify-content: flex-end; }

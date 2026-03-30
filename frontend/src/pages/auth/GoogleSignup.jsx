@@ -1,0 +1,288 @@
+import { useState, useEffect, useRef } from "react";
+import { useNavigate, Link } from "react-router-dom";
+import api from "../../api/axiosConfig";
+import "./GoogleSignup.css";
+
+const LOGO_URL = "https://cdn-icons-png.flaticon.com/512/3429/3429153.png";
+
+// ─── Replace this with your actual Google OAuth Client ID ───────────────────
+const GOOGLE_CLIENT_ID = "1076398521639-0ue5haenlao9htqbu0ce3v4kngq5vc80.apps.googleusercontent.com";
+
+// ────────────────────────────────────────────────────────────────────────────
+
+function GoogleSignup() {
+  const navigate = useNavigate();
+  const googleBtnRef = useRef(null);
+
+  // Flow State: 'CHOOSER' | 'EMAIL_INPUT' | 'OTP_INPUT'
+  const [step, setStep] = useState('CHOOSER');
+  
+  // Data State
+  const [email, setEmail] = useState("");
+  const [otp, setOtp] = useState("");
+  
+  // UI State
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState("");
+
+  // ── 1. Google Identity Services Setup ──
+  useEffect(() => {
+    if (step === 'CHOOSER') {
+      const loadGoogleScript = () => {
+        if (window.google) {
+          initializeGoogle();
+          return;
+        }
+        const script = document.createElement("script");
+        script.src = "https://accounts.google.com/gsi/client";
+        script.async = true;
+        script.defer = true;
+        script.onload = initializeGoogle;
+        document.head.appendChild(script);
+      };
+
+      const initializeGoogle = () => {
+        if (!window.google || !googleBtnRef.current) return;
+
+        window.google.accounts.id.initialize({
+          client_id: GOOGLE_CLIENT_ID,
+          callback: handleGoogleResponse,
+          auto_select: false,
+          cancel_on_tap_outside: true,
+        });
+
+        // Render the Google button inside our custom button area
+        window.google.accounts.id.renderButton(googleBtnRef.current, {
+          theme: "outline",
+          size: "large",
+          width: googleBtnRef.current.offsetWidth || 340,
+          text: "continue_with",
+          logo_alignment: "center",
+        });
+      };
+
+      loadGoogleScript();
+    }
+  }, [step]);
+
+  // ── 2. Google Response Handler ──
+  const handleGoogleResponse = (response) => {
+    try {
+      // Decode the JWT token returned by Google
+      const base64Url = response.credential.split(".")[1];
+      const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
+      const payload = JSON.parse(atob(base64));
+
+      const googleEmail = payload.email;
+      const googleName = payload.name || "";
+
+      if (!googleEmail.endsWith("@gmail.com") && !googleEmail.includes("@")) {
+        alert("Please sign in with a valid Google account.");
+        return;
+      }
+
+      // Navigate to register page with Google email pre-filled
+      navigate("/register", {
+        state: {
+          googleEmail,
+          googleName,
+          fromGoogle: true,
+        },
+      });
+    } catch (err) {
+      console.error("Google token decode error:", err);
+      alert("Google sign-in failed. Please try again.");
+    }
+  };
+
+  // ── 3. Manual Email Handlers ──
+  const handleSendOtp = async (e) => {
+    e.preventDefault();
+    setError("");
+    setSuccess("");
+
+    if (!email.toLowerCase().endsWith("@gmail.com")) {
+      setError("Please enter a valid @gmail.com address.");
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const res = await api.post("/auth/send-signup-otp", { email });
+      setSuccess(res.data.message || "OTP sent successfully.");
+      setStep("OTP_INPUT");
+    } catch (err) {
+      setError(err.response?.data?.message || "Failed to send OTP. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleVerifyOtp = async (e) => {
+    e.preventDefault();
+    setError("");
+    setSuccess("");
+
+    if (!otp || otp.length < 6) {
+      setError("Please enter a valid 6-digit OTP.");
+      return;
+    }
+
+    setLoading(true);
+    try {
+      await api.post("/auth/verify-signup-otp", { email, otp });
+      setSuccess("Email verified successfully! Redirecting...");
+      
+      // Navigate to register page passing the manually verified email
+      setTimeout(() => {
+        navigate("/register", {
+          state: {
+            verifiedEmail: email,
+            manuallyVerified: true,
+          },
+        });
+      }, 1500);
+
+    } catch (err) {
+      setError(err.response?.data?.message || "Invalid OTP. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+
+  return (
+    <div className="gs-container">
+      {/* Animated background blobs */}
+      <div className="gs-blob gs-blob-1" />
+      <div className="gs-blob gs-blob-2" />
+      <div className="gs-blob gs-blob-3" />
+
+      <div className="gs-card">
+        <div className="gs-header">
+          <div className="gs-logo-wrap">
+            <img src={LOGO_URL} alt="EtMS Logo" className="gs-logo" />
+          </div>
+          <h1 className="gs-title">Create Your Account</h1>
+          <p className="gs-subtitle">
+            {step === 'CHOOSER' ? "Choose how you want to sign up" : 
+             step === 'EMAIL_INPUT' ? "Verify your Gmail address" : 
+             "Enter verification code"}
+          </p>
+        </div>
+
+        {error && <div style={{background: '#fee2e2', color: '#991b1b', padding: '10px', borderRadius: '8px', marginBottom: '15px', fontSize: '13px', textAlign: 'center'}}>{error}</div>}
+        {success && <div style={{background: '#dcfce7', color: '#166534', padding: '10px', borderRadius: '8px', marginBottom: '15px', fontSize: '13px', textAlign: 'center'}}>{success}</div>}
+
+        <div className="gs-options">
+          
+          {/* STEP 1: CHOOSER */}
+          {step === 'CHOOSER' && (
+            <>
+              {/* Google Sign-in button wrapper */}
+              <div className="gs-google-wrapper">
+                <div className="gs-google-label">
+                  <svg viewBox="0 0 24 24" className="gs-google-icon">
+                    <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
+                    <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
+                    <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" />
+                    <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
+                  </svg>
+                  Continue with Google
+                </div>
+                {/* The actual Google sign-in button rendered here */}
+                <div ref={googleBtnRef} className="gs-google-btn-inner" />
+              </div>
+
+              <div className="gs-divider">
+                <span>or</span>
+              </div>
+
+              <button className="gs-email-btn" onClick={() => setStep('EMAIL_INPUT')}>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
+                  <polyline points="22,6 12,12 2,6" />
+                </svg>
+                Continue with Email
+              </button>
+            </>
+          )}
+
+          {/* STEP 2: EMAIL INPUT (OTP Request) */}
+          {step === 'EMAIL_INPUT' && (
+            <form onSubmit={handleSendOtp} style={{display: 'flex', flexDirection: 'column', gap: '15px'}}>
+              <div style={{display: 'flex', flexDirection: 'column', gap: '5px'}}>
+                <label style={{fontSize: '14px', fontWeight: '600', color: '#1e293b'}}>Gmail Address</label>
+                <input 
+                  type="email" 
+                  autoFocus
+                  placeholder="name@gmail.com" 
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                  style={{padding: '12px 14px', border: '1px solid #cbd5e1', borderRadius: '8px', fontSize: '14px', outline: 'none', transition: '0.2s'}}
+                  onFocus={(e) => e.target.style.borderColor = '#2563eb'}
+                  onBlur={(e) => e.target.style.borderColor = '#cbd5e1'}
+                />
+              </div>
+
+              <div style={{display: 'flex', gap: '10px', marginTop: '5px'}}>
+                <button type="button" onClick={() => {setStep('CHOOSER'); setError("");}} style={{flex: 1, padding: '12px', background: '#f1f5f9', border: 'none', borderRadius: '8px', color: '#475569', fontWeight: '600', cursor: 'pointer'}}>
+                  Back
+                </button>
+                <button type="submit" disabled={loading} style={{flex: 2, padding: '12px', background: '#2563eb', border: 'none', borderRadius: '8px', color: 'white', fontWeight: '600', cursor: loading ? 'not-allowed' : 'pointer', opacity: loading ? 0.7 : 1}}>
+                  {loading ? 'Sending...' : 'Send OTP'}
+                </button>
+              </div>
+            </form>
+          )}
+
+          {/* STEP 3: OTP VERIFICATION */}
+          {step === 'OTP_INPUT' && (
+            <form onSubmit={handleVerifyOtp} style={{display: 'flex', flexDirection: 'column', gap: '15px'}}>
+              <div style={{fontSize: '13px', color: '#64748b', textAlign: 'center', marginBottom: '5px'}}>
+                We sent a 6-digit code to <strong>{email}</strong>
+              </div>
+
+              <div style={{display: 'flex', flexDirection: 'column', gap: '5px'}}>
+                <label style={{fontSize: '14px', fontWeight: '600', color: '#1e293b'}}>Verification Code</label>
+                <input 
+                  type="text" 
+                  autoFocus
+                  placeholder="Enter 6-digit OTP" 
+                  value={otp}
+                  onChange={(e) => setOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                  required
+                  style={{padding: '12px 14px', border: '1px solid #cbd5e1', borderRadius: '8px', fontSize: '16px', letterSpacing: '4px', textAlign: 'center', outline: 'none', transition: '0.2s', fontWeight: 'bold'}}
+                  onFocus={(e) => e.target.style.borderColor = '#2563eb'}
+                  onBlur={(e) => e.target.style.borderColor = '#cbd5e1'}
+                />
+              </div>
+
+              <div style={{display: 'flex', gap: '10px', marginTop: '5px'}}>
+                <button type="button" onClick={() => {setStep('EMAIL_INPUT'); setOtp(""); setError(""); setSuccess("");}} style={{flex: 1, padding: '12px', background: '#f1f5f9', border: 'none', borderRadius: '8px', color: '#475569', fontWeight: '600', cursor: 'pointer'}}>
+                  Back
+                </button>
+                <button type="submit" disabled={loading} style={{flex: 2, padding: '12px', background: '#22c55e', border: 'none', borderRadius: '8px', color: 'white', fontWeight: '600', cursor: loading ? 'not-allowed' : 'pointer', opacity: loading ? 0.7 : 1}}>
+                  {loading ? 'Verifying...' : 'Verify OTP'}
+                </button>
+              </div>
+            </form>
+          )}
+
+        </div>
+
+        <div className="gs-footer">
+          Already have an account?{" "}
+          <Link to="/login" className="gs-link">
+            Sign in
+          </Link>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export default GoogleSignup;
+

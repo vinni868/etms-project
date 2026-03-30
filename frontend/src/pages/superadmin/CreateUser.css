@@ -1,0 +1,659 @@
+/* ═══════════════════════════════════════════════════════════
+   CreateUser.css — EtMS User Provisioning Form
+   Theme  : White + Royal Blue + Role-color accents
+   Fonts  : Outfit (display) + Poppins (body)
+   ═══════════════════════════════════════════════════════════ */
+
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=Outfit:wght@500;600;700;800;900&display=swap');
+
+/* ── Variables ─────────────────────────────────────── */
+:root {
+  --cu-blue:         #2347c5;
+  --cu-blue-dark:    #1a3499;
+  --cu-blue-mid:     #2f59e0;
+  --cu-blue-light:   #eef2fd;
+  --cu-blue-soft:    rgba(35, 71, 197, 0.08);
+
+  --cu-green:        #16a34a;
+  --cu-green-light:  #dcfce7;
+  --cu-green-soft:   rgba(22, 163, 74, 0.1);
+
+  --cu-gold:         #f59e0b;
+  --cu-gold-light:   #fffbeb;
+
+  --cu-orange:       #f97316;
+  --cu-orange-light: #fff7ed;
+  --cu-orange-soft:  rgba(249, 115, 22, 0.1);
+
+  --cu-purple:       #7c3aed;
+  --cu-purple-light: #f5f3ff;
+  --cu-purple-soft:  rgba(124, 58, 237, 0.1);
+
+  --cu-red:          #ef4444;
+  --cu-red-light:    #fef2f2;
+
+  --cu-bg:           #f0f3fa;
+  --cu-white:        #ffffff;
+  --cu-border:       #e2e8f0;
+  --cu-border-focus: #2347c5;
+
+  --cu-text:         #1e293b;
+  --cu-text-mid:     #475569;
+  --cu-text-muted:   #94a3b8;
+
+  --cu-shadow:       0 2px 12px rgba(35, 71, 197, 0.08), 0 1px 4px rgba(0,0,0,0.04);
+  --cu-shadow-lg:    0 12px 40px rgba(35, 71, 197, 0.14), 0 4px 12px rgba(0,0,0,0.06);
+
+  --cu-side-bg:      linear-gradient(160deg, #1a3499 0%, #2347c5 55%, #3d6ee8 100%);
+  --cu-radius:       14px;
+  --cu-radius-sm:    10px;
+
+  --font-body:       'Poppins', sans-serif;
+  --font-display:    'Outfit', sans-serif;
+}
+
+/* ── Base ──────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+button { cursor: pointer; font-family: var(--font-body); }
+
+/* ═══════════════════════════
+   PAGE SHELL
+═══════════════════════════ */
+.cu-page {
+  min-height: 100vh;
+  background: var(--cu-bg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 1rem 2rem 1rem;
+  font-family: var(--font-body);
+}
+
+/* ═══════════════════════════
+   WRAPPER  (two-column card)
+═══════════════════════════ */
+.cu-wrapper {
+  display: grid;
+  grid-template-columns: 300px 1fr;
+  width: 100%;
+  max-width: 1350px; /* Increased from 960px to solve side gaps */
+  background: var(--cu-white);
+  border-radius: 22px;
+  box-shadow: var(--cu-shadow-lg);
+  overflow: hidden;
+  animation: cuSlideUp 0.45s ease-out both;
+}
+
+/* ═══════════════════════════
+   LEFT SIDE PANEL
+═══════════════════════════ */
+.cu-side {
+  background: var(--cu-side-bg);
+  padding: 2.5rem 2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  position: relative;
+  overflow: hidden;
+}
+
+/* decorative circle */
+.cu-side::before {
+  content: '';
+  position: absolute;
+  width: 280px;
+  height: 280px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.05);
+  top: -80px;
+  right: -80px;
+  pointer-events: none;
+}
+.cu-side::after {
+  content: '';
+  position: absolute;
+  width: 180px;
+  height: 180px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.04);
+  bottom: -60px;
+  left: -50px;
+  pointer-events: none;
+}
+
+/* Brand */
+.cu-side-brand {
+  font-family: var(--font-display);
+  font-size: 1.75rem;
+  font-weight: 900;
+  line-height: 1;
+  position: relative;
+  z-index: 1;
+}
+.cu-side-et { color: #fff; }
+.cu-side-ms { color: var(--cu-gold); }
+
+/* Title & Desc */
+.cu-side-title {
+  font-family: var(--font-display);
+  font-size: 1.4rem;
+  font-weight: 800;
+  color: #fff;
+  line-height: 1.2;
+  position: relative;
+  z-index: 1;
+}
+
+.cu-side-desc {
+  font-size: 0.82rem;
+  color: rgba(255,255,255,0.68);
+  line-height: 1.6;
+  position: relative;
+  z-index: 1;
+}
+
+/* Role Preview */
+.cu-side-role-preview {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  background: rgba(255,255,255,0.12);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255,255,255,0.18);
+  border-radius: var(--cu-radius-sm);
+  padding: 1rem;
+  position: relative;
+  z-index: 1;
+  transition: all 0.3s ease;
+}
+
+.cu-srp-icon {
+  width: 46px;
+  height: 46px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.4rem;
+  flex-shrink: 0;
+}
+.cu-srp-icon.blue   { background: rgba(35,71,197,0.3);  }
+.cu-srp-icon.green  { background: rgba(22,163,74,0.3);  }
+.cu-srp-icon.purple { background: rgba(124,58,237,0.3); }
+.cu-srp-icon.orange { background: rgba(249,115,22,0.3); }
+
+.cu-srp-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+.cu-srp-label {
+  font-size: 0.62rem;
+  color: rgba(255,255,255,0.55);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  font-weight: 600;
+}
+.cu-srp-name {
+  font-family: var(--font-display);
+  font-size: 1rem;
+  font-weight: 700;
+  color: #fff;
+}
+.cu-srp-desc {
+  font-size: 0.72rem;
+  color: rgba(255,255,255,0.6);
+}
+
+/* Stats strip */
+.cu-side-stats {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  background: rgba(255,255,255,0.08);
+  border-radius: var(--cu-radius-sm);
+  padding: 0.85rem 1rem;
+  position: relative;
+  z-index: 1;
+  margin-top: auto;
+}
+
+.cu-ss-item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.2rem;
+}
+.cu-ss-val {
+  font-family: var(--font-display);
+  font-size: 1.2rem;
+  font-weight: 800;
+  color: #fff;
+}
+.cu-ss-lbl {
+  font-size: 0.62rem;
+  color: rgba(255,255,255,0.55);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-weight: 500;
+  text-align: center;
+}
+.cu-ss-divider {
+  width: 1px;
+  height: 28px;
+  background: rgba(255,255,255,0.15);
+  flex-shrink: 0;
+}
+
+/* ═══════════════════════════
+   FORM PANEL (right)
+═══════════════════════════ */
+.cu-form-panel {
+  padding: 2.5rem 2.5rem 2.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  overflow-y: auto;
+}
+
+/* Form Header */
+.cu-form-header {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+}
+
+.cu-form-header-icon {
+  width: 46px;
+  height: 46px;
+  border-radius: 12px;
+  background: var(--cu-blue-light);
+  color: var(--cu-blue);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.1rem;
+  flex-shrink: 0;
+}
+
+.cu-form-title {
+  font-family: var(--font-display);
+  font-size: 1.35rem;
+  font-weight: 800;
+  color: var(--cu-text);
+  line-height: 1.1;
+}
+
+.cu-form-subtitle {
+  font-size: 0.8rem;
+  color: var(--cu-text-muted);
+  margin-top: 2px;
+}
+
+/* Alert */
+.cu-alert {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  padding: 0.85rem 1.1rem;
+  border-radius: var(--cu-radius-sm);
+  font-size: 0.85rem;
+  font-weight: 500;
+  animation: cuFadeIn 0.3s ease-out;
+}
+
+.cu-alert--success {
+  background: var(--cu-green-light);
+  color: var(--cu-green);
+  border: 1px solid rgba(22, 163, 74, 0.25);
+}
+.cu-alert--error {
+  background: var(--cu-red-light);
+  color: var(--cu-red);
+  border: 1px solid rgba(239, 68, 68, 0.25);
+}
+
+.cu-alert-icon { font-size: 1rem; flex-shrink: 0; }
+
+/* ── Section label ── */
+.cu-section-label {
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1.2px;
+  color: var(--cu-text-muted);
+  margin-bottom: -0.5rem;
+}
+
+/* ═══════════════════════════
+   ROLE GRID
+═══════════════════════════ */
+.cu-field-note {
+  font-size: 11px;
+  color: #64748b;
+  margin-top: 6px;
+  font-style: italic;
+}
+
+.cu-role-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.65rem;
+}
+
+.cu-role-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.9rem 0.5rem 0.8rem;
+  border-radius: var(--cu-radius-sm);
+  border: 2px solid var(--cu-border);
+  background: #fafbfe;
+  color: var(--cu-text-mid);
+  font-size: 0.78rem;
+  font-weight: 600;
+  transition: all 0.2s ease;
+  position: relative;
+  cursor: pointer;
+  text-align: center;
+}
+
+.cu-role-card:hover {
+  border-color: var(--cu-blue);
+  background: var(--cu-blue-light);
+  color: var(--cu-blue);
+  transform: translateY(-2px);
+}
+
+/* Selected states per color */
+.cu-role-card.selected.blue   { border-color: var(--cu-blue);   background: var(--cu-blue-light);   color: var(--cu-blue);   }
+.cu-role-card.selected.green  { border-color: var(--cu-green);  background: var(--cu-green-light);  color: var(--cu-green);  }
+.cu-role-card.selected.purple { border-color: var(--cu-purple); background: var(--cu-purple-light); color: var(--cu-purple); }
+.cu-role-card.selected.orange { border-color: var(--cu-orange); background: var(--cu-orange-light); color: var(--cu-orange); }
+
+.cu-rc-icon {
+  font-size: 1.5rem;
+  line-height: 1;
+}
+.cu-rc-label {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: inherit;
+}
+.cu-rc-desc {
+  font-size: 0.65rem;
+  color: var(--cu-text-muted);
+  font-weight: 400;
+}
+.cu-role-card.selected .cu-rc-desc { color: inherit; opacity: 0.7; }
+
+.cu-rc-check {
+  position: absolute;
+  top: 6px;
+  right: 7px;
+  font-size: 0.65rem;
+  font-weight: 800;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: currentColor;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ═══════════════════════════
+   FORM FIELDS
+═══════════════════════════ */
+.cu-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.cu-field-row {
+  display: grid;
+  gap: 1rem;
+}
+.cu-field-row.two {
+  grid-template-columns: 1fr 1fr;
+}
+
+/* Field wrapper */
+.cu-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+/* Label */
+.cu-label {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--cu-text-mid);
+}
+.cu-label-icon {
+  font-size: 0.78rem;
+  color: var(--cu-blue);
+}
+.cu-optional {
+  margin-left: auto;
+  font-size: 0.68rem;
+  font-weight: 500;
+  color: var(--cu-text-muted);
+  background: #f1f5f9;
+  padding: 0.1rem 0.5rem;
+  border-radius: 10px;
+}
+
+/* Input wrapper */
+.cu-input-wrap {
+  position: relative;
+}
+
+.cu-input-wrap input {
+  width: 100%;
+  padding: 0.72rem 2.4rem 0.72rem 0.95rem;
+  border: 1.5px solid var(--cu-border);
+  border-radius: var(--cu-radius-sm);
+  font-family: var(--font-body);
+  font-size: 0.875rem;
+  color: var(--cu-text);
+  background: #fafbfe;
+  outline: none;
+  transition: border-color 0.2s, box-shadow 0.2s, background 0.2s;
+}
+
+.cu-input-wrap input::placeholder {
+  color: var(--cu-text-muted);
+  font-size: 0.82rem;
+}
+
+.cu-input-wrap input:focus {
+  border-color: var(--cu-blue);
+  background: var(--cu-white);
+  box-shadow: 0 0 0 3px rgba(35, 71, 197, 0.1);
+}
+
+/* Validation states */
+.cu-field.has-error .cu-input-wrap input {
+  border-color: var(--cu-red);
+  background: #fff8f8;
+}
+.cu-field.has-error .cu-input-wrap input:focus {
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.12);
+}
+
+.cu-field.has-success .cu-input-wrap input {
+  border-color: var(--cu-green);
+}
+.cu-field.has-success .cu-input-wrap input:focus {
+  box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.1);
+}
+
+/* Valid icon */
+.cu-valid-ic {
+  position: absolute;
+  right: 0.75rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--cu-green);
+  font-size: 0.85rem;
+  font-weight: 700;
+  pointer-events: none;
+}
+
+/* Error msg */
+.cu-error-msg {
+  font-size: 0.72rem;
+  color: var(--cu-red);
+  font-weight: 500;
+  padding-left: 0.2rem;
+}
+
+/* Password toggle */
+.cu-toggle-pass {
+  position: absolute;
+  right: 0.75rem;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  color: var(--cu-text-muted);
+  font-size: 0.85rem;
+  display: flex;
+  align-items: center;
+  padding: 0;
+  transition: color 0.2s;
+}
+.cu-toggle-pass:hover { color: var(--cu-blue); }
+
+/* Password strength */
+.cu-pass-strength {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.2rem;
+}
+
+.cu-ps-bar {
+  flex: 1;
+  height: 4px;
+  border-radius: 4px;
+  transition: all 0.3s ease;
+}
+.cu-ps-bar.weak   { background: var(--cu-red);   width: 33%; }
+.cu-ps-bar.medium { background: var(--cu-gold);  width: 66%; }
+.cu-ps-bar.strong { background: var(--cu-green); width: 100%; }
+
+.cu-ps-label {
+  font-size: 0.7rem;
+  font-weight: 600;
+}
+.cu-ps-bar.weak   + .cu-ps-label { color: var(--cu-red);  }
+.cu-ps-bar.medium + .cu-ps-label { color: var(--cu-gold); }
+.cu-ps-bar.strong + .cu-ps-label { color: var(--cu-green);}
+
+/* ═══════════════════════════
+   SUBMIT BUTTON
+═══════════════════════════ */
+.cu-submit {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+  width: 100%;
+  padding: 0.9rem 1.5rem;
+  background: var(--cu-blue);
+  color: #fff;
+  border: none;
+  border-radius: var(--cu-radius-sm);
+  font-family: var(--font-body);
+  font-size: 0.95rem;
+  font-weight: 700;
+  letter-spacing: 0.2px;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.15s, box-shadow 0.2s;
+  margin-top: 0.25rem;
+  box-shadow: 0 4px 14px rgba(35,71,197,0.3);
+}
+
+.cu-submit:hover:not(:disabled) {
+  background: var(--cu-blue-dark);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(35,71,197,0.4);
+}
+
+.cu-submit:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.cu-submit:disabled {
+  opacity: 0.75;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.cu-submit.loading { background: var(--cu-blue-mid); }
+
+/* Spinner */
+.cu-spinner {
+  width: 18px;
+  height: 18px;
+  border: 2.5px solid rgba(255,255,255,0.3);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: cuSpin 0.7s linear infinite;
+  flex-shrink: 0;
+}
+
+/* ═══════════════════════════
+   ANIMATIONS
+═══════════════════════════ */
+@keyframes cuSlideUp {
+  from { opacity: 0; transform: translateY(24px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes cuFadeIn {
+  from { opacity: 0; transform: translateY(-6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes cuSpin {
+  to { transform: rotate(360deg); }
+}
+
+/* ═══════════════════════════
+   RESPONSIVE
+═══════════════════════════ */
+@media (max-width: 992px) {
+  .cu-wrapper {
+    grid-template-columns: 1fr;
+    max-width: 100%;
+    margin: 0;
+    border-radius: 0;
+  }
+  .cu-side {
+    padding: 2rem;
+  }
+}
+
+@media (max-width: 600px) {
+  .cu-form-panel { padding: 1.5rem 1rem; }
+  .cu-field-row.two { grid-template-columns: 1fr; }
+  .cu-role-grid { grid-template-columns: repeat(2, 1fr); }
+  .cu-side-brand { font-size: 1.5rem; }
+  .cu-side-title { font-size: 1.2rem; }
+  .cu-side-stats { display: none; }
+}
+
+@media (max-width: 480px) {
+  .cu-role-grid { grid-template-columns: 1fr; }
+}

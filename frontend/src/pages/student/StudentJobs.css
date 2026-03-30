@@ -1,0 +1,186 @@
+/* =============================================
+   StudentJobs.css — EtMS Job Board
+   ============================================= */
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&display=swap');
+
+.sjobs-page {
+  padding: 28px 36px 60px;
+  font-family: 'Outfit', sans-serif;
+  background: #f1f5fb;
+  min-height: 100vh;
+}
+
+/* Header */
+.sjobs-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-bottom: 28px;
+}
+.sjobs-header-left { display: flex; align-items: center; gap: 16px; }
+.sjobs-icon {
+  width: 56px; height: 56px;
+  background: linear-gradient(135deg, #1e3a8a, #2563eb);
+  border-radius: 14px;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 26px;
+  box-shadow: 0 6px 20px rgba(37,99,235,0.3);
+}
+.sjobs-title { font-size: 26px; font-weight: 800; color: #0f172a; }
+.sjobs-sub { font-size: 13px; color: #64748b; margin-top: 3px; }
+.sjobs-stats-pill {
+  background: #eff6ff;
+  color: #2563eb;
+  font-size: 13px; font-weight: 700;
+  padding: 8px 18px; border-radius: 20px;
+}
+
+/* Filters */
+.sjobs-filters {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-bottom: 24px;
+  align-items: center;
+}
+.sjobs-search-wrap {
+  display: flex; align-items: center; gap: 10px;
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 10px 16px;
+  flex: 1; min-width: 240px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+}
+.sjobs-search-icon { font-size: 15px; }
+.sjobs-search { border: none; outline: none; font-size: 14px; width: 100%; font-family: inherit; }
+.sjobs-type-filters { display: flex; gap: 8px; flex-wrap: wrap; }
+.sjobs-filter-btn {
+  padding: 8px 16px;
+  border-radius: 20px;
+  border: 1px solid #e2e8f0;
+  background: #fff;
+  font-size: 13px; font-weight: 600; cursor: pointer;
+  color: #64748b;
+  transition: all 0.2s;
+}
+.sjobs-filter-btn.active {
+  background: #1e3a8a; color: #fff; border-color: #1e3a8a;
+}
+
+/* Message */
+.sjobs-msg {
+  padding: 12px 20px; border-radius: 10px;
+  font-size: 14px; font-weight: 600;
+  margin-bottom: 20px;
+}
+.sjobs-msg--ok { background: #dcfce7; color: #16a34a; }
+.sjobs-msg--err { background: #fee2e2; color: #dc2626; }
+
+/* Grid */
+.sjobs-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+  gap: 20px;
+}
+
+/* Card */
+.sjobs-card {
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 20px;
+  padding: 24px;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.05);
+  transition: transform 0.2s, box-shadow 0.2s;
+  display: flex; flex-direction: column; gap: 14px;
+}
+.sjobs-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 30px rgba(37,99,235,0.1);
+}
+.sjobs-card-top {
+  display: flex; align-items: flex-start; gap: 14px;
+  position: relative;
+}
+.sjobs-company-logo {
+  width: 48px; height: 48px; border-radius: 12px;
+  background: linear-gradient(135deg, #dbeafe, #bfdbfe);
+  color: #1e3a8a; font-size: 20px; font-weight: 800;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.sjobs-card-meta { flex: 1; }
+.sjobs-card-title { font-size: 16px; font-weight: 700; color: #0f172a; margin: 0 0 4px; }
+.sjobs-company { font-size: 13px; color: #64748b; font-weight: 500; }
+
+/* Deadline badges */
+.sjobs-deadline-badge {
+  font-size: 11px; font-weight: 700; padding: 3px 10px; border-radius: 20px;
+  white-space: nowrap; flex-shrink: 0;
+}
+.badge-good    { background: #dcfce7; color: #16a34a; }
+.badge-urgent  { background: #fef3c7; color: #d97706; }
+.badge-expired { background: #fee2e2; color: #dc2626; }
+
+/* Details */
+.sjobs-card-details { display: flex; gap: 12px; flex-wrap: wrap; }
+.sjobs-detail { font-size: 12px; color: #64748b; font-weight: 500; }
+
+/* Skills */
+.sjobs-skills { display: flex; gap: 6px; flex-wrap: wrap; }
+.skill-chip {
+  font-size: 11px; font-weight: 600; padding: 3px 10px; border-radius: 20px;
+  background: #eff6ff; color: #2563eb;
+}
+
+/* Description */
+.sjobs-desc { font-size: 13px; color: #475569; line-height: 1.6; }
+
+/* Footer */
+.sjobs-card-footer {
+  display: flex; align-items: center; justify-content: space-between;
+  padding-top: 14px;
+  border-top: 1px solid #f1f5f9;
+  margin-top: auto;
+}
+.sjobs-type-badge {
+  font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 20px;
+}
+.badge-fulltime { background: #eff6ff; color: #2563eb; }
+.badge-parttime { background: #fdf4ff; color: #9333ea; }
+
+.sjobs-apply-btn {
+  padding: 9px 20px;
+  background: linear-gradient(135deg, #1e3a8a, #2563eb);
+  color: #fff; border: none; border-radius: 10px;
+  font-size: 13px; font-weight: 700; cursor: pointer;
+  transition: all 0.2s;
+}
+.sjobs-apply-btn:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 15px rgba(37,99,235,0.35);
+}
+.sjobs-apply-btn:disabled {
+  opacity: 0.6; cursor: not-allowed;
+  background: #94a3b8;
+}
+
+/* Loading / Empty */
+.sjobs-loading {
+  text-align: center; padding: 60px;
+  color: #64748b; font-size: 15px;
+}
+.sjobs-empty {
+  text-align: center; padding: 80px 20px;
+}
+.sjobs-empty-icon { font-size: 52px; margin-bottom: 16px; }
+.sjobs-empty h3 { font-size: 20px; font-weight: 700; color: #1e293b; margin-bottom: 8px; }
+.sjobs-empty p  { color: #64748b; font-size: 14px; }
+
+@media (max-width: 768px) {
+  .sjobs-page { padding: 16px; }
+  .sjobs-grid { grid-template-columns: 1fr; }
+  .sjobs-header { flex-direction: column; align-items: flex-start; }
+}

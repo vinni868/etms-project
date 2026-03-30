@@ -1,0 +1,323 @@
+/* ─────────────────────────────────────────────────────────────
+   AdminIdManagement.css — Premium ID Control Panel Styles
+───────────────────────────────────────────────────────────── */
+
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap');
+
+.idm-page {
+  font-family: 'Inter', sans-serif;
+  background: #f1f5f9;
+  min-height: 100vh;
+  padding: 0 0 60px;
+}
+
+/* ── Loader ── */
+.idm-loader {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+  height: 60vh;
+  color: #64748b;
+}
+.idm-spinner {
+  width: 44px; height: 44px;
+  border: 4px solid #e2e8f0;
+  border-top-color: #2f59e0;
+  border-radius: 50%;
+  animation: idmSpin 0.8s linear infinite;
+}
+@keyframes idmSpin { to { transform: rotate(360deg); } }
+
+/* ── Toast ── */
+.idm-toast {
+  position: fixed;
+  top: 88px;
+  right: 24px;
+  z-index: 9999;
+  padding: 14px 24px;
+  border-radius: 12px;
+  font-weight: 600;
+  font-size: 0.95rem;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.15);
+  animation: idmSlideIn 0.3s ease;
+}
+.idm-toast--success { background: #16a34a; color: #fff; }
+.idm-toast--error   { background: #dc2626; color: #fff; }
+@keyframes idmSlideIn { from { transform: translateX(50px); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+
+/* ── Hero ── */
+.idm-hero {
+  background: linear-gradient(135deg, #1e3a8a 0%, #2f59e0 60%, #7c3aed 100%);
+  position: relative;
+  overflow: hidden;
+  padding: 48px 40px 40px;
+  color: white;
+}
+.idm-hero__orb {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(80px);
+  opacity: 0.35;
+  pointer-events: none;
+}
+.idm-hero__orb--1 { width: 320px; height: 320px; background: #60a5fa; top: -80px; right: -60px; }
+.idm-hero__orb--2 { width: 220px; height: 220px; background: #c4b5fd; bottom: -60px; left: 40%; }
+
+.idm-hero__inner {
+  position: relative;
+  z-index: 1;
+  max-width: 1200px;
+  margin: 0 auto;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 24px;
+}
+.idm-hero__chip {
+  display: inline-block;
+  background: rgba(255,255,255,0.15);
+  border: 1px solid rgba(255,255,255,0.25);
+  border-radius: 50px;
+  padding: 6px 16px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  margin-bottom: 12px;
+}
+.idm-hero__title {
+  font-size: 2rem;
+  font-weight: 800;
+  margin: 0 0 8px;
+  line-height: 1.2;
+}
+.idm-hero__sub {
+  margin: 0;
+  opacity: 0.8;
+  font-size: 0.95rem;
+}
+.idm-refresh-btn {
+  background: rgba(255,255,255,0.15);
+  border: 1px solid rgba(255,255,255,0.3);
+  color: white;
+  padding: 10px 20px;
+  border-radius: 10px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+.idm-refresh-btn:hover { background: rgba(255,255,255,0.25); }
+
+/* ── Tabs ── */
+.idm-tabs {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 24px 40px 0;
+  display: flex;
+  gap: 8px;
+}
+.idm-tab {
+  padding: 10px 24px;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  background: white;
+  color: #64748b;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.idm-tab--active {
+  background: #2f59e0;
+  color: white;
+  border-color: #2f59e0;
+  box-shadow: 0 4px 12px rgba(47,89,224,0.25);
+}
+
+/* ── Overview Cards Grid ── */
+.idm-cards-grid {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 24px 40px;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 20px;
+}
+
+.idm-seq-card {
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05), 0 4px 12px rgba(0,0,0,0.04);
+  overflow: hidden;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+.idm-seq-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.1);
+}
+
+.idm-seq-card__header {
+  padding: 16px 20px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.idm-seq-card__icon { font-size: 2rem; }
+.idm-seq-card__portal { margin: 0; font-size: 1rem; font-weight: 800; }
+.idm-seq-card__prefix { font-size: 0.78rem; color: #64748b; }
+
+.idm-seq-card__body {
+  padding: 12px 20px;
+  display: flex;
+  gap: 16px;
+  border-top: 1px solid #f1f5f9;
+  border-bottom: 1px solid #f1f5f9;
+}
+.idm-seq-card__stat { display: flex; flex-direction: column; gap: 2px; }
+.idm-seq-card__stat-label { font-size: 0.72rem; color: #94a3b8; font-weight: 500; text-transform: uppercase; letter-spacing: 0.05em; }
+.idm-seq-card__stat-val { font-size: 1.4rem; font-weight: 800; color: #1e293b; }
+
+.idm-seq-card__footer { padding: 12px 20px; }
+.idm-next-id-label { display: block; font-size: 0.78rem; color: #64748b; margin-bottom: 6px; }
+.idm-next-id-badge {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.9rem;
+  font-weight: 700;
+  background: #f8fafc;
+  border: 1.5px solid;
+  border-radius: 6px;
+  padding: 4px 10px;
+  display: inline-block;
+}
+
+/* ── Control Table ── */
+.idm-table-wrap {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 24px 40px;
+}
+.idm-table-header {
+  margin-bottom: 20px;
+}
+.idm-table-header h2 {
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: #1e293b;
+  margin: 0 0 4px;
+}
+.idm-table-header p {
+  font-size: 0.9rem;
+  color: #64748b;
+  margin: 0;
+}
+
+.idm-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: white;
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+}
+.idm-table thead {
+  background: #f8fafc;
+}
+.idm-table th {
+  padding: 14px 16px;
+  text-align: left;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  border-bottom: 1px solid #e2e8f0;
+}
+.idm-table td {
+  padding: 14px 16px;
+  font-size: 0.9rem;
+  color: #1e293b;
+  border-bottom: 1px solid #f1f5f9;
+  vertical-align: middle;
+}
+.idm-table tr:last-child td { border-bottom: none; }
+.idm-row--editing {
+  background: #eff6ff;
+}
+
+.idm-portal-cell { display: flex; align-items: center; gap: 10px; font-size: 1rem; }
+.idm-prefix-badge {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.85rem;
+  background: #f1f5f9;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  padding: 2px 8px;
+  color: #475569;
+}
+.idm-seq-num { font-weight: 700; font-size: 1.1rem; }
+.idm-preview-id {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.88rem;
+  font-weight: 700;
+}
+
+.idm-inline-input {
+  width: 90px;
+  padding: 6px 10px;
+  border: 1px solid #2f59e0;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  color: #1e293b;
+  background: white;
+}
+.idm-inline-input:focus { outline: none; box-shadow: 0 0 0 3px rgba(47,89,224,0.15); }
+
+.idm-action-group { display: flex; gap: 8px; }
+.idm-btn {
+  padding: 8px 16px;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.idm-btn--edit   { background: #eff6ff; color: #2563eb; border: 1px solid #bfdbfe; }
+.idm-btn--save   { background: #16a34a; color: white; }
+.idm-btn--cancel { background: #fee2e2; color: #dc2626; }
+.idm-btn:hover { transform: translateY(-1px); filter: brightness(0.95); }
+
+.idm-info-box {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  background: #fffbeb;
+  border: 1px solid #fde68a;
+  border-radius: 12px;
+  padding: 16px 20px;
+  margin-top: 20px;
+  font-size: 0.9rem;
+  color: #92400e;
+  line-height: 1.5;
+}
+.idm-info-box span { font-size: 1.2rem; flex-shrink: 0; }
+.idm-info-box code { background: rgba(254,215,170,0.5); padding: 1px 6px; border-radius: 4px; font-family: 'JetBrains Mono', monospace; }
+
+@media (max-width: 992px) {
+  .idm-hero { padding: 32px 20px; }
+  .idm-hero__inner { flex-direction: column; align-items: stretch; gap: 20px; }
+  .idm-refresh-btn { align-self: flex-start; }
+  .idm-cards-grid { grid-template-columns: 1fr; padding: 20px; }
+  .idm-table-wrap { padding: 20px; }
+  .idm-tabs { padding: 16px 20px 0; overflow-x: auto; white-space: nowrap; }
+  .idm-tab { flex-shrink: 0; }
+  .idm-table-header { text-align: left; }
+}
+
+@media (max-width: 600px) {
+  .idm-hero__title { font-size: 1.5rem; }
+  .idm-portal-cell { font-size: 0.9rem; flex-direction: column; align-items: flex-start; gap: 5px; }
+}

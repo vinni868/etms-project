@@ -1,0 +1,227 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+
+/* ── Container ── */
+.gs-container {
+  font-family: 'Inter', sans-serif;
+  min-height: calc(100vh - 120px);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 30px 20px;
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(135deg, #f0f4ff 0%, #fafaff 50%, #f5f0ff 100%);
+}
+
+/* ── Animated blobs ── */
+.gs-blob {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(80px);
+  opacity: 0.4;
+  pointer-events: none;
+  animation: gsFloat 8s ease-in-out infinite;
+}
+.gs-blob-1 {
+  width: 380px; height: 380px;
+  background: radial-gradient(circle, #c7d2fe, #a5b4fc);
+  top: -100px; left: -100px;
+  animation-delay: 0s;
+}
+.gs-blob-2 {
+  width: 300px; height: 300px;
+  background: radial-gradient(circle, #ddd6fe, #c4b5fd);
+  bottom: -80px; right: -80px;
+  animation-delay: -3s;
+}
+.gs-blob-3 {
+  width: 220px; height: 220px;
+  background: radial-gradient(circle, #bfdbfe, #93c5fd);
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  animation-delay: -5s;
+}
+@keyframes gsFloat {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  33%       { transform: translate(20px, -20px) scale(1.05); }
+  66%       { transform: translate(-15px, 15px) scale(0.95); }
+}
+
+/* ── Card ── */
+.gs-card {
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.9);
+  border-radius: 24px;
+  box-shadow:
+    0 20px 60px -10px rgba(99, 102, 241, 0.15),
+    0 8px 20px -4px rgba(0, 0, 0, 0.08);
+  padding: 48px 44px;
+  width: 100%;
+  max-width: 420px;
+  position: relative;
+  z-index: 1;
+  animation: gsSlideUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+@keyframes gsSlideUp {
+  from { opacity: 0; transform: translateY(30px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ── Header ── */
+.gs-header {
+  text-align: center;
+  margin-bottom: 36px;
+}
+.gs-logo-wrap {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 72px; height: 72px;
+  background: linear-gradient(135deg, #eef2ff, #dbeafe);
+  border-radius: 20px;
+  margin-bottom: 16px;
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.15);
+}
+.gs-logo {
+  width: 44px; height: 44px;
+  object-fit: contain;
+}
+.gs-title {
+  font-size: 26px;
+  font-weight: 800;
+  color: #0f172a;
+  margin: 0 0 8px;
+  letter-spacing: -0.5px;
+}
+.gs-subtitle {
+  font-size: 14px;
+  color: #64748b;
+  margin: 0;
+}
+
+/* ── Options ── */
+.gs-options {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+/* ── Google Button Wrapper ── */
+.gs-google-wrapper {
+  position: relative;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 12px;
+  overflow: hidden;
+  transition: border-color 0.2s, box-shadow 0.2s;
+  cursor: pointer;
+  background: #fff;
+}
+.gs-google-wrapper:hover {
+  border-color: #a5b4fc;
+  box-shadow: 0 4px 16px rgba(99, 102, 241, 0.12);
+}
+
+/* Our custom label overlay (visual only) */
+.gs-google-label {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 14px 20px;
+  font-size: 15px;
+  font-weight: 600;
+  color: #1e293b;
+  pointer-events: none;
+}
+.gs-google-icon {
+  width: 20px; height: 20px;
+  flex-shrink: 0;
+}
+
+/* The actual Google SDK button — overlay it over the label so clicks work */
+.gs-google-btn-inner {
+  position: absolute;
+  top: 0; left: 0;
+  width: 100%; height: 100%;
+  opacity: 0;           /* invisible but fully clickable */
+  overflow: hidden;
+}
+.gs-google-btn-inner > div,
+.gs-google-btn-inner iframe {
+  width: 100% !important;
+  height: 100% !important;
+}
+
+/* ── Divider ── */
+.gs-divider {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: #94a3b8;
+  font-size: 13px;
+  font-weight: 500;
+}
+.gs-divider::before,
+.gs-divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: #e2e8f0;
+}
+
+/* ── Email Button ── */
+.gs-email-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 14px 20px;
+  background: linear-gradient(135deg, #2563eb, #4f46e5);
+  color: #fff;
+  border-radius: 12px;
+  font-size: 15px;
+  font-weight: 600;
+  text-decoration: none;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 14px rgba(37, 99, 235, 0.3);
+}
+.gs-email-btn svg {
+  width: 18px; height: 18px;
+}
+.gs-email-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(37, 99, 235, 0.4);
+  background: linear-gradient(135deg, #1d4ed8, #4338ca);
+  color: #fff;
+}
+.gs-email-btn:active {
+  transform: translateY(0);
+}
+
+/* ── Footer ── */
+.gs-footer {
+  margin-top: 28px;
+  text-align: center;
+  font-size: 14px;
+  color: #64748b;
+}
+.gs-link {
+  color: #2563eb;
+  font-weight: 600;
+  text-decoration: none;
+}
+.gs-link:hover {
+  text-decoration: underline;
+}
+
+/* ── Responsive ── */
+@media (max-width: 480px) {
+  .gs-card {
+    padding: 32px 24px;
+  }
+  .gs-title {
+    font-size: 22px;
+  }
+}

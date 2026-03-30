@@ -1,0 +1,199 @@
+@import url("./SuperAdminCommon.css");
+
+/* Layout Override */
+.sl-wrapper-extra {
+  max-width: 1300px;
+}
+
+/* Side Card */
+.sl-side-card {
+  background: rgba(255,255,255,0.08);
+  border: 1px solid rgba(255,255,255,0.1);
+  padding: 1.25rem;
+  border-radius: var(--sa-radius-sm);
+  margin-top: auto;
+  backdrop-filter: blur(4px);
+}
+.sl-sc-label {
+  font-size: 0.6rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  color: var(--sa-gold);
+  letter-spacing: 0.5px;
+  display: block;
+  margin-bottom: 0.25rem;
+}
+.sl-sc-value {
+  font-family: var(--font-display);
+  font-size: 1.2rem;
+  font-weight: 900;
+  color: #fff;
+}
+
+.sl-side-illustration {
+  margin-top: 1.5rem;
+  display: flex;
+  justify-content: center;
+}
+
+/* Main Panel */
+.sl-main-panel {
+  padding: 2.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.75rem;
+  overflow-y: auto;
+}
+
+.sl-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.sl-header h1 {
+  font-family: var(--font-display);
+  font-size: 1.8rem;
+  font-weight: 900;
+  color: var(--sa-text);
+}
+.sl-header p {
+  font-size: 0.9rem;
+  color: var(--sa-text-muted);
+}
+
+.sl-search-box {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  background: #fff;
+  border: 1.5px solid var(--sa-border);
+  border-radius: 10px;
+  padding: 0.5rem 1rem;
+  width: 300px;
+  transition: all 0.2s;
+}
+.sl-search-box:focus-within {
+  border-color: var(--sa-blue);
+  box-shadow: 0 0 0 3px rgba(37,99,235,0.1);
+}
+.sl-search-box svg { color: var(--sa-text-muted); }
+.sl-search-box input {
+  border: none;
+  outline: none;
+  width: 100%;
+  font-size: 0.9rem;
+  font-family: inherit;
+}
+
+.sl-btn-primary {
+  background: var(--sa-blue);
+  color: #fff;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 10px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  transition: all 0.2s;
+}
+.sl-btn-primary:hover {
+  background: var(--sa-blue-dark);
+  transform: translateY(-2px);
+}
+
+/* Stats (for Finance/Performance) */
+.sl-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1.25rem;
+}
+.sl-stat-card {
+  background: #fff;
+  border: 1.5px solid var(--sa-border);
+  border-radius: 16px;
+  padding: 1.25rem;
+  box-shadow: var(--sa-shadow);
+}
+.sl-stat-label {
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: var(--sa-text-muted);
+  text-transform: uppercase;
+}
+.sl-stat-value {
+  font-family: var(--font-display);
+  font-size: 1.5rem;
+  font-weight: 900;
+  color: var(--sa-blue);
+  margin-top: 0.4rem;
+}
+
+/* Table Section */
+.sl-table-card {
+  background: #fff;
+  border: 1.5px solid var(--sa-border);
+  border-radius: 20px;
+  overflow: hidden;
+  box-shadow: var(--sa-shadow);
+}
+.sl-table-card h3 {
+  padding: 1.5rem 1.5rem 0.5rem;
+  font-family: var(--font-display);
+  font-size: 1.1rem;
+  font-weight: 800;
+}
+
+.sl-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+.sl-table th {
+  background: #f8fafc;
+  padding: 1.15rem 1.5rem;
+  text-align: left;
+  font-size: 0.75rem;
+  font-weight: 800;
+  color: var(--sa-text-muted);
+  text-transform: uppercase;
+  border-bottom: 2px solid var(--sa-border);
+}
+.sl-table td {
+  padding: 1.15rem 1.5rem;
+  border-bottom: 1px solid #f1f5f9;
+  font-size: 0.95rem;
+  color: var(--sa-text-mid);
+}
+
+.sl-td-id {
+  font-family: 'JetBrains Mono', monospace;
+  font-weight: 700;
+  color: var(--sa-blue);
+  letter-spacing: -0.2px;
+}
+
+.sl-status-pill {
+  font-size: 0.75rem;
+  font-weight: 800;
+  padding: 0.35rem 0.75rem;
+  border-radius: 20px;
+  text-transform: uppercase;
+}
+.sl-status-pill--active { background: #f0fdf4; color: #16a34a; }
+.sl-status-pill--low { background: #fff1f2; color: #e11d48; }
+.sl-status-pill--warn { background: #fff7ed; color: #ea580c; }
+
+@media (max-width: 900px) {
+  .sa-wrapper { grid-template-columns: 1fr; }
+  .sa-side-panel { display: none; }
+  .sl-main-panel { padding: 1.5rem; }
+  .sl-header { flex-direction: column; align-items: flex-start; gap: 1rem; }
+  .sl-search-box { width: 100%; }
+  .sl-btn-primary { width: 100%; justify-content: center; }
+}
+
+@media (max-width: 480px) {
+  .sl-main-panel { padding: 1rem; }
+  .sl-stats-grid { grid-template-columns: 1fr; }
+  .sl-table td { padding: 1rem; }
+}

@@ -1,0 +1,80 @@
+.course-details-page {
+  padding: 40px;
+  background: #f4f7fb;
+  min-height: 100vh;
+  font-family: "Inter", sans-serif;
+}
+
+/* Back Button */
+.back-btn {
+  background: none;
+  border: none;
+  color: #4f46e5;
+  font-size: 14px;
+  cursor: pointer;
+  margin-bottom: 20px;
+}
+
+.back-btn:hover {
+  text-decoration: underline;
+}
+
+/* Main Card */
+.details-card {
+  background: #ffffff;
+  padding: 35px;
+  border-radius: 20px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+  max-width: 800px;
+}
+
+.details-card h2 {
+  font-size: 26px;
+  color: #1e293b;
+  margin-bottom: 15px;
+}
+
+.description {
+  color: #64748b;
+  margin-bottom: 30px;
+  line-height: 1.6;
+}
+
+/* Modules */
+.modules-section h3 {
+  margin-bottom: 15px;
+  color: #1e293b;
+}
+
+.modules-section ul {
+  list-style: none;
+  padding: 0;
+}
+
+.modules-section li {
+  display: flex;
+  align-items: center;
+  background: #f8fafc;
+  padding: 12px 15px;
+  border-radius: 12px;
+  margin-bottom: 10px;
+  transition: 0.3s ease;
+}
+
+.modules-section li:hover {
+  background: #e0e7ff;
+}
+
+.module-number {
+  width: 28px;
+  height: 28px;
+  background: #4f46e5;
+  color: white;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 12px;
+  font-size: 13px;
+  font-weight: 600;
+}
