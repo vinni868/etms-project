@@ -364,49 +364,51 @@ function ManageStudents() {
             </div>
             <form onSubmit={handleUpdateProfile}>
               <div className="modal-body">
-                <div className="m-field">
-                  <label>Student ID / Portal ID</label>
-                  <input 
-                    type="text" 
-                    required 
-                    value={editingStudent.studentId || editingStudent.portalId || ""}
-                    onChange={(e) => setEditingStudent({...editingStudent, studentId: e.target.value, portalId: e.target.value})}
-                  />
-                </div>
-                <div className="m-field">
-                  <label>Full Name</label>
-                  <input 
-                    type="text" 
-                    required 
-                    value={editingStudent.name}
-                    onChange={(e) => setEditingStudent({...editingStudent, name: e.target.value})}
-                  />
-                </div>
-                <div className="m-field">
-                  <label>Email Address</label>
-                  <input 
-                    type="email" 
-                    required 
-                    value={editingStudent.email}
-                    onChange={(e) => setEditingStudent({...editingStudent, email: e.target.value})}
-                  />
-                </div>
-                <div className="m-field">
-                  <label>Phone Number</label>
-                  <input 
-                    type="text" 
-                    value={editingStudent.phone || ""}
-                    onChange={(e) => setEditingStudent({...editingStudent, phone: e.target.value})}
-                  />
-                </div>
-                <div className="m-field">
-                  <label>Account Status</label>
-                  <select 
-                    value={editingStudent.status}
-                    onChange={(e) => setEditingStudent({...editingStudent, status: e.target.value})}
-                  >
-                    {STATUSES.map(s => <option key={s} value={s}>{s}</option>)}
-                  </select>
+                <div className="modal-grid">
+                  <div className="m-field">
+                    <label>Student ID / Portal ID</label>
+                    <input 
+                      type="text" 
+                      required 
+                      value={editingStudent.studentId || editingStudent.portalId || ""}
+                      onChange={(e) => setEditingStudent({...editingStudent, studentId: e.target.value, portalId: e.target.value})}
+                    />
+                  </div>
+                  <div className="m-field">
+                    <label>Account Status</label>
+                    <select 
+                      value={editingStudent.status}
+                      onChange={(e) => setEditingStudent({...editingStudent, status: e.target.value})}
+                    >
+                      {STATUSES.map(s => <option key={s} value={s}>{s}</option>)}
+                    </select>
+                  </div>
+                  <div className="m-field m-field--full">
+                    <label>Full Name</label>
+                    <input 
+                      type="text" 
+                      required 
+                      value={editingStudent.name}
+                      onChange={(e) => setEditingStudent({...editingStudent, name: e.target.value})}
+                    />
+                  </div>
+                  <div className="m-field">
+                    <label>Email Address</label>
+                    <input 
+                      type="email" 
+                      required 
+                      value={editingStudent.email}
+                      onChange={(e) => setEditingStudent({...editingStudent, email: e.target.value})}
+                    />
+                  </div>
+                  <div className="m-field">
+                    <label>Phone Number</label>
+                    <input 
+                      type="text" 
+                      value={editingStudent.phone || ""}
+                      onChange={(e) => setEditingStudent({...editingStudent, phone: e.target.value})}
+                    />
+                  </div>
                 </div>
                 <div className="m-warning">
                    ⚠️ Password reset is disabled in this module for security.

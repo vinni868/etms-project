@@ -6,9 +6,11 @@ import {
 } from "react-icons/fa";
 import { useEffect, useState, useRef } from "react";
 import { createPortal } from "react-dom";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import api from "../../api/axiosConfig";
 import "./AdminDashboard.css";
+import QuickPunch from "../../components/QuickPunch/QuickPunch";
+import AttendanceRules from "../../components/AttendanceRules/AttendanceRules";
 
 /* ── Constants ── */
 const PAGE_SIZE_APPROVAL = 8;
@@ -140,67 +142,7 @@ function Pagination({ currentPage, totalPages, onChange, total, pageSize }) {
    traps any child regardless of z-index).
    Position is calculated from the button's bounding rect.
    ══════════════════════════════════════════════════ */
-function NotifDropdown({ btnRef, pendingUsers, onViewAll }) {
-  const [pos, setPos] = useState({ top: 0, right: 0 });
-
-  useEffect(() => {
-    function reposition() {
-      if (!btnRef.current) return;
-      const r = btnRef.current.getBoundingClientRect();
-      setPos({
-        top:   r.bottom + window.scrollY + 8,
-        right: window.innerWidth - r.right,
-      });
-    }
-    reposition();
-    window.addEventListener("resize",  reposition);
-    window.addEventListener("scroll",  reposition, true);
-    return () => {
-      window.removeEventListener("resize",  reposition);
-      window.removeEventListener("scroll",  reposition, true);
-    };
-  }, [btnRef]);
-
-  return createPortal(
-    <div
-      className="adm-notif-drop adm-notif-drop--portal"
-      style={{ top: pos.top, right: pos.right }}
-    >
-      <div className="adm-notif-drop__head">
-        🔔 Pending Approvals
-        <span className="adm-notif-count">{pendingUsers.length}</span>
-      </div>
-      <div className="adm-notif-drop__body">
-        {pendingUsers.length > 0 ? pendingUsers.map(u => (
-          <div key={u.id} className="adm-notif-item">
-            <div className="adm-notif-item__avatar">
-              {u.name?.charAt(0).toUpperCase()}
-            </div>
-            <div>
-              <div className="adm-notif-item__name">{u.name}</div>
-              <div className="adm-notif-item__role">
-                {u.role?.roleName} · {u.email}
-              </div>
-              {u.role?.roleName !== "STUDENT" && (
-                <div className="adm-notif-item__alert" style={{color: '#f97316', fontSize: '10px', marginTop: '2px', fontWeight: '600'}}>
-                  (Pending Super Admin Approval)
-                </div>
-              )}
-            </div>
-          </div>
-        )) : (
-          <div className="adm-notif-empty">All caught up! No pending requests 🎉</div>
-        )}
-      </div>
-      {pendingUsers.length > 0 && (
-        <div className="adm-notif-drop__footer">
-          <button onClick={onViewAll}>View All Approvals →</button>
-        </div>
-      )}
-    </div>,
-    document.body
-  );
-}
+// Redundant NotifDropdown removed as notifications are now global in Navbar
 
 /* ══════════════════════════════════════════════════
    MAIN COMPONENT
@@ -213,8 +155,8 @@ function AdminDashboard() {
   });
   const [users,   setUsers]   = useState([]);
   const [loading, setLoading] = useState(false);
+  const [recentNotifs, setRecentNotifs] = useState([]);
 
-  const [showNotif,   setShowNotif]   = useState(false);
   const notifBtnRef  = useRef(null);   // on the <button>
   const notifWrapRef = useRef(null);   // on the wrapper div
 
@@ -276,7 +218,14 @@ function AdminDashboard() {
     }
   };
 
-  useEffect(() => { fetchDashboardData(); fetchAllUsers(); }, []);
+  const fetchRecentNotifs = async () => {
+    try {
+      const res = await api.get("/notifications/unread");
+      setRecentNotifs(res.data.slice(0, 5));
+    } catch (err) { console.error(err); }
+  };
+
+  useEffect(() => { fetchDashboardData(); fetchAllUsers(); fetchRecentNotifs(); }, []);
 
   const approveUser    = async (id) => { 
     let overrideId = window.prompt("To auto-generate ID, leave blank. To manually assign an ID, enter it below:");
@@ -287,7 +236,7 @@ function AdminDashboard() {
   const rejectUser     = async (id) => { await api.patch(`/admin/users/reject/${id}`);     fetchAllUsers(); };
   const deactivateUser = async (id) => { await api.patch(`/admin/users/${id}/status`); fetchAllUsers(); };
   const reactivateUser = async (id) => { await api.patch(`/admin/users/${id}/status`); fetchAllUsers(); fetchDashboardData(); };
-  const handleRefresh  = () => { fetchDashboardData(); fetchAllUsers(); };
+  const handleRefresh  = () => { fetchDashboardData(); fetchAllUsers(); fetchRecentNotifs(); };
 
   const pendingUsers  = users.filter(u => u.status === "PENDING" || u.approvalStatus === "PENDING");
   const pendingCount  = pendingUsers.length;
@@ -369,26 +318,18 @@ function AdminDashboard() {
               </div>
             </div>
 
-            {/* Notification bell — dropdown uses Portal to escape stacking context */}
             <div className="adm-notif-wrap" ref={notifWrapRef}>
-              <button
-                className="adm-notif-btn"
-                ref={notifBtnRef}
-                onClick={() => setShowNotif(v => !v)}
+              <div 
+                className="adm-notif-btn" 
+                style={{cursor: 'pointer'}} 
+                onClick={() => navigate("/admin/notifications")}
+                title="System Notifications"
               >
                 <FaBell />
-                {pendingCount > 0 && (
-                  <span className="adm-notif-badge">{pendingCount}</span>
+                {recentNotifs.length > 0 && (
+                  <span className="adm-notif-badge">{recentNotifs.length}</span>
                 )}
-              </button>
-
-              {showNotif && (
-                <NotifDropdown
-                  btnRef={notifBtnRef}
-                  pendingUsers={pendingUsers}
-                  onViewAll={() => { setActiveSection("approval"); setShowNotif(false); }}
-                />
-              )}
+              </div>
             </div>
 
             <button className="adm-refresh-btn" onClick={handleRefresh} title="Refresh">
@@ -410,6 +351,13 @@ function AdminDashboard() {
           ))}
         </div>
       </header>
+      {/* ══════════ QUICK PUNCH ══════════ */}
+      <div className="adm-punch-wrapper" style={{ margin: '30px 30px 20px', maxWidth: '400px' }}>
+        <QuickPunch />
+        <div style={{ marginTop: '1rem' }}>
+           <AttendanceRules />
+        </div>
+      </div>
 
       {/* ══════════ SECTION TABS ══════════ */}
       <div className="adm-section-tabs">
@@ -440,6 +388,28 @@ function AdminDashboard() {
           </span>
         </div>
       </div>
+
+      {/* ══════════ RECENT ACTIVITY WIDGET ══════════ */}
+      {recentNotifs.length > 0 && (
+        <div className="adm-activity-widget" style={{margin: '0 30px 30px', animation: 'fadeIn 0.5s ease-out'}}>
+          <div className="adm-card">
+            <div className="adm-card__toolbar">
+               <h3 className="adm-card__title">Recent System Activity</h3>
+               <Link to="/admin/notifications" className="adm-link" style={{fontSize: '12px'}}>History →</Link>
+            </div>
+            <div className="adm-activity-list" style={{display: 'flex', flexWrap: 'wrap', gap: '15px', padding: '15px'}}>
+              {recentNotifs.map(n => (
+                <div key={n.id} className="adm-activity-item" style={{
+                  flex: '1', minWidth: '250px', background: '#f8fafc', padding: '12px', borderLeft: '3px solid #2563eb', borderRadius: '8px'
+                }}>
+                  <div style={{fontSize: '13px', fontWeight: '600', color: '#1e293b', marginBottom: '4px'}}>{n.message}</div>
+                  <div style={{fontSize: '11px', color: '#64748b'}}>{new Date(n.createdAt).toLocaleTimeString()} · {n.type}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* ══════════════════════════════════════
           SECTION 1 — USER APPROVALS

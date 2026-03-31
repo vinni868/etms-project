@@ -1,6 +1,8 @@
 import React, { useEffect, useState, useCallback } from "react";
 import api from "../../api/axiosConfig";
 import { useNavigate } from "react-router-dom";
+import QuickPunch from "../../components/QuickPunch/QuickPunch";
+import AttendanceRules from "../../components/AttendanceRules/AttendanceRules";
 import {
   FaSync,
   FaUser,
@@ -257,24 +259,29 @@ function TrainerDashboard() {
 
       {/* ══════════════ BODY ══════════════ */}
       <div className="td-body">
+ 
+        <div className="td-left-col">
+          <QuickPunch />
+          <AttendanceRules />
 
-        {/* ── LEFT: Quick Actions ── */}
-        <div className="td-card td-card--actions">
-          <div className="td-card__head">
-            <h3 className="td-card__title">⚡ Quick Actions</h3>
-          </div>
-          <div className="td-actions-grid">
-            {QUICK_ACTIONS.map(({ label, icon: Icon, path, color, bg }) => (
-              <button
-                key={label}
-                className="td-action-tile"
-                style={{ "--tile-color": color, "--tile-bg": bg }}
-                onClick={() => navigate(path)}
-              >
-                <div className="td-action-tile__icon"><Icon /></div>
-                <span className="td-action-tile__label">{label}</span>
-              </button>
-            ))}
+          {/* ── LEFT: Quick Actions ── */}
+          <div className="td-card td-card--actions">
+            <div className="td-card__head">
+              <h3 className="td-card__title">⚡ Quick Actions</h3>
+            </div>
+            <div className="td-actions-grid">
+              {QUICK_ACTIONS.map(({ label, icon: Icon, path, color, bg }) => (
+                <button
+                  key={label}
+                  className="td-action-tile"
+                  style={{ "--tile-color": color, "--tile-bg": bg }}
+                  onClick={() => navigate(path)}
+                >
+                  <div className="td-action-tile__icon"><Icon /></div>
+                  <span className="td-action-tile__label">{label}</span>
+                </button>
+              ))}
+            </div>
           </div>
         </div>
 

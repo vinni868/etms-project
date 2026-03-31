@@ -10,8 +10,9 @@ import api from '../api/axiosConfig';
  *
  * @param {boolean}  isPunchedIn  - Whether the user currently has an active session
  * @param {function} onAutoCheckout - Callback when auto-checkout fires (to refresh UI)
+ * @param {function} onLocationError - Callback when location permission is denied
  */
-export default function useGeofenceWatcher(isPunchedIn, onAutoCheckout) {
+export default function useGeofenceWatcher(isPunchedIn, onAutoCheckout, onLocationError) {
   const watchIdRef        = useRef(null);
   const pollingRef        = useRef(null);
   const didCheckoutRef    = useRef(false);   // prevent double-firing
@@ -97,10 +98,21 @@ export default function useGeofenceWatcher(isPunchedIn, onAutoCheckout) {
       Notification.requestPermission();
     }
 
-    // watchPosition fires on significant movement
+    // 1. Layer 2: On-Load re-entry check (immediate check)
+    navigator.geolocation.getCurrentPosition(
+      (pos) => checkPosition(pos.coords.latitude, pos.coords.longitude),
+      (err) => {
+        if (onLocationError) onLocationError(err.message);
+      },
+      { enableHighAccuracy: true, timeout: 5000 }
+    );
+
+    // 2. Layer 1: watchPosition fires on significant movement
     watchIdRef.current = navigator.geolocation.watchPosition(
       (pos) => checkPosition(pos.coords.latitude, pos.coords.longitude),
-      () => {}, // ignore errors silently
+      (err) => {
+        if (err.code === 1 && onLocationError) onLocationError("PERMISSION_DENIED");
+      },
       { enableHighAccuracy: true, maximumAge: 15000, timeout: 10000 }
     );
 

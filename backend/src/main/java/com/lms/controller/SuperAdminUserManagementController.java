@@ -11,6 +11,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 import com.lms.service.UserService;
 import com.lms.service.IdGeneratorService;
+import com.lms.service.NotificationService;
 import com.lms.dto.RegisterRequest;
 import com.lms.repository.CourseRepository;
 import com.lms.entity.CourseMaster;
@@ -39,6 +40,9 @@ public class SuperAdminUserManagementController {
 
     @Autowired
     private CourseRepository courseRepository;
+
+    @Autowired
+    private NotificationService notificationService;
 
     @GetMapping("/all")
     public ResponseEntity<List<User>> getAllUsers() {
@@ -109,7 +113,9 @@ public class SuperAdminUserManagementController {
             user.setStudentId(sid);
         }
 
-        return ResponseEntity.ok(userRepository.save(user));
+        User savedUser = userRepository.save(user);
+        notificationService.createNotification("Super Admin created new " + roleName + ": " + user.getName(), "USER_CREATION", "ADMIN");
+        return ResponseEntity.ok(savedUser);
     }
 
     @PutMapping("/update/{id}")

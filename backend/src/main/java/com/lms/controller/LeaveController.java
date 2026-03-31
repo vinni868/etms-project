@@ -5,9 +5,11 @@ import com.lms.entity.User;
 import com.lms.repository.LeaveRequestRepository;
 import com.lms.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
+import com.lms.service.NotificationService;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -20,13 +22,22 @@ import com.lms.entity.ScheduledClass;
 import com.lms.entity.TrainerMarkedAttendance;
 
 @RestController
-@RequiredArgsConstructor
 public class LeaveController {
 
-    private final LeaveRequestRepository leaveRepo;
-    private final UserRepository userRepo;
-    private final ScheduledClassRepository classRepo;
-    private final AttendanceRepository attendanceRepo;
+    @Autowired
+    private LeaveRequestRepository leaveRepo;
+    
+    @Autowired
+    private UserRepository userRepo;
+    
+    @Autowired
+    private ScheduledClassRepository classRepo;
+    
+    @Autowired
+    private AttendanceRepository attendanceRepo;
+    
+    @Autowired
+    private NotificationService notificationService;
 
     /** POST /api/leave/request — student/staff submits leave */
     @PostMapping(value = "/api/leave/request", consumes = {"multipart/form-data"})
@@ -73,6 +84,12 @@ public class LeaveController {
         }
 
         leaveRepo.save(req);
+        notificationService.createNotification(
+            "New leave request from " + user.getName() + " for " + req.getFromDate() + " to " + req.getToDate(),
+            "LEAVE",
+            "ADMIN",
+            req.getId()
+        );
         return ResponseEntity.ok(Map.of("status", "success", "message", "Leave request submitted successfully."));
     }
 

@@ -1,7 +1,17 @@
+import QuickPunch from '../../components/QuickPunch/QuickPunch';
+import AttendanceRules from '../../components/AttendanceRules/AttendanceRules';
+
 function MarketerDashboard() {
   return (
-    <div>
+    <div style={{ padding: '20px' }}>
       <h2>Marketer Dashboard</h2>
+
+      <div style={{ margin: '20px 0', maxWidth: '400px' }}>
+        <QuickPunch />
+        <div style={{ marginTop: '1rem' }}>
+           <AttendanceRules />
+        </div>
+      </div>
 
       <div className="stats-grid">
         <div className="stat-card">

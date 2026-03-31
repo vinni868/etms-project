@@ -260,6 +260,20 @@ export default function SuperAdminAttendanceReport() {
                           <div>
                             <small>Punch In</small>
                             <div>{fmtTime(session.loginTime)}</div>
+                            {/* Field is always rendered now to prove existence */}
+                            <div style={{ fontSize: '0.75rem', marginTop: '4px', color: '#64748b' }}>
+                                Method: {!session.punchMethod ? 'Unknown (Legacy Record)' : 
+                                          session.punchMethod === 'QR_SCAN' ? '📷 QR' : '⚡ Quick'}
+                            </div>
+                            
+                            {session.distanceIn != null && (
+                                <div style={{ 
+                                    fontSize: '0.75rem', 
+                                    color: session.distanceIn > 180 ? '#ea580c' : '#64748b' 
+                                }}>
+                                    Distance: {Math.round(session.distanceIn)}m
+                                </div>
+                            )}
                           </div>
                         </div>
                         <div className="sa-tl-time">
@@ -271,6 +285,20 @@ export default function SuperAdminAttendanceReport() {
                                 <span className="sa-time-active">Active Now</span>
                               )}
                             </div>
+                            
+                            {/* Always show reason if checked out */}
+                            {session.logoutTime && (
+                                <div style={{ 
+                                    fontSize: '0.75rem', marginTop: '4px',
+                                    fontWeight: 600,
+                                    color: (session.checkoutReason === 'System Closed' || session.checkoutReason === 'MIDNIGHT_AUTO_CLOSE' || session.checkoutReason === 'GEOFENCE_EXIT') ? '#ea580c' : '#10b981' 
+                                }}>
+                                    Reason: {!session.checkoutReason ? 'Manual / Unknown' : 
+                                             session.checkoutReason === 'MIDNIGHT_AUTO_CLOSE' ? 'System Automatically Logout' :
+                                             session.checkoutReason === 'GEOFENCE_EXIT' ? 'Auto: Left Area' :
+                                             session.checkoutReason}
+                                </div>
+                            )}
                           </div>
                         </div>
                       </div>

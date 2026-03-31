@@ -43,6 +43,10 @@ export default function SuperAdminDashboard() {
   const [error, setError]         = useState(null);
   const [activeNav, setActiveNav] = useState("dashboard");
   const [collapsed, setCollapsed] = useState(false);
+  const [punchSettings, setPunchSettings] = useState({
+    latitude: 0, longitude: 0, radiusMeters: 200, lateThreshold: "10:00"
+  });
+  const [savetip, setSavetip] = useState("");
 
   useEffect(() => { fetchDashboard(); }, []);
 
@@ -50,11 +54,21 @@ export default function SuperAdminDashboard() {
     try {
       const res = await api.get("/superadmin/dashboard");
       setDashboard(res.data);
+      fetchPunchSettings();
     } catch (err) {
       if (err.response?.status === 401) handleLogout();
       else setError("Connection lost. Please retry.");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchPunchSettings = async () => {
+    try {
+      const res = await api.get("/qr/punch-settings");
+      setPunchSettings(res.data);
+    } catch (err) {
+      console.error("Failed to fetch punch settings", err);
     }
   };
 
@@ -71,6 +85,33 @@ export default function SuperAdminDashboard() {
     { key: "messages",  label: "Messages",         icon: "📩", path: "/superadmin/messages", badge: true },
     { key: "analytics", label: "Analytics",        icon: "📊", path: "/superadmin/analytics" },
   ];
+
+  const handleAutoDetect = () => {
+    if (!navigator.geolocation) {
+      alert("Geolocation is not supported by your browser");
+      return;
+    }
+    navigator.geolocation.getCurrentPosition((pos) => {
+      setPunchSettings(prev => ({
+        ...prev,
+        latitude: pos.coords.latitude,
+        longitude: pos.coords.longitude
+      }));
+      setSavetip("Detected! Remember to Save Changes.");
+    }, (err) => {
+      alert("Error detecting location: " + err.message);
+    });
+  };
+
+  const handleSaveSettings = async () => {
+    try {
+      await api.post("/qr/punch-settings", punchSettings);
+      setSavetip("Settings saved successfully! ✅");
+      setTimeout(() => setSavetip(""), 3000);
+    } catch (err) {
+      alert("Failed to save settings: " + (err.response?.data?.message || err.message));
+    }
+  };
 
   /* ── LOADING ── */
   if (loading) return (
@@ -298,6 +339,50 @@ export default function SuperAdminDashboard() {
                 <HealthRow label="CDN / Assets" status="Operational"      dot="green" />
                 <HealthRow label="Auth Server"  status="Secure"           dot="green" />
               </ul>
+            </div>
+
+            {/* Attendance Configuration */}
+            <div className="sa-card sa-settings-card">
+              <div className="sa-card-hd">
+                <div className="sa-card-ic" style={{ background: "#f0fdf4" }}>📍</div>
+                <h3>Attendance Configuration</h3>
+                <span className="sa-badge blue">GEOFENCING</span>
+              </div>
+              <div className="sa-settings-form" style={{ padding: '15px' }}>
+                <p style={{ fontSize: '12px', color: '#64748b', marginBottom: '15px' }}>
+                  Set your institute's coordinates to restrict "Quick Punch" usage.
+                </p>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginBottom: '15px' }}>
+                  <div className="sa-form-group">
+                    <label style={{ fontSize: '11px', fontWeight: '600', color: '#475569' }}>Latitude</label>
+                    <input type="number" step="any" value={punchSettings.latitude} 
+                      onChange={e => setPunchSettings({...punchSettings, latitude: parseFloat(e.target.value)})}
+                      className="sa-input" style={{ width: '100%', padding: '8px', border: '1px solid #e2e8f0', borderRadius: '6px' }} />
+                  </div>
+                  <div className="sa-form-group">
+                    <label style={{ fontSize: '11px', fontWeight: '600', color: '#475569' }}>Longitude</label>
+                    <input type="number" step="any" value={punchSettings.longitude} 
+                      onChange={e => setPunchSettings({...punchSettings, longitude: parseFloat(e.target.value)})}
+                      className="sa-input" style={{ width: '100%', padding: '8px', border: '1px solid #e2e8f0', borderRadius: '6px' }} />
+                  </div>
+                </div>
+                <div className="sa-form-group" style={{ marginBottom: '15px' }}>
+                  <label style={{ fontSize: '11px', fontWeight: '600', color: '#475569' }}>Allowed Radius (Meters)</label>
+                  <input type="number" value={punchSettings.radiusMeters} 
+                    onChange={e => setPunchSettings({...punchSettings, radiusMeters: parseFloat(e.target.value)})}
+                    className="sa-input" style={{ width: '100%', padding: '8px', border: '1px solid #e2e8f0', borderRadius: '6px' }} />
+                </div>
+                
+                <div style={{ display: 'flex', gap: '10px' }}>
+                  <button className="sa-btn sa-btn--secondary" onClick={handleAutoDetect} style={{ flex: 1, fontSize: '12px' }}>
+                    🛰 Detect My Location
+                  </button>
+                  <button className="sa-btn sa-btn--primary" onClick={handleSaveSettings} style={{ flex: 1, fontSize: '12px', background: '#2563eb', color: '#fff' }}>
+                    💾 Save Changes
+                  </button>
+                </div>
+                {savetip && <div style={{ marginTop: '12px', fontSize: '12px', color: '#059669', textAlign: 'center', fontWeight: '600' }}>{savetip}</div>}
+              </div>
             </div>
 
             {/* Quick Actions */}

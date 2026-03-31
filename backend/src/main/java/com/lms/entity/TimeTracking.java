@@ -32,6 +32,21 @@ public class TimeTracking {
     @Column(name = "total_minutes")
     private Integer totalMinutes;
 
+    @Column(name = "latitude")
+    private Double latitude;
+
+    @Column(name = "longitude")
+    private Double longitude;
+
+    @Column(name = "distance_from_office")
+    private Double distanceFromOffice;
+
+    @Column(name = "punch_method")
+    private String punchMethod; // "QR_SCAN", "QUICK_PUNCH"
+
+    @Column(name = "checkout_reason")
+    private String checkoutReason; // "MANUAL", "GEOFENCE_EXIT", "MIDNIGHT_AUTO_CLOSE"
+
     @Column(name = "created_at")
     private LocalDateTime createdAt = LocalDateTime.now();
 }

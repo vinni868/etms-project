@@ -14,6 +14,7 @@ import {
   FaBriefcase
 } from 'react-icons/fa';
 import GlobalAnnouncementPopup from "../components/GlobalAnnouncementPopup";
+import NotificationDropdown from "../components/NotificationDropdown";
 import "./DashboardLayout.css";
 
 function DashboardLayout() {
@@ -320,6 +321,7 @@ function DashboardLayout() {
           </nav>
 
           <div className="user-actions-right">
+            {(user?.role === "ADMIN" || user?.role === "SUPERADMIN") && <NotificationDropdown />}
             <div className="user-role-badge">
               <div className="role-badge-content">
                 <span className="role-text-label">{user?.role?.replace("_", " ")}</span>

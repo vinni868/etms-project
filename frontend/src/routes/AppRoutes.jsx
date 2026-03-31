@@ -82,6 +82,7 @@ import AdminAnnouncements from "../pages/admin/AdminAnnouncements";
 import AdminLeaves from "../pages/admin/AdminLeaves";
 import PostJob from "../pages/admin/PostJob";
 import ManageJobs from "../pages/admin/ManageJobs";
+import NotificationsPage from "../pages/admin/NotificationsPage";
 
 /* ================= MARKETER ================= */
 import MarketerDashboard from "../pages/marketer/MarketerDashboard";
@@ -182,6 +183,7 @@ export default function AppRoutes() {
         <Route path="attendance-report" element={<SuperAdminAttendanceReport />} />
         <Route path="announcements"     element={<AdminAnnouncements />} />
         <Route path="leave"             element={<AdminLeaves />} />
+        <Route path="notifications"     element={<NotificationsPage />} />
       </Route>
 
       {/* ================= ADMIN ================= */}
@@ -213,6 +215,7 @@ export default function AppRoutes() {
         <Route path="profile"        element={<AdminProfile />} />
         <Route path="leave"          element={<AdminLeaves />} />
         <Route path="my-leave"       element={<TrainerLeaves />} />
+        <Route path="notifications"  element={<NotificationsPage />} />
         
         {/* Career Hub */}
         <Route path="post-job"           element={<PostJob />} />

@@ -2,6 +2,8 @@ import { useState, useEffect } from 'react';
 import api from '../../api/axiosConfig';
 import { FaUserMd, FaVideo, FaCheck, FaStickyNote, FaCalendarAlt } from 'react-icons/fa';
 import './CounselorDashboard.css';
+import QuickPunch from '../../components/QuickPunch/QuickPunch';
+import AttendanceRules from '../../components/AttendanceRules/AttendanceRules';
 
 export default function CounselorDashboard() {
   const [sessions, setSessions] = useState([]);
@@ -67,6 +69,13 @@ export default function CounselorDashboard() {
             <h1>Counselor Dashboard</h1>
             <p className="page-subtitle">Manage student academic & mental health counseling sessions</p>
           </div>
+        </div>
+      </div>
+
+      <div style={{ margin: '20px 0', maxWidth: '400px' }}>
+        <QuickPunch />
+        <div style={{ marginTop: '1rem' }}>
+           <AttendanceRules />
         </div>
       </div>
 

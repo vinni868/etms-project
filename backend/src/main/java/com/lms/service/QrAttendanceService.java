@@ -79,7 +79,10 @@ public class QrAttendanceService {
             dto.put("loginTime",     t.getLoginTime().toString());
             dto.put("logoutTime",    t.getLogoutTime() != null ? t.getLogoutTime().toString() : null);
             dto.put("totalMinutes",  t.getTotalMinutes());
-            dto.put("sessionCount",  1); // each TimeTracking = 1 session
+            dto.put("punchMethod",   t.getPunchMethod());
+            dto.put("checkoutReason", t.getCheckoutReason());
+            dto.put("distanceIn",    t.getDistanceFromOffice());
+            dto.put("sessionCount",  1); 
             logDtos.add(dto);
         }
 
@@ -131,6 +134,11 @@ public class QrAttendanceService {
             dto.put("loginTime",     t.getLoginTime().toString());
             dto.put("logoutTime",    t.getLogoutTime() != null ? t.getLogoutTime().toString() : null);
             dto.put("totalMinutes",  t.getTotalMinutes());
+            dto.put("punchMethod",   t.getPunchMethod());
+            dto.put("checkoutReason", t.getCheckoutReason());
+            dto.put("distanceIn",    t.getDistanceFromOffice());
+            dto.put("lat",           t.getLatitude());
+            dto.put("lng",           t.getLongitude());
             
             logDtos.add(dto);
         }
@@ -163,34 +171,9 @@ public class QrAttendanceService {
                     "Invalid or expired QR code. Please scan the current one displayed at the institute.");
         }
 
-        // 4. Geolocation check
-        Double lat = request.getLatitude();
-        Double lng = request.getLongitude();
-
-        String officeLat  = getSetting("office_latitude",      "0.0");
-        String officeLng  = getSetting("office_longitude",     "0.0");
-        String radiusStr  = getSetting("office_radius_meters", "200");
-
-        if (lat != null && lng != null) {
-            if (!"0.0".equals(officeLat) && !"0.0".equals(officeLng)) {
-                double oLat   = parseDouble(officeLat);
-                double oLng   = parseDouble(officeLng);
-                double radius = parseDouble(radiusStr);
-                double dist   = HaversineUtil.distanceMeters(lat, lng, oLat, oLng);
-
-                if (dist > radius) {
-                    throw new ResponseStatusException(HttpStatus.FORBIDDEN,
-                            String.format("You are %dm away from the office. QR scan is only allowed within %dm. " +
-                                    "Please move closer to the institute.", (int) dist, (int) radius));
-                }
-            }
-        } else {
-            // Location not provided — reject only if office coords are configured
-            if (!"0.0".equals(officeLat)) {
-                throw new ResponseStatusException(HttpStatus.FORBIDDEN,
-                        "Location access is required to punch in. Please enable location services in your browser.");
-            }
-        }
+        // 4. Geolocation check & Distance calculation
+        double distance = calculateDistance(request.getLatitude(), request.getLongitude());
+        validateLocation(request.getLatitude(), request.getLongitude());
 
         // 5. Punch In / Out Toggle
         LocalDate today = LocalDate.now();
@@ -211,6 +194,10 @@ public class QrAttendanceService {
             record.setDate(today);
             record.setLoginTime(now);
             record.setCreatedAt(now);
+            record.setLatitude(request.getLatitude());
+            record.setLongitude(request.getLongitude());
+            record.setDistanceFromOffice(distance);
+            record.setPunchMethod("QR_SCAN");
             trackingRepo.save(record);
 
             message = String.format("Punch In successful! Session #%d started.", sessionNumber);
@@ -226,6 +213,7 @@ public class QrAttendanceService {
             // ─ CASE B: Punch Out ─
             int sessionNumber = todayRecords.size();
             latest.setLogoutTime(now);
+            latest.setCheckoutReason("MANUAL");
 
             long diffMinutes = java.time.Duration.between(latest.getLoginTime(), now).toMinutes();
             latest.setTotalMinutes((int) diffMinutes);
@@ -255,7 +243,7 @@ public class QrAttendanceService {
 
     // ─── Direct Punch In (portal authenticated, no QR token) ─────────────────
     @Transactional
-    public Map<String, Object> directPunchIn(Long userId) {
+    public Map<String, Object> directPunchIn(Long userId, Double latitude, Double longitude) {
         User user = userRepo.findById(userId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
 
@@ -263,6 +251,10 @@ public class QrAttendanceService {
         if ("SUPER_ADMIN".equals(roleName) || "SUPERADMIN".equals(roleName)) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Super Admins are exempt from punch-in.");
         }
+
+        // Location Check
+        double distance = calculateDistance(latitude, longitude);
+        validateLocation(latitude, longitude);
 
         LocalDate today = LocalDate.now();
         LocalDateTime now = LocalDateTime.now();
@@ -279,6 +271,10 @@ public class QrAttendanceService {
         record.setDate(today);
         record.setLoginTime(now);
         record.setCreatedAt(now);
+        record.setLatitude(latitude);
+        record.setLongitude(longitude);
+        record.setDistanceFromOffice(distance);
+        record.setPunchMethod("QUICK_PUNCH");
         trackingRepo.save(record);
 
         int sessionNumber = trackingRepo.findByUserIdAndDateOrderByLoginTimeDesc(userId, today).size();
@@ -294,9 +290,12 @@ public class QrAttendanceService {
 
     // ─── Direct Punch Out (portal authenticated, no QR token) ────────────────
     @Transactional
-    public Map<String, Object> directPunchOut(Long userId) {
+    public Map<String, Object> directPunchOut(Long userId, Double latitude, Double longitude) {
         User user = userRepo.findById(userId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
+
+        // Location Check
+        validateLocation(latitude, longitude);
 
         LocalDate today = LocalDate.now();
         LocalDateTime now = LocalDateTime.now();
@@ -309,6 +308,7 @@ public class QrAttendanceService {
 
         TimeTracking record = openOpt.get();
         record.setLogoutTime(now);
+        record.setCheckoutReason("MANUAL");
         long diffMinutes = java.time.Duration.between(record.getLoginTime(), now).toMinutes();
         record.setTotalMinutes((int) diffMinutes);
         trackingRepo.save(record);
@@ -325,6 +325,90 @@ public class QrAttendanceService {
             "totalMinutes",  (int) diffMinutes,
             "duration",      duration
         );
+    }
+
+    // ─── Auto-Checkout (Geofence Exit or Manual Trigger) ───────────────────
+    @Transactional
+    public Map<String, Object> autoCheckout(Long userId, String reason) {
+        LocalDate today = LocalDate.now();
+        LocalDateTime now = LocalDateTime.now();
+
+        Optional<TimeTracking> openOpt = trackingRepo.findOpenSessionForToday(userId, today);
+        if (openOpt.isEmpty()) {
+            return Map.of("status", "ALREADY_CLOSED", "message", "No active session found.");
+        }
+
+        TimeTracking record = openOpt.get();
+        record.setLogoutTime(now);
+        record.setCheckoutReason(reason != null ? reason : "GEOFENCE_EXIT");
+        long diffMinutes = java.time.Duration.between(record.getLoginTime(), now).toMinutes();
+        record.setTotalMinutes((int) diffMinutes);
+        trackingRepo.save(record);
+
+        long hours = diffMinutes / 60;
+        long mins  = diffMinutes % 60;
+        String duration = hours > 0 ? String.format("%dh %dm", hours, mins) : String.format("%dm", mins);
+
+        return Map.of(
+            "status",        "CHECKED_OUT",
+            "reason",        reason,
+            "logoutTime",    now.toString(),
+            "totalMinutes",  (int) diffMinutes,
+            "duration",      duration
+        );
+    }
+
+    // ─── Midnight Auto-Checkout for ALL users ───────────────────────────────
+    @Transactional
+    public void autoCheckoutAllOpenSessions(LocalDate date) {
+        List<TimeTracking> openSessions = trackingRepo.findAllOpenSessionsForDate(date);
+        LocalDateTime endOfDay = date.atTime(23, 59, 0);
+
+        for (TimeTracking session : openSessions) {
+            session.setLogoutTime(endOfDay);
+            session.setCheckoutReason("MIDNIGHT_AUTO_CLOSE");
+            long diffMinutes = java.time.Duration.between(session.getLoginTime(), endOfDay).toMinutes();
+            session.setTotalMinutes((int) diffMinutes);
+            trackingRepo.save(session);
+        }
+    }
+
+    // ─── Geofencing Helper ──────────────────────────────────────────────────
+    private void validateLocation(Double lat, Double lng) {
+        String officeLat  = getSetting("office_latitude",      "0.0");
+        String officeLng  = getSetting("office_longitude",     "0.0");
+        String radiusStr  = getSetting("office_radius_meters", "200");
+
+        if (lat != null && lng != null) {
+            if (!"0.0".equals(officeLat) && !"0.0".equals(officeLng)) {
+                double oLat   = parseDouble(officeLat);
+                double oLng   = parseDouble(officeLng);
+                double radius = parseDouble(radiusStr);
+                double dist   = HaversineUtil.distanceMeters(lat, lng, oLat, oLng);
+
+                if (dist > radius) {
+                    throw new ResponseStatusException(HttpStatus.FORBIDDEN,
+                            String.format("You are %dm away from the office. Punching is only allowed within %dm. " +
+                                    "Please move closer to the institute.", (int) dist, (int) radius));
+                }
+            }
+        } else {
+            // Location not provided — reject only if office coords are configured
+            if (!"0.0".equals(officeLat)) {
+                throw new ResponseStatusException(HttpStatus.FORBIDDEN,
+                        "Location access is required to punch in/out. Please enable location services in your browser.");
+            }
+        }
+        }
+    }
+
+    private double calculateDistance(Double lat, Double lng) {
+        if (lat == null || lng == null) return 0.0;
+        String officeLat = getSetting("office_latitude", "0.0");
+        String officeLng = getSetting("office_longitude", "0.0");
+        if ("0.0".equals(officeLat) || "0.0".equals(officeLng)) return 0.0;
+
+        return HaversineUtil.distanceMeters(lat, lng, parseDouble(officeLat), parseDouble(officeLng));
     }
 
     // ─── Helpers ─────────────────────────────────────────────────────────────

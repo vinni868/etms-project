@@ -1,7 +1,7 @@
-import { useState, useEffect } from 'react';
 import api from '../../api/axiosConfig';
 import QrScannerModal from '../../components/QrScannerModal';
 import useGeofenceWatcher from '../../hooks/useGeofenceWatcher';
+import AttendanceRules from '../../components/AttendanceRules/AttendanceRules';
 import './StudentTimeTracking.css';
 
 /**
@@ -23,6 +23,7 @@ export default function StudentTimeTracking() {
   const [scannerOpen,   setScannerOpen]   = useState(false);
   const [toast,         setToast]         = useState(null);
   const [now,           setNow]           = useState(new Date());
+  const [gpsError,      setGpsError]      = useState(null);
 
   // Live clock
   useEffect(() => {
@@ -63,7 +64,15 @@ export default function StudentTimeTracking() {
     showToast('warning', `📍 Auto checked-out — you left the institute. Duration: ${data.duration}`);
     loadData();
   };
-  useGeofenceWatcher(isPunchedIn, handleAutoCheckout);
+  
+  const handleGpsError = (err) => {
+    setGpsError(err === "PERMISSION_DENIED" 
+      ? "Location access is blocked. Please enable GPS in your browser settings to use Punch features." 
+      : `Location error: ${err}`
+    );
+  };
+
+  useGeofenceWatcher(isPunchedIn, handleAutoCheckout, handleGpsError);
 
   /* ─── Quick Direct Punch (No QR) ─── */
   const handleDirectPunch = async () => {
@@ -158,6 +167,19 @@ export default function StudentTimeTracking() {
           <span className="stt-clock-date">{dateStr}</span>
         </div>
       </div>
+
+      <AttendanceRules />
+
+      {/* ── GPS Warning ── */}
+      {gpsError && (
+        <div style={{
+          backgroundColor: '#fff7ed', border: '1.5px solid #fed7aa', color: '#ea580c',
+          padding: '1rem', borderRadius: '12px', marginBottom: '1.5rem',
+          display: 'flex', alignItems: 'center', gap: '0.75rem', fontWeight: 600
+        }}>
+          ⚠️ {gpsError}
+        </div>
+      )}
 
       {/* ── Status Row ── */}
       <div className="stt-stats-row">
@@ -318,7 +340,8 @@ export default function StudentTimeTracking() {
                   <th>First In</th>
                   <th>Last Out</th>
                   <th>Total Hours</th>
-                  <th>Sessions</th>
+                  <th>Method</th>
+                  <th>Status/Reason</th>
                 </tr>
               </thead>
               <tbody>
@@ -328,7 +351,16 @@ export default function StudentTimeTracking() {
                     <td className="time-in">{fmtTime(log.loginTime)}</td>
                     <td className="time-out">{fmtTime(log.logoutTime)}</td>
                     <td className="duration">{fmtDuration(log.totalMinutes)}</td>
-                    <td>{log.sessionCount || 1} session{(log.sessionCount || 1) !== 1 ? 's' : ''}</td>
+                    <td className="method">
+                      {log.punchMethod === 'QR_SCAN' ? '📷 QR' : '⚡ Quick'}
+                    </td>
+                    <td>
+                      <span className={`stt-badge-reason ${log.checkoutReason?.toLowerCase()}`}>
+                        {log.checkoutReason === 'MIDNIGHT_AUTO_CLOSE' ? 'System Auto-Closed' : 
+                         log.checkoutReason === 'GEOFENCE_EXIT' ? 'Location Violation' : 
+                         log.checkoutReason || 'Manual'}
+                      </span>
+                    </td>
                   </tr>
                 ))}
               </tbody>

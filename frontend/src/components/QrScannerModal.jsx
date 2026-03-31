@@ -44,7 +44,7 @@ export default function QrScannerModal({ isOpen, onClose, onSuccess }) {
           },
           () => {
             locationRef.current = null;
-            setScanMsg('Warning: Location denied. Scan may be rejected by server.');
+            setScanMsg('Location denied. Please enable GPS in your browser settings to scan.');
             resolve();
           },
           { enableHighAccuracy: true, timeout: 10000 }
@@ -129,9 +129,12 @@ export default function QrScannerModal({ isOpen, onClose, onSuccess }) {
       if (locationRef.current) {
         body.latitude  = locationRef.current.lat;
         body.longitude = locationRef.current.lng;
+      } else {
+        setScanResult({ success: false, message: 'Location is required. Please enable GPS and try again.' });
+        return;
       }
 
-      const res = await api.post('/qr/punch', body);
+      const res = await api.post('/qr/scan', body);
       const data = res.data;
 
       setScanResult({ success: true, message: data.message, sessionInfo: data.sessionInfo });

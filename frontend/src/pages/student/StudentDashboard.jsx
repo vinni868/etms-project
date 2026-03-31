@@ -2,6 +2,8 @@ import { useState, useRef, useEffect, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
 import api from "../../api/axiosConfig";
 import "./StudentDashboard.css";
+import QuickPunch from "../../components/QuickPunch/QuickPunch";
+import AttendanceRules from "../../components/AttendanceRules/AttendanceRules";
 
 /* ══════════════════════════════════════════════════
    SESSION-BASED ACTIVITY TRACKER
@@ -603,6 +605,13 @@ function StudentDashboard() {
       {/* ══════════ OVERVIEW TAB ══════════ */}
       {activeTab === "overview" && (
         <div className="sd-grid-3">
+
+          <div className="sd-card sd-punch-card-wrapper">
+             <QuickPunch />
+             <div style={{ marginTop: '1rem' }}>
+                <AttendanceRules />
+             </div>
+          </div>
 
           <div className="sd-card">
             <div className="sd-card-head"><h2>⚡ Quick Actions</h2></div>

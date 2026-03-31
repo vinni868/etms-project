@@ -51,6 +51,7 @@ public class SecurityConfig {
                 .requestMatchers(org.springframework.security.web.util.matcher.AntPathRequestMatcher.antMatcher("/api/trainer/**")).hasRole("TRAINER")
                 .requestMatchers(org.springframework.security.web.util.matcher.AntPathRequestMatcher.antMatcher("/api/student/profile/**")).hasAnyRole("STUDENT", "ADMIN", "SUPERADMIN")
                 .requestMatchers(org.springframework.security.web.util.matcher.AntPathRequestMatcher.antMatcher("/api/student/**")).hasRole("STUDENT")
+                .requestMatchers(org.springframework.security.web.util.matcher.AntPathRequestMatcher.antMatcher("/api/notifications/**")).authenticated()
                 .anyRequest().authenticated();
             })
             .sessionManagement(sess -> sess.sessionCreationPolicy(SessionCreationPolicy.STATELESS))

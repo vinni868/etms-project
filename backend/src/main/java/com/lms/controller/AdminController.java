@@ -14,6 +14,7 @@ import org.springframework.web.multipart.MultipartFile;
 import com.lms.service.AdminService;
 import com.lms.service.UserService;
 import com.lms.service.IdGeneratorService;
+import com.lms.service.NotificationService;
 
 import com.lms.dto.*;
 import com.lms.entity.*;
@@ -61,6 +62,9 @@ public class AdminController {
 
     @Autowired
     private AdminProfileRepository adminProfileRepository;
+
+    @Autowired
+    private NotificationService notificationService;
 
     @Autowired
     private CertificateRepository certificateRepository;
@@ -655,7 +659,8 @@ public ResponseEntity<?> createTrainer(@RequestBody Map<String, String> payload)
         trainer.setPhone(phone);
         trainer.setPassword(passwordEncoder.encode(plainPass)); // hashed
         trainer.setPlainPassword(plainPass);
-        trainer.setStatus(Status.PENDING); // Admin-created trainers require SuperAdmin approval
+        trainer.setStatus(Status.ACTIVE); // Auto-approved if created by Admin
+        trainer.setApprovalStatus(com.lms.enums.ApprovalStatus.APPROVED);
         
         // ✅ MANUAL OR AUTO-GENERATED ID
         String trainerId = payload.get("studentId");
@@ -676,8 +681,9 @@ public ResponseEntity<?> createTrainer(@RequestBody Map<String, String> payload)
         trainer.setRole(role);
 
         userRepository.save(trainer);
+        notificationService.createNotification("New trainer profile created: " + trainer.getName(), "USER_CREATION", "ADMIN");
 
-        return ResponseEntity.ok(Map.of("message", "Trainer created! Note: This role requires Super Admin approval specifically."));
+        return ResponseEntity.ok(Map.of("message", "Trainer created and approved successfully!"));
 
     } catch (Exception e) {
         return ResponseEntity.badRequest()
@@ -777,8 +783,9 @@ public ResponseEntity<?> updateTrainer(@PathVariable Long id,
         user.setPassword(passwordEncoder.encode(plainPass));
         user.setPlainPassword(plainPass);
         
-        // ALL Admin-created users must be approved by SuperAdmin first
-        user.setStatus(Status.PENDING);
+        // Auto-approved if created by Admin
+        user.setStatus(Status.ACTIVE);
+        user.setApprovalStatus(com.lms.enums.ApprovalStatus.APPROVED);
         user.setRole(role);
 
         // ✅ MANUAL OR AUTO-GENERATED ID
@@ -809,20 +816,10 @@ public ResponseEntity<?> updateTrainer(@PathVariable Long id,
         }
 
         userRepository.save(user);
-
-        // ✅ AUTO-ENROL IF COURSE IS SELECTED
-        if (roleName.equals("STUDENT") && payload.get("courseId") != null && !payload.get("courseId").isEmpty()) {
-            try {
-                Long cId = Long.valueOf(payload.get("courseId"));
-                String mode = payload.getOrDefault("courseMode", "OFFLINE");
-                adminService.mapStudentToCourse(user.getId(), cId, null, null, mode);
-            } catch (Exception e) {
-                System.err.println("AUTO_ENROL_ERR: " + e.getMessage());
-            }
-        }
+        notificationService.createNotification("New student profile created: " + user.getName(), "USER_CREATION", "ADMIN");
 
         return ResponseEntity.ok(Map.of(
-            "message", "User " + user.getName() + " created successfully! Waiting for Super Admin approval."
+            "message", "User " + user.getName() + " created and approved successfully!"
         ));
     }
 
