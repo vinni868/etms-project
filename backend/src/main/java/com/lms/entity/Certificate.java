@@ -23,8 +23,12 @@ public class Certificate {
     @Column(name = "file_name", nullable = false)
     private String fileName;
 
-    @Column(name = "file_path", nullable = false)
+    @Column(name = "file_path")
     private String filePath;
+
+    @Lob
+    @Column(name = "file_data", columnDefinition = "LONGBLOB")
+    private byte[] fileData;
 
     @Column(name = "issue_date", nullable = false)
     private LocalDate issueDate;
@@ -44,6 +48,16 @@ public class Certificate {
         this.issueDate = issueDate;
         this.visibleFrom = visibleFrom;
     }
+
+    public Certificate(User student, String courseName, String fileName, byte[] fileData, LocalDate issueDate, java.time.LocalDateTime visibleFrom) {
+        this.student = student;
+        this.courseName = courseName;
+        this.fileName = fileName;
+        this.fileData = fileData;
+        this.issueDate = issueDate;
+        this.visibleFrom = visibleFrom;
+    }
+
 
     // Getters and setters
     public Long getId() {
@@ -84,6 +98,14 @@ public class Certificate {
 
     public void setFilePath(String filePath) {
         this.filePath = filePath;
+    }
+
+    public byte[] getFileData() {
+        return fileData;
+    }
+
+    public void setFileData(byte[] fileData) {
+        this.fileData = fileData;
     }
 
     public LocalDate getIssueDate() {

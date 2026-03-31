@@ -436,23 +436,34 @@ public class StudentController {
         try {
             Long studentId = getLoggedInStudentId();
             Certificate cert = certificateRepository.findById(certId).orElseThrow(() -> new RuntimeException("Certificate not found"));
-            
+
             if (!cert.getStudent().getId().equals(studentId)) {
                 return ResponseEntity.status(403).body("Unauthorized access to this certificate");
             }
-            
-            java.io.File file = new java.io.File(cert.getFilePath());
-            if (!file.exists()) {
-                return ResponseEntity.status(404).body("Certificate file not found on server");
+
+            byte[] fileBytes = cert.getFileData();
+
+            // Fallback: try reading from filePath if fileData is not stored in DB (legacy certificates)
+            if (fileBytes == null || fileBytes.length == 0) {
+                if (cert.getFilePath() != null) {
+                    java.io.File file = new java.io.File(cert.getFilePath());
+                    if (file.exists()) {
+                        fileBytes = java.nio.file.Files.readAllBytes(file.toPath());
+                    }
+                }
+                if (fileBytes == null || fileBytes.length == 0) {
+                    return ResponseEntity.status(404).body("Certificate file not available. Please contact admin to re-upload.");
+                }
             }
-            
-            org.springframework.core.io.Resource resource = new org.springframework.core.io.FileSystemResource(file);
-            String contentDisposition = mode.equalsIgnoreCase("download") ? "attachment; filename=\"" + cert.getFileName() + "\"" : "inline";
-            
+
+            String contentDisposition = mode.equalsIgnoreCase("download")
+                    ? "attachment; filename=\"" + cert.getFileName() + "\""
+                    : "inline; filename=\"" + cert.getFileName() + "\"";
+
             return ResponseEntity.ok()
                     .header("Content-Type", "application/pdf")
                     .header("Content-Disposition", contentDisposition)
-                    .body(resource);
+                    .body(fileBytes);
         } catch (Exception e) {
             return ResponseEntity.status(500).body("Failed to retrieve certificate");
         }

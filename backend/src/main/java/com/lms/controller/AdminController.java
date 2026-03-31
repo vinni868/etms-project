@@ -1487,35 +1487,23 @@ public ResponseEntity<?> updateAdminAttendance(
             @RequestParam("file") MultipartFile file) {
         try {
             User student = userRepository.findById(studentId).orElseThrow(() -> new RuntimeException("Student not found"));
-            
+
             if (file == null || file.isEmpty()) {
                 throw new RuntimeException("No file provided");
             }
-            
-            String uploadDir = System.getProperty("user.dir") + "/uploads/certificates/";
-            java.io.File directory = new java.io.File(uploadDir);
-            if (!directory.exists()) {
-                directory.mkdirs();
-            }
-            
+
             String originalFileName = file.getOriginalFilename();
-            String extension = "";
-            if (originalFileName != null && originalFileName.lastIndexOf(".") != -1) {
-                extension = originalFileName.substring(originalFileName.lastIndexOf("."));
-            }
-            String fileName = "cert_" + studentId + "_" + System.currentTimeMillis() + extension;
-            String filePath = uploadDir + fileName;
-            
-            file.transferTo(new java.io.File(filePath));
-            
+            byte[] fileBytes = file.getBytes();
+
             java.time.LocalDateTime visibleFrom = null;
             if (visibleFromStr != null && !visibleFromStr.isEmpty()) {
                 visibleFrom = java.time.LocalDateTime.parse(visibleFromStr);
             }
-            
-            Certificate cert = new Certificate(student, courseName, originalFileName, filePath, LocalDate.parse(issueDateStr), visibleFrom);
+
+            // Store file bytes in the database (works on Render's ephemeral filesystem)
+            Certificate cert = new Certificate(student, courseName, originalFileName, fileBytes, LocalDate.parse(issueDateStr), visibleFrom);
             certificateRepository.save(cert);
-            
+
             return ResponseEntity.ok(Map.of("message", "Certificate issued successfully"));
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
