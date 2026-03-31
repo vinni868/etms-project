@@ -1566,6 +1566,13 @@ public ResponseEntity<?> updateAdminAttendance(
                     student.setStatus(com.lms.enums.Status.valueOf(statusStr));
                 } catch (Exception e) {}
             }
+            if (payload.containsKey("studentId")) {
+                String newId = String.valueOf(payload.get("studentId")).trim();
+                if (!newId.isEmpty()) {
+                    student.setStudentId(newId);
+                    student.setPortalId(newId);
+                }
+            }
 
             userRepository.save(student);
             return ResponseEntity.ok(Map.of("message", "Student profile updated successfully"));

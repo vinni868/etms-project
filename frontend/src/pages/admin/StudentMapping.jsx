@@ -339,7 +339,10 @@ function StudentMapping() {
                   >
                     <option value="">— Choose Student —</option>
                     {students
-                      .filter(s => (s.status?.name || s.status) === "ACTIVE")
+                      .filter(s => 
+                        (s.status?.name || s.status) === "ACTIVE" && 
+                        (s.approvalStatus?.name || s.approvalStatus) === "APPROVED"
+                      )
                       .map(s => (
                         <option key={s.id} value={s.id}>{s.name} ({s.studentId || s.email})</option>
                     ))}
@@ -420,7 +423,10 @@ function StudentMapping() {
                   >
                     <option value="">— Choose Student —</option>
                     {students
-                      .filter(s => (s.status?.name || s.status) === "ACTIVE")
+                      .filter(s => 
+                        (s.status?.name || s.status) === "ACTIVE" && 
+                        (s.approvalStatus?.name || s.approvalStatus) === "APPROVED"
+                      )
                       .map(s => (
                         <option key={s.id} value={s.id}>{s.name} ({s.studentId || s.email})</option>
                     ))}

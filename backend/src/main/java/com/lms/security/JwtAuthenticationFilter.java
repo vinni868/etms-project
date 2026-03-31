@@ -58,6 +58,15 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 UserDetails userDetails = this.userDetailsService.loadUserByUsername(userEmail);
 
                 if (jwtService.isTokenValid(jwt, userDetails)) {
+                    // Immediate suspension check: if status is not ACTIVE, block access.
+                    if (!userDetails.isEnabled()) {
+                        System.out.println("JWT_SUSPENDED: Blocking access for suspended/unapproved user: " + userEmail);
+                        response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+                        response.setContentType("application/json");
+                        response.getWriter().write("{\"error\": \"Account suspended or not approved.\"}");
+                        return; // Halt request processing immediately.
+                    }
+
                     UsernamePasswordAuthenticationToken authToken = new UsernamePasswordAuthenticationToken(
                             userDetails,
                             null,

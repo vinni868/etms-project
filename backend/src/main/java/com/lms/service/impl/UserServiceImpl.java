@@ -116,7 +116,7 @@ public class UserServiceImpl implements UserService {
         }
 
         if (user.getStatus() == Status.INACTIVE) {
-            throw new RuntimeException("Account inactive");
+            throw new RuntimeException("ACCOUNT_SUSPENDED: Your account has been suspended. Please contact your admin to reactivate your access.");
         }
 
         // Final check: Only ACTIVE users can pass

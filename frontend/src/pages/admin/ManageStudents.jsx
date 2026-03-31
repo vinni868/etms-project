@@ -82,7 +82,8 @@ function ManageStudents() {
         name: editingStudent.name,
         email: editingStudent.email,
         phone: editingStudent.phone,
-        status: editingStudent.status
+        status: editingStudent.status,
+        studentId: editingStudent.studentId || editingStudent.portalId
       };
       
       await api.put(`/admin/students/${editingStudent.id}`, payload);
@@ -363,6 +364,15 @@ function ManageStudents() {
             </div>
             <form onSubmit={handleUpdateProfile}>
               <div className="modal-body">
+                <div className="m-field">
+                  <label>Student ID / Portal ID</label>
+                  <input 
+                    type="text" 
+                    required 
+                    value={editingStudent.studentId || editingStudent.portalId || ""}
+                    onChange={(e) => setEditingStudent({...editingStudent, studentId: e.target.value, portalId: e.target.value})}
+                  />
+                </div>
                 <div className="m-field">
                   <label>Full Name</label>
                   <input 
