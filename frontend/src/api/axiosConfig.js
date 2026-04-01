@@ -23,11 +23,20 @@ api.interceptors.request.use(
 export const handleViewFile = async (endpoint) => {
   try {
     const response = await api.get(endpoint, { responseType: 'blob' });
+    
+    // Check if the response is actually JSON (Cloudinary URL)
+    if (response.data.type === 'application/json') {
+      const text = await response.data.text();
+      const json = JSON.parse(text);
+      if (json.url) {
+        window.open(json.url, '_blank');
+        return;
+      }
+    }
+
     const contentType = response.headers['content-type'] || 'application/pdf';
     const url = window.URL.createObjectURL(new Blob([response.data], { type: contentType }));
     window.open(url, '_blank');
-    // Note: objectURL lives as long as the document is open. 
-    // It's safe for simple viewing in a new tab.
   } catch (err) {
     console.error("View error:", err);
     alert(err.response?.data?.message || "Failed to open document.");
@@ -37,12 +46,21 @@ export const handleViewFile = async (endpoint) => {
 export const handleDownload = async (endpoint, fileName) => {
   try {
     const response = await api.get(endpoint, { responseType: 'blob' });
+    
+    // Check if the response is actually JSON (Cloudinary URL)
+    if (response.data.type === 'application/json') {
+      const text = await response.data.text();
+      const json = JSON.parse(text);
+      if (json.url) {
+        // Open Cloudinary URL in a new tab for direct download/view
+        window.open(json.url, '_blank');
+        return;
+      }
+    }
+
     const url = window.URL.createObjectURL(new Blob([response.data]));
     const link = document.createElement('a');
     link.href = url;
-    
-    // For inline view, we don't necessarily want to force download if we are using _blank
-    // but a hidden link click is the standard way to trigger authenticated browser actions.
     link.setAttribute('download', fileName || 'document');
     document.body.appendChild(link);
     link.click();

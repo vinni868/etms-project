@@ -201,11 +201,9 @@ public class StudentController {
                 return ResponseEntity.status(404).body("Syllabus not found");
             }
 
-            // Cloudinary URL Redirect
+            // Cloudinary URL — Return JSON to frontend
             if (filePath.startsWith("http")) {
-                return ResponseEntity.status(302)
-                        .header("Location", filePath)
-                        .build();
+                return ResponseEntity.ok(Map.of("url", filePath));
             }
 
             // Legacy Local File Check
@@ -422,27 +420,26 @@ public class StudentController {
     public ResponseEntity<?> getMyCertificates() {
         try {
             Long studentId = getLoggedInStudentId();
-            System.out.println("DEBUG: Student fetching their certificates: " + studentId);
             List<Certificate> certs = certificateRepository.findByStudent_IdOrderByIssueDateDesc(studentId);
             
             List<Map<String, Object>> response = new java.util.ArrayList<>();
             java.time.LocalDateTime now = java.time.LocalDateTime.now();
+            
             for(Certificate c : certs) {
-                if (c.getVisibleFrom() != null && c.getVisibleFrom().isAfter(now)) {
-                    continue; // Skip certificates not yet visible to the student
-                }
+                // If visibleFrom is not set, or is in the past, show it
+                boolean isVisible = (c.getVisibleFrom() == null || !c.getVisibleFrom().isAfter(now));
                 
-                Map<String, Object> map = new java.util.HashMap<>();
-                map.put("id", c.getId());
-                map.put("courseName", c.getCourseName());
-                map.put("fileName", c.getFileName());
-                map.put("issueDate", c.getIssueDate() != null ? c.getIssueDate().toString() : "");
-                response.add(map);
+                if (isVisible) {
+                    Map<String, Object> map = new java.util.HashMap<>();
+                    map.put("id", c.getId());
+                    map.put("courseName", c.getCourseName());
+                    map.put("fileName", c.getFileName());
+                    map.put("issueDate", c.getIssueDate() != null ? c.getIssueDate().toString() : "");
+                    response.add(map);
+                }
             }
             return ResponseEntity.ok(response);
         } catch (Exception e) {
-            System.err.println("ERROR in getMyCertificates: " + e.getMessage());
-            e.printStackTrace();
             return ResponseEntity.status(500).body(Map.of("error", e.getMessage()));
         }
     }
@@ -459,11 +456,9 @@ public class StudentController {
 
             String path = cert.getFilePath();
             
-            // Cloudinary URL Redirect
+            // Cloudinary URL — Return JSON to frontend
             if (path != null && path.startsWith("http")) {
-                return ResponseEntity.status(302)
-                        .header("Location", path)
-                        .build();
+                return ResponseEntity.ok(Map.of("url", path));
             }
 
             byte[] fileBytes = cert.getFileData();

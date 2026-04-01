@@ -178,11 +178,9 @@ public class LeaveController {
             String url = req.getDocumentFilePath();
             if (url == null || url.isBlank()) return ResponseEntity.notFound().build();
 
-            // Cloudinary URL — redirect directly
+            // Cloudinary URL — Return JSON to frontend
             if (url.startsWith("http")) {
-                return ResponseEntity.status(302)
-                        .header("Location", url)
-                        .build();
+                return ResponseEntity.ok(Map.of("url", url));
             }
 
             // Legacy local path — no longer available on Render

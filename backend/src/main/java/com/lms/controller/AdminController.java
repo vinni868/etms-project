@@ -135,18 +135,15 @@ public class AdminController {
             CourseMaster course = courseRepository.findById(courseId)
                     .orElseThrow(() -> new RuntimeException("Course not found"));
 
-            String path = course.getSyllabusFilePath();
-            if (path == null || path.isEmpty()) {
+            String filePath = course.getSyllabusFilePath();
+            if (filePath == null || filePath.isEmpty()) {
                 return ResponseEntity.status(404).body(Map.of("error", "No syllabus uploaded for this course."));
             }
 
-            // If stored as Cloudinary URL — redirect browser directly
-            if (path.startsWith("http")) {
-                return ResponseEntity.status(302)
-                        .header("Location", path)
-                        .build();
+            // If stored as Cloudinary URL — return JSON to frontend
+            if (filePath.startsWith("http")) {
+                return ResponseEntity.ok(Map.of("url", filePath));
             }
-
             // Fallback: legacy local file (won't exist on Render — return 404)
             return ResponseEntity.status(404).body(Map.of("error", "Syllabus file not available. Please re-upload."));
 
