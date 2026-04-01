@@ -399,7 +399,6 @@ public class QrAttendanceService {
                         "Location access is required to punch in/out. Please enable location services in your browser.");
             }
         }
-        }
     }
 
     private double calculateDistance(Double lat, Double lng) {
