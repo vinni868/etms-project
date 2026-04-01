@@ -7,6 +7,7 @@ import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
 
 @Component
+@org.springframework.context.annotation.Profile("dev")
 public class UserAuditRunner implements CommandLineRunner {
     @Autowired private UserRepository userRepo;
     @Override

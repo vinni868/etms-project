@@ -56,7 +56,7 @@ public class DataInitializer implements CommandLineRunner {
         // Seed Courses
         String[] courses = {"Full Stack Java", "Full Stack Python", "MERN Stack", "Generative AI", "Cyber Security", "Data Analytics", "Digital Marketing"};
         for (String cName : courses) {
-            if (!courseRepository.findAll().stream().anyMatch(c -> c.getCourseName().equals(cName))) {
+            if (courseRepository.findByCourseName(cName).isEmpty()) {
                 CourseMaster course = new CourseMaster();
                 course.setCourseName(cName);
                 course.setStatus("ACTIVE");
