@@ -20,4 +20,6 @@ public interface CourseRepository extends JpaRepository<CourseMaster, Long> {
                    "WHERE bs.student_id = :studentId", 
            nativeQuery = true)
     List<CourseMaster> findByStudentId(@Param("studentId") Long studentId);
+
+    java.util.Optional<com.lms.entity.CourseMaster> findByCourseName(String courseName);
 }
