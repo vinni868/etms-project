@@ -25,8 +25,7 @@ export const handleViewFile = async (endpoint) => {
     const response = await api.get(endpoint, { responseType: 'blob' });
     
     // Check if the response is actually JSON (Cloudinary URL)
-    // Sometimes response.data.type is misspelled or empty, so we check size and text too.
-    if (response.data.size < 1000) {
+    if (response.data.size < 2000) {
       const text = await response.data.text();
       try {
         const json = JSON.parse(text);
@@ -35,7 +34,7 @@ export const handleViewFile = async (endpoint) => {
           return;
         }
       } catch (e) {
-        // Not JSON, continue with blob
+        // Not JSON
       }
     }
 
@@ -52,8 +51,8 @@ export const handleDownload = async (endpoint, fileName) => {
   try {
     const response = await api.get(endpoint, { responseType: 'blob' });
     
-    // Check if size is small (potential JSON URL vs multi-MB file)
-    if (response.data.size < 1000) {
+    // Check if the response is actually JSON (Cloudinary URL)
+    if (response.data.size < 2000) {
       const text = await response.data.text();
       try {
         const json = JSON.parse(text);

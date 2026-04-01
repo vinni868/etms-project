@@ -85,7 +85,7 @@ public class CloudinaryService {
      * Convenience: upload a PDF or document (resource_type = "raw").
      */
     public String uploadDocument(MultipartFile file, String folder) throws IOException {
-        return upload(file, folder, "raw");
+        return upload(file, folder, "auto");
     }
 
     /**
