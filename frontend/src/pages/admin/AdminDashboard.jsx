@@ -4,7 +4,7 @@ import {
   FaUserSlash, FaUserCheck, FaUserGraduate, FaUserTie,
   FaSync, FaCalendarTimes
 } from "react-icons/fa";
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState } from "react";
 import { createPortal } from "react-dom";
 import { useNavigate, Link } from "react-router-dom";
 import api from "../../api/axiosConfig";
@@ -157,8 +157,6 @@ function AdminDashboard() {
   const [loading, setLoading] = useState(false);
   const [recentNotifs, setRecentNotifs] = useState([]);
 
-  const notifBtnRef  = useRef(null);   // on the <button>
-  const notifWrapRef = useRef(null);   // on the wrapper div
 
   const [activeSection, setActiveSection] = useState("approval");
 
@@ -183,17 +181,6 @@ function AdminDashboard() {
     return "Good Evening";
   })();
 
-  /* Outside click — must also check the portal node in document.body */
-  useEffect(() => {
-    const h = (e) => {
-      if (notifWrapRef.current && notifWrapRef.current.contains(e.target)) return;
-      const portal = document.querySelector(".adm-notif-drop--portal");
-      if (portal && portal.contains(e.target)) return;
-      setShowNotif(false);
-    };
-    document.addEventListener("mousedown", h);
-    return () => document.removeEventListener("mousedown", h);
-  }, []);
 
   useEffect(() => { setApprovalPage(1); }, [approvalSearch]);
   useEffect(() => { setUserPage(1); }, [userSearch, roleFilter, statusFilter]);
@@ -318,7 +305,7 @@ function AdminDashboard() {
               </div>
             </div>
 
-            <div className="adm-notif-wrap" ref={notifWrapRef}>
+            <div className="adm-notif-wrap">
               <div 
                 className="adm-notif-btn" 
                 style={{cursor: 'pointer'}} 
