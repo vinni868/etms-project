@@ -338,10 +338,10 @@ function AdminDashboard() {
           ))}
         </div>
       </header>
-      {/* ══════════ QUICK PUNCH ══════════ */}
-      <div className="adm-punch-wrapper" style={{ margin: '30px 30px 20px', maxWidth: '400px' }}>
-        <QuickPunch />
-        <div style={{ marginTop: '1rem' }}>
+      {/* ══════════ QUICK PUNCH (HORIZONTAL BAR) ══════════ */}
+      <div className="adm-punch-wrapper" style={{ margin: '30px 30px 10px' }}>
+        <QuickPunch variant="horizontal" />
+        <div style={{ marginTop: '1.5rem' }}>
            <AttendanceRules />
         </div>
       </div>

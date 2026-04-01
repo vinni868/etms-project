@@ -4,7 +4,7 @@ import api from '../../api/axiosConfig';
 import './QuickPunch.css';
 import useGeofenceWatcher from '../../hooks/useGeofenceWatcher';
 
-const QuickPunch = () => {
+const QuickPunch = ({ variant = 'card' }) => {
     const [status, setStatus] = useState(null); // 'IN', 'OUT'
     const [loading, setLoading] = useState(true);
     const [actionLoading, setActionLoading] = useState(false);
@@ -13,7 +13,7 @@ const QuickPunch = () => {
     const [lastLog, setLastLog] = useState(null);
     const [gpsError, setGpsError] = useState(null);
 
-    // ─── 3-Layer Geofencing Hook ───
+    // ... (rest of the logic remains the same)
     useGeofenceWatcher(
         status === 'IN',
         (data) => {
@@ -82,8 +82,10 @@ const QuickPunch = () => {
 
     if (loading) return <div className="qp-skeleton">Checking status...</div>;
 
+    const isH = variant === 'horizontal';
+
     return (
-        <div className={`quick-punch-card ${status === 'IN' ? 'status-in' : 'status-out'}`}>
+        <div className={`quick-punch-card ${status === 'IN' ? 'status-in' : 'status-out'} ${isH ? 'qp-horizontal' : ''}`}>
             <div className="qp-header">
                 <div className="qp-icon-box">
                     <FaFingerprint size={24} />
@@ -95,27 +97,31 @@ const QuickPunch = () => {
             </div>
 
             <div className="qp-body">
-                {lastLog && (
-                    <div className="qp-info-text">
-                        <FaClock size={12} style={{marginRight: '6px'}} /> 
-                        Last: {new Date(lastLog.loginTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                    </div>
-                )}
-                
-                <button 
-                    className={`qp-action-btn ${actionLoading ? 'loading' : ''}`} 
-                    onClick={handlePunch}
-                    disabled={actionLoading}
-                >
-                    {actionLoading ? (
-                        <div className="qp-spinner"></div>
-                    ) : (
-                        <>
-                            {status === 'IN' ? <FaSignOutAlt style={{marginRight: '8px'}} /> : <FaSignInAlt style={{marginRight: '8px'}} />}
-                            {status === 'IN' ? 'Punch Out' : 'Quick Punch In'}
-                        </>
+                <div className="qp-body-left">
+                    {lastLog && (
+                        <div className="qp-info-text">
+                            <FaClock size={12} style={{marginRight: '6px'}} /> 
+                            Last: {new Date(lastLog.loginTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                        </div>
                     )}
-                </button>
+                </div>
+                
+                <div className="qp-body-right">
+                    <button 
+                        className={`qp-action-btn ${actionLoading ? 'loading' : ''}`} 
+                        onClick={handlePunch}
+                        disabled={actionLoading}
+                    >
+                        {actionLoading ? (
+                            <div className="qp-spinner"></div>
+                        ) : (
+                            <>
+                                {status === 'IN' ? <FaSignOutAlt style={{marginRight: '8px'}} /> : <FaSignInAlt style={{marginRight: '8px'}} />}
+                                {status === 'IN' ? 'Punch Out' : 'Quick Punch In'}
+                            </>
+                        )}
+                    </button>
+                </div>
 
                 {gpsError && (
                     <div className="qp-msg warning" style={{border: '1.5px solid #fed7aa', color: '#ea580c', background: '#fff7ed'}}>
@@ -127,10 +133,12 @@ const QuickPunch = () => {
                 {error && <div className="qp-msg error"><FaMapMarkerAlt size={12} style={{marginRight: '6px'}} /> {error}</div>}
             </div>
             
-            <div className="qp-footer">
-                <span className="qp-tag">GPS Geofencing Active</span>
-                <span className={`sa-hr-dot ${status === 'IN' ? 'green' : 'gold'}`}></span>
-            </div>
+            {!isH && (
+                <div className="qp-footer">
+                    <span className="qp-tag">GPS Geofencing Active</span>
+                    <span className={`sa-hr-dot ${status === 'IN' ? 'green' : 'gold'}`}></span>
+                </div>
+            )}
         </div>
     );
 };

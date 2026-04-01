@@ -202,3 +202,68 @@
 .sa-hr-dot.green { background: #10b981; box-shadow: 0 0 8px #10b981; }
 .sa-hr-dot.gold { background: #f59e0b; box-shadow: 0 0 8px #f59e0b; }
 .sa-hr-dot.red { background: #ef4444; box-shadow: 0 0 8px #ef4444; }
+
+/* ─── HORIZONTAL VARIANT ─── */
+.qp-horizontal {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 24px;
+    gap: 30px;
+    min-height: 80px;
+}
+
+.qp-horizontal .qp-header {
+    margin-bottom: 0;
+    flex: 0 0 auto;
+}
+
+.qp-horizontal .qp-body {
+    flex: 1;
+    flex-direction: row;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 20px;
+}
+
+.qp-horizontal .qp-body-left {
+    flex: 1;
+    display: flex;
+    justify-content: flex-end;
+}
+
+.qp-horizontal .qp-body-right {
+    min-width: 160px;
+}
+
+.qp-horizontal .qp-action-btn {
+    width: auto;
+    padding: 10px 24px;
+}
+
+.qp-horizontal .qp-msg {
+    position: absolute;
+    bottom: -40px;
+    right: 24px;
+    z-index: 10;
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+}
+
+@media (max-width: 768px) {
+    .qp-horizontal {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 15px;
+    }
+    .qp-horizontal .qp-body {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    .qp-horizontal .qp-body-right {
+        width: 100%;
+    }
+    .qp-horizontal .qp-action-btn {
+        width: 100%;
+    }
+}

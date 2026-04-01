@@ -13,6 +13,10 @@ public class LmsApplication {
 		dotenv.entries().forEach(entry -> System.setProperty(entry.getKey(), entry.getValue()));
 		
 		SpringApplication.run(LmsApplication.class, args);
+		
+		// Final Build Diagnostic Log
+		System.out.println("LMS_INIT: Build Status [PROPER]");
+		System.out.println("LMS_INIT: Cloudinary Cloud: " + (System.getProperty("CLOUDINARY_CLOUD_NAME") != null ? System.getProperty("CLOUDINARY_CLOUD_NAME") : "NOT_SET"));
 	}
 
 }

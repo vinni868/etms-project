@@ -40,14 +40,17 @@ public class CloudinaryService {
 
     @PostConstruct
     public void init() {
-        cloudinary = new Cloudinary(ObjectUtils.asMap(
-            "cloud_name", cloudName,
-            "api_key",    apiKey,
-            "api_secret", apiSecret,
-            "secure",     true
-        ));
-        System.out.println("CLOUDINARY: Initialized — cloud=" + cloudName
-            + " | configured=" + (!cloudName.isEmpty() && !apiKey.isEmpty()));
+        if (isConfigured()) {
+            cloudinary = new Cloudinary(ObjectUtils.asMap(
+                "cloud_name", cloudName,
+                "api_key",    apiKey,
+                "api_secret", apiSecret,
+                "secure",     true
+            ));
+            System.out.println("CLOUDINARY_SERVICE: Configured successfully using cloud: " + cloudName);
+        } else {
+            System.err.println("CLOUDINARY_SERVICE: ERROR - NOT CONFIGURED. Please set CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, and CLOUDINARY_API_SECRET in Render Environment Variables.");
+        }
     }
 
     /**
