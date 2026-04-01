@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import api from "../../api/axiosConfig";
+import api, { handleDownload } from "../../api/axiosConfig";
 import "./StudentCertificates.css";
 import { FaAward, FaDownload, FaEye, FaFilePdf } from "react-icons/fa";
 
@@ -22,27 +22,9 @@ function StudentCertificates() {
     }
   };
 
-  const handleDownload = async (certId, fileName, mode="download") => {
-    try {
-      const response = await api.get(`/student/certificates/download/${certId}?mode=${mode}`, {
-        responseType: 'blob'
-      });
-      const fileURL = window.URL.createObjectURL(new Blob([response.data], { type: 'application/pdf' }));
-      
-      if (mode === "view") {
-        window.open(fileURL, "_blank");
-      } else {
-        const fileLink = document.createElement('a');
-        fileLink.href = fileURL;
-        fileLink.setAttribute('download', fileName);
-        document.body.appendChild(fileLink);
-        fileLink.click();
-        fileLink.remove();
-      }
-    } catch (err) {
-      console.error("Failed to download certificate", err);
-      alert("Error retrieving certificate pdf.");
-    }
+  const handleAction = (certId, fileName, mode) => {
+    const endpoint = `/student/certificates/download/${certId}?mode=${mode}`;
+    handleDownload(endpoint, fileName);
   };
 
   if (loading) return <div className="certificate-page"><p className="cert-loading">Loading certificates...</p></div>;
@@ -69,10 +51,10 @@ function StudentCertificates() {
                 </div>
               </div>
               <div className="certificate-card__actions">
-                <button className="btn-view" onClick={() => handleDownload(cert.id, cert.fileName, "view")}>
+                <button className="btn-view" onClick={() => handleAction(cert.id, cert.fileName, "view")}>
                   <FaEye /> View
                 </button>
-                <button className="btn-down" onClick={() => handleDownload(cert.id, cert.fileName, "download")}>
+                <button className="btn-down" onClick={() => handleAction(cert.id, cert.fileName, "download")}>
                   <FaDownload /> Download
                 </button>
               </div>

@@ -419,14 +419,17 @@ public class StudentController {
     @GetMapping("/certificates")
     public ResponseEntity<?> getMyCertificates() {
         try {
-            Long studentId = getLoggedInStudentId();
-            List<Certificate> certs = certificateRepository.findByStudent_IdOrderByIssueDateDesc(studentId);
+            Long studentDbId = getLoggedInStudentId();
+            User student = userRepository.findById(studentDbId).orElseThrow(() -> new RuntimeException("User not found"));
+            
+            // Search for certificates by numeric user mapping
+            List<Certificate> certs = certificateRepository.findByStudent_IdOrderByIssueDateDesc(studentDbId);
             
             List<Map<String, Object>> response = new java.util.ArrayList<>();
             java.time.LocalDateTime now = java.time.LocalDateTime.now();
             
             for(Certificate c : certs) {
-                // If visibleFrom is not set, or is in the past, show it
+                // If visibleFrom is not set or is in the past, show it immediately
                 boolean isVisible = (c.getVisibleFrom() == null || !c.getVisibleFrom().isAfter(now));
                 
                 if (isVisible) {

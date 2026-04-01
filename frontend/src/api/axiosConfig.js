@@ -25,12 +25,17 @@ export const handleViewFile = async (endpoint) => {
     const response = await api.get(endpoint, { responseType: 'blob' });
     
     // Check if the response is actually JSON (Cloudinary URL)
-    if (response.data.type === 'application/json') {
+    // Sometimes response.data.type is misspelled or empty, so we check size and text too.
+    if (response.data.size < 1000) {
       const text = await response.data.text();
-      const json = JSON.parse(text);
-      if (json.url) {
-        window.open(json.url, '_blank');
-        return;
+      try {
+        const json = JSON.parse(text);
+        if (json.url) {
+          window.open(json.url, '_blank');
+          return;
+        }
+      } catch (e) {
+        // Not JSON, continue with blob
       }
     }
 
@@ -47,14 +52,17 @@ export const handleDownload = async (endpoint, fileName) => {
   try {
     const response = await api.get(endpoint, { responseType: 'blob' });
     
-    // Check if the response is actually JSON (Cloudinary URL)
-    if (response.data.type === 'application/json') {
+    // Check if size is small (potential JSON URL vs multi-MB file)
+    if (response.data.size < 1000) {
       const text = await response.data.text();
-      const json = JSON.parse(text);
-      if (json.url) {
-        // Open Cloudinary URL in a new tab for direct download/view
-        window.open(json.url, '_blank');
-        return;
+      try {
+        const json = JSON.parse(text);
+        if (json.url) {
+          window.open(json.url, '_blank');
+          return;
+        }
+      } catch (e) {
+        // Not JSON
       }
     }
 
