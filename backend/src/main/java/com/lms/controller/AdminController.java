@@ -72,6 +72,9 @@ public class AdminController {
     @Autowired
     private StudentCourseRepository studentCourseRepository;
 
+    @Autowired
+    private CloudinaryService cloudinaryService;
+
     // ================= DASHBOARD =================
     @GetMapping("/dashboard")
     public DashboardResponse getDashboard() {
@@ -101,23 +104,11 @@ public class AdminController {
             if (shortcut != null) course.setShortcut(shortcut.toUpperCase());
             course.setStatus("ACTIVE");
 
-            // ===== UPDATED FILE UPLOAD LOGIC =====
+            // ===== CLOUDINARY FILE UPLOAD =====
             if (file != null && !file.isEmpty()) {
-
-                String uploadDir = System.getProperty("user.dir") + "/uploads/syllabus/";
-
-                java.io.File directory = new java.io.File(uploadDir);
-                if (!directory.exists()) {
-                    directory.mkdirs();
-                }
-
-                String fileName = file.getOriginalFilename();
-                String filePath = uploadDir + fileName;
-
-                file.transferTo(new java.io.File(filePath));
-
-                course.setSyllabusFileName(fileName);
-                course.setSyllabusFilePath(filePath);
+                String url = cloudinaryService.uploadDocument(file, "syllabus");
+                course.setSyllabusFileName(file.getOriginalFilename());
+                course.setSyllabusFilePath(url);   // stores Cloudinary CDN URL
             }
 
             courseRepository.save(course);
@@ -136,30 +127,28 @@ public class AdminController {
     }
 
     @GetMapping("/courses/{courseId}/syllabus")
-    public ResponseEntity<org.springframework.core.io.Resource> getSyllabus(@PathVariable Long courseId, @RequestParam(defaultValue = "download") String mode) {
+    public ResponseEntity<?> getSyllabus(@PathVariable Long courseId, @RequestParam(defaultValue = "download") String mode) {
         try {
             CourseMaster course = courseRepository.findById(courseId)
                     .orElseThrow(() -> new RuntimeException("Course not found"));
 
-            if (course.getSyllabusFilePath() == null || course.getSyllabusFilePath().isEmpty()) {
-                throw new RuntimeException("Syllabus file not found");
+            String path = course.getSyllabusFilePath();
+            if (path == null || path.isEmpty()) {
+                return ResponseEntity.status(404).body(Map.of("error", "No syllabus uploaded for this course."));
             }
 
-            java.io.File file = new java.io.File(course.getSyllabusFilePath());
-            if (!file.exists()) {
-                throw new RuntimeException("File does not exist on server");
+            // If stored as Cloudinary URL — redirect browser directly
+            if (path.startsWith("http")) {
+                return ResponseEntity.status(302)
+                        .header("Location", path)
+                        .build();
             }
 
-            String contentType = "application/pdf";
-            String contentDisposition = mode.equalsIgnoreCase("view") ? "inline" : "attachment; filename=\"" + course.getSyllabusFileName() + "\"";
-
-            return ResponseEntity.ok()
-                    .header(org.springframework.http.HttpHeaders.CONTENT_TYPE, contentType)
-                    .header(org.springframework.http.HttpHeaders.CONTENT_DISPOSITION, contentDisposition)
-                    .body(new org.springframework.core.io.FileSystemResource(file));
+            // Fallback: legacy local file (won't exist on Render — return 404)
+            return ResponseEntity.status(404).body(Map.of("error", "Syllabus file not available. Please re-upload."));
 
         } catch (Exception e) {
-            return ResponseEntity.badRequest().body(null);
+            return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         }
     }
     @GetMapping("/course-full-details/{courseId}")
@@ -848,23 +837,11 @@ public ResponseEntity<?> updateCourse(
         course.setCategory(category);
         if (shortcut != null) course.setShortcut(shortcut.toUpperCase());
 
-        // ===== UPDATED FILE UPLOAD LOGIC =====
+        // ===== CLOUDINARY FILE UPLOAD =====
         if (file != null && !file.isEmpty()) {
-
-            String uploadDir = System.getProperty("user.dir") + "/uploads/syllabus/";
-
-            java.io.File directory = new java.io.File(uploadDir);
-            if (!directory.exists()) {
-                directory.mkdirs();
-            }
-
-            String fileName = file.getOriginalFilename();
-            String filePath = uploadDir + fileName;
-
-            file.transferTo(new java.io.File(filePath));
-
-            course.setSyllabusFileName(fileName);
-            course.setSyllabusFilePath(filePath);
+            String url = cloudinaryService.uploadDocument(file, "syllabus");
+            course.setSyllabusFileName(file.getOriginalFilename());
+            course.setSyllabusFilePath(url);
         }
 
         courseRepository.save(course);
@@ -1489,16 +1466,14 @@ public ResponseEntity<?> updateAdminAttendance(
                 throw new RuntimeException("No file provided");
             }
 
-            String originalFileName = file.getOriginalFilename();
-            byte[] fileBytes = file.getBytes();
-
             java.time.LocalDateTime visibleFrom = null;
             if (visibleFromStr != null && !visibleFromStr.isEmpty()) {
                 visibleFrom = java.time.LocalDateTime.parse(visibleFromStr);
             }
 
-            // Store file bytes in the database (works on Render's ephemeral filesystem)
-            Certificate cert = new Certificate(student, courseName, originalFileName, fileBytes, LocalDate.parse(issueDateStr), visibleFrom);
+            // Upload to Cloudinary — store CDN URL instead of BLOB
+            String cloudinaryUrl = cloudinaryService.uploadDocument(file, "certificates");
+            Certificate cert = new Certificate(student, courseName, file.getOriginalFilename(), cloudinaryUrl, LocalDate.parse(issueDateStr), visibleFrom);
             certificateRepository.save(cert);
 
             return ResponseEntity.ok(Map.of("message", "Certificate issued successfully"));
@@ -1537,8 +1512,8 @@ public ResponseEntity<?> updateAdminAttendance(
     public ResponseEntity<?> deleteCertificate(@PathVariable Long certId) {
         try {
             Certificate cert = certificateRepository.findById(certId).orElseThrow(() -> new RuntimeException("Certificate not found"));
-            java.io.File file = new java.io.File(cert.getFilePath());
-            if (file.exists()) file.delete();
+            // Delete from Cloudinary (non-fatal if already deleted)
+            cloudinaryService.deleteByUrl(cert.getFilePath(), "raw");
             certificateRepository.delete(cert);
             return ResponseEntity.ok(Map.of("message", "Certificate revoked successfully"));
         } catch (Exception e) {

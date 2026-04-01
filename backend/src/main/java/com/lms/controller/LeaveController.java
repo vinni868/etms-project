@@ -39,6 +39,9 @@ public class LeaveController {
     @Autowired
     private NotificationService notificationService;
 
+    @Autowired
+    private com.lms.service.CloudinaryService cloudinaryService;
+
     /** POST /api/leave/request — student/staff submits leave */
     @PostMapping(value = "/api/leave/request", consumes = {"multipart/form-data"})
     public ResponseEntity<?> requestLeave(
@@ -64,20 +67,12 @@ public class LeaveController {
         if (batches != null) req.setBatches(batches);
         if (courseMode != null) req.setCourseMode(courseMode);
 
-        // File upload logic
+        // File upload to Cloudinary
         if (file != null && !file.isEmpty()) {
             try {
-                String uploadDir = System.getProperty("user.dir") + "/uploads/leaves/";
-                java.io.File directory = new java.io.File(uploadDir);
-                if (!directory.exists()) directory.mkdirs();
-
-                String originalName = file.getOriginalFilename();
-                String fileName = System.currentTimeMillis() + "_" + originalName;
-                String filePath = uploadDir + fileName;
-
-                file.transferTo(new java.io.File(filePath));
-                req.setDocumentFileName(originalName);
-                req.setDocumentFilePath(filePath);
+                String url = cloudinaryService.uploadDocument(file, "leaves");
+                req.setDocumentFileName(file.getOriginalFilename());
+                req.setDocumentFilePath(url);  // stores Cloudinary CDN URL
             } catch (Exception e) {
                 return ResponseEntity.badRequest().body(Map.of("message", "File upload failed: " + e.getMessage()));
             }
@@ -163,13 +158,12 @@ public class LeaveController {
         return updateStatus(id, "CONDITIONAL", body.get("note"), auth);
     }
 
-    /** GET /api/leave/document/{id} — View Attachment (Secure access for owner & admin) */
     @GetMapping("/api/leave/document/{id}")
     public ResponseEntity<?> downloadDocument(@PathVariable Long id, Authentication auth) {
         try {
             User user = getUser(auth);
             LeaveRequest req = leaveRepo.findById(id).orElseThrow(() -> new RuntimeException("Request not found"));
-            
+
             // SECURITY: Only allow owner or ADMIN/SUPERADMIN
             String roleName = user.getRole().getRoleName();
             boolean isAdmin = "ADMIN".equalsIgnoreCase(roleName) || "SUPERADMIN".equalsIgnoreCase(roleName);
@@ -179,24 +173,19 @@ public class LeaveController {
                 return ResponseEntity.status(403).body(Map.of("message", "Unauthorized access to this document."));
             }
 
-            if (req.getDocumentFilePath() == null) return ResponseEntity.notFound().build();
+            String url = req.getDocumentFilePath();
+            if (url == null || url.isBlank()) return ResponseEntity.notFound().build();
 
-            java.io.File file = new java.io.File(req.getDocumentFilePath());
-            if (!file.exists()) return ResponseEntity.notFound().build();
+            // Cloudinary URL — redirect directly
+            if (url.startsWith("http")) {
+                return ResponseEntity.status(302)
+                        .header("Location", url)
+                        .build();
+            }
 
-            // Determine content type
-            String fileName = req.getDocumentFileName().toLowerCase();
-            String contentType = "application/octet-stream";
-            if (fileName.endsWith(".pdf")) contentType = "application/pdf";
-            else if (fileName.endsWith(".jpg") || fileName.endsWith(".jpeg")) contentType = "image/jpeg";
-            else if (fileName.endsWith(".png")) contentType = "image/png";
+            // Legacy local path — no longer available on Render
+            return ResponseEntity.status(404).body(Map.of("message", "Document not available. Please re-upload."));
 
-            String disp = "inline; filename=\"" + req.getDocumentFileName() + "\""; // Show in browser if possible
-
-            return ResponseEntity.ok()
-                    .header(org.springframework.http.HttpHeaders.CONTENT_TYPE, contentType)
-                    .header(org.springframework.http.HttpHeaders.CONTENT_DISPOSITION, disp)
-                    .body(new org.springframework.core.io.FileSystemResource(file));
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(Map.of("message", e.getMessage()));
         }

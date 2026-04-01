@@ -194,10 +194,24 @@ public class StudentController {
             Map<String, Object> fileData = jdbcTemplate.queryForMap(sql, courseId);
             String fileName = (String) fileData.get("syllabus_file_name");
             String filePath = (String) fileData.get("syllabus_file_path");
+
+            if (filePath == null || filePath.isEmpty()) {
+                return ResponseEntity.status(404).body("Syllabus not found");
+            }
+
+            // Cloudinary URL Redirect
+            if (filePath.startsWith("http")) {
+                return ResponseEntity.status(302)
+                        .header("Location", filePath)
+                        .build();
+            }
+
+            // Legacy Local File Check
             java.io.File file = new java.io.File(filePath);
             if (!file.exists()) {
-                return ResponseEntity.status(404).body("File not found");
+                return ResponseEntity.status(404).body("File not found on server. Please contact admin.");
             }
+
             org.springframework.core.io.Resource resource =
                     new org.springframework.core.io.FileSystemResource(file);
 
@@ -208,7 +222,7 @@ public class StudentController {
                     .header("Content-Disposition", contentDisposition)
                     .body(resource);
         } catch (Exception e) {
-            return ResponseEntity.status(500).body("Failed to download syllabus");
+            return ResponseEntity.status(500).body("Failed to download syllabus: " + e.getMessage());
         }
     }
 
@@ -441,12 +455,21 @@ public class StudentController {
                 return ResponseEntity.status(403).body("Unauthorized access to this certificate");
             }
 
+            String path = cert.getFilePath();
+            
+            // Cloudinary URL Redirect
+            if (path != null && path.startsWith("http")) {
+                return ResponseEntity.status(302)
+                        .header("Location", path)
+                        .build();
+            }
+
             byte[] fileBytes = cert.getFileData();
 
-            // Fallback: try reading from filePath if fileData is not stored in DB (legacy certificates)
+            // Fallback: legacy local file/data
             if (fileBytes == null || fileBytes.length == 0) {
-                if (cert.getFilePath() != null) {
-                    java.io.File file = new java.io.File(cert.getFilePath());
+                if (path != null) {
+                    java.io.File file = new java.io.File(path);
                     if (file.exists()) {
                         fileBytes = java.nio.file.Files.readAllBytes(file.toPath());
                     }
@@ -465,7 +488,7 @@ public class StudentController {
                     .header("Content-Disposition", contentDisposition)
                     .body(fileBytes);
         } catch (Exception e) {
-            return ResponseEntity.status(500).body("Failed to retrieve certificate");
+            return ResponseEntity.status(500).body("Failed to retrieve certificate: " + e.getMessage());
         }
     }
 }
