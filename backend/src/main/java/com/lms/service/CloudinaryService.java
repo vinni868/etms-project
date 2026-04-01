@@ -63,8 +63,8 @@ public class CloudinaryService {
             throw new RuntimeException("Cloudinary is not configured. Please set CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, and CLOUDINARY_API_SECRET environment variables.");
         }
 
-        // Use a unique public_id to avoid overwriting existing files
-        String publicId = folder + "/" + UUID.randomUUID() + "_" + sanitize(file.getOriginalFilename());
+        // Use a unique public_id (random UUID suffix) to avoid name collisions
+        String publicId = UUID.randomUUID() + "_" + sanitize(file.getOriginalFilename());
 
         @SuppressWarnings("unchecked")
         Map<String, Object> result = cloudinary.uploader().upload(
