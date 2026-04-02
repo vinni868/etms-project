@@ -159,94 +159,86 @@
   top: calc(100% + 5px);
   left: 50%;
   transform: translate(-50%, 15px);
-  background: rgba(255, 255, 255, 0.94);
-  backdrop-filter: blur(25px) saturate(180%);
-  -webkit-backdrop-filter: blur(25px) saturate(180%);
-  width: max-content;
-  min-width: 320px;
-  max-width: 95vw;
-  border-radius: 28px;
-  box-shadow: 
-    0 40px 100px rgba(0,0,0,0.12), 
-    0 0 0 1px rgba(255,255,255,0.7) inset,
-    0 0 0 1px rgba(0,0,0,0.03);
-  padding: 30px;
-  display: flex;
-  gap: 30px;
+  background: rgba(255, 255, 255, 0.98);
+  backdrop-filter: blur(20px);
+  width: max-content; /* Hug the content properly */
+  min-width: 450px;    /* Reasonable minimum for two columns */
+  max-width: 95vw;     /* Don't spill off the edge of small screens */
+  border-radius: 24px;
+  box-shadow: 0 30px 70px rgba(0,0,0,0.15), 0 0 0 1px rgba(0,0,0,0.05);
+  padding: 35px;
+  display: flex;       /* Use flex with gap for dynamic columns */
+  gap: 40px;
   z-index: 2000;
   opacity: 0;
   visibility: hidden;
-  transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
   pointer-events: auto;
 }
 
-/* 🌉 THE HOVER BRIDGE */
+/* 🌉 THE HOVER BRIDGE: Fills the 5px gap so the menu doesn't close prematurely */
 .mega-menu::before {
   content: '';
   position: absolute;
   top: -20px;
   left: 0;
   right: 0;
-  height: 25px;
+  height: 20px;
   background: transparent;
 }
 
 .mega-group {
   display: flex;
   flex-direction: column;
-  gap: 12px;
-  min-width: 260px;
+  gap: 15px;
 }
 
 .mega-group-title {
   font-size: 11px;
-  font-weight: 900;
-  color: #64748b;
+  font-weight: 850;
+  color: #94a3b8;
   text-transform: uppercase;
-  letter-spacing: 2px;
-  padding-bottom: 12px;
-  border-bottom: 2px solid rgba(0,0,0,0.04);
-  margin-bottom: 8px;
+  letter-spacing: 1.5px;
+  padding-bottom: 8px;
+  border-bottom: 1.5px solid #f1f5f9;
+  margin-bottom: 5px;
 }
 
 .mega-link {
   text-decoration: none;
   display: flex;
   align-items: center;
-  gap: 16px;
-  padding: 14px 20px;
-  border-radius: 18px;
-  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  gap: 14px;
+  padding: 12px 16px;
+  border-radius: 14px;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   color: var(--text-main);
   background: transparent;
 }
 
 .mega-link:hover {
-  background: white;
-  box-shadow: 0 10px 30px rgba(0,0,0,0.04);
-  color: #2563eb;
-  transform: translateX(10px) scale(1.02);
+  background: var(--blue-hover);
+  color: var(--blue-royal);
+  transform: translateX(8px);
 }
 
 .mega-icon-box {
-  width: 38px;
-  height: 38px;
-  background: #f8fafc;
-  border-radius: 12px;
+  width: 32px;
+  height: 32px;
+  background: white;
+  border-radius: 10px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 18px;
-  box-shadow: 0 4px 10px rgba(0,0,0,0.03);
-  transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-  color: #64748b;
+  font-size: 16px;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+  transition: all 0.3s;
 }
 
 .mega-link:hover .mega-icon-box {
-  background: linear-gradient(135deg, #2563eb, #1e40af);
+  background: var(--blue-royal);
   color: white;
-  transform: rotate(-8deg) scale(1.1);
-  box-shadow: 0 8px 20px rgba(37, 99, 235, 0.25);
+  transform: rotate(10deg);
 }
 
 .mega-link-text {
@@ -255,33 +247,246 @@
 }
 
 .mega-link-name {
-  font-size: 15px;
-  font-weight: 800;
-  letter-spacing: -0.2px;
+  font-size: 14px;
+  font-weight: 750;
 }
 
 .mega-link-desc {
   font-size: 11px;
   font-weight: 500;
   color: #94a3b8;
-  margin-top: 2px;
+  margin-top: 1px;
 }
 
-/* --- MOBILE SPECIFICS --- */
+/* --- USER ACTIONS --- */
+.user-actions-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
+}
+
+.user-role-badge {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: rgba(255, 255, 255, 0.9);
+  padding: 6px 6px 6px 16px;
+  border-radius: 40px;
+  border: 1px solid rgba(226, 232, 240, 0.8);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
+}
+
+.role-badge-content {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  white-space: nowrap;
+}
+
+.role-text-label {
+  font-size: 11px;
+  font-weight: 800;
+  color: #1e293b;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  white-space: nowrap;
+}
+
+.student-id-label {
+  font-size: 10px;
+  font-weight: 700;
+  color: #2563eb;
+  letter-spacing: 0.2px;
+  margin-top: -1px;
+  white-space: nowrap;
+}
+
+.avatar-circle {
+  width: 26px; height: 26px;
+  background: var(--blue-royal); color: white;
+  border-radius: 50%; display: flex;
+  justify-content: center; align-items: center;
+  font-size: 11px; font-weight: bold;
+}
+
+.nav-logout-btn {
+  background: var(--blue-royal); color: white; border: none;
+  padding: 8px 14px; border-radius: 6px; font-weight: 700;
+  cursor: pointer; display: flex; align-items: center; gap: 6px;
+  transition: 0.2s;
+  font-size: 12px;
+}
+
+.nav-logout-btn:hover { background: var(--navy-dark); }
+
+/* --- CONTENT AREA --- */
+.dashboard-view-content {
+  padding: 0;
+  flex: 1;
+}
+
+.content-fluid-wrapper {
+  width: 100%;
+}
+
+@media (max-width: 480px) {
+  .brand-name { font-size: 1.25rem; }
+  .brand-tagline { font-size: 0.65rem; }
+  .logo-icon-box { width: 32px; height: 32px; font-size: 1rem; }
+}
+
+/* ================================================== */
+/*                RESPONSIVE MEDIA QUERIES            */
+/* ================================================== */
+
+.mobile-menu-toggle {
+  display: none;
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  color: var(--navy-dark);
+  cursor: pointer;
+  margin-left: auto;
+}
+
+.nav-right-collapse {
+  display: flex;
+  flex: 1;
+  justify-content: flex-end;
+  align-items: center;
+}
+
 @media (max-width: 992px) {
-  .mega-menu {
-    border-radius: 0;
-    backdrop-filter: none;
-    -webkit-backdrop-filter: none;
-    background: #f8fafc;
-    padding: 15px;
-    border-left: 4px solid #2563eb;
+  .nav-container-inner {
+    padding: 0 20px;
   }
-  
+
+  .mobile-menu-toggle {
+    display: block;
+  }
+
+  .nav-right-collapse {
+    display: none; /* Controlled by .open class */
+    flex-direction: column;
+    position: fixed; /* ⚡ FIXED to the screen to ensure scroll works ⚡ */
+    top: 80px;
+    left: 0;
+    width: 100%;
+    height: calc(100vh - 80px);
+    background: var(--white);
+    box-shadow: 10px 0 30px rgba(0,0,0,0.1);
+    padding: 0; /* Padding will be on the nav-menu instead */
+    z-index: 2100;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior: contain;
+  }
+
+  .nav-right-collapse.open {
+    display: flex;
+    animation: slideDownFade 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  }
+
+  .header-nav-menu {
+    flex-direction: column;
+    align-items: stretch; /* Stretch links to fill width */
+    width: 100%;
+    padding: 20px;
+    gap: 12px;
+  }
+
+  .nav-menu-link {
+    width: 100%;
+    justify-content: space-between; /* Icon on the left, chevron on the right */
+    padding: 14px 18px;
+    background: #f8fafc;
+    font-size: 14px;
+  }
+
+  .dropdown-content {
+    position: relative;
+    top: 0;
+    left: 0;
+    transform: none;
+    width: 100%;
+    box-shadow: none;
+    border: none;
+    border-left: 2px solid var(--blue-royal);
+    border-radius: 0;
+    padding: 5px 0;
+    margin-top: 5px;
+    background: none;
+  }
+
+  /* 📱 MOBILE MEGA MENU OVERRIDES */
+  .mega-menu {
+    display: none; /* Controlled by .open class */
+    position: static;
+    transform: none;
+    width: 100%;
+    min-width: unset;
+    max-width: 100%;
+    background: #f8fafc; /* Subtle offset background */
+    backdrop-filter: none;
+    box-shadow: none;
+    padding: 10px 15px 20px 15px;
+    flex-direction: column; /* Stack columns vertically */
+    gap: 25px;
+    opacity: 1;
+    visibility: visible;
+    border-left: 3px solid var(--blue-royal);
+    margin-top: 5px;
+    border-radius: 0;
+    pointer-events: auto;
+  }
+
+  .mega-menu.open {
+    display: flex; /* Show when active */
+    animation: slideDownFade 0.3s ease forwards;
+  }
+
+  .mega-menu::before {
+    display: none; /* No need for hover bridge on touch */
+  }
+
+  .mega-group {
+    gap: 10px;
+  }
+
+  .mega-group-title {
+    border-bottom-color: #e2e8f0;
+    color: var(--blue-royal);
+    padding-bottom: 5px;
+  }
+
   .mega-link {
     background: white;
-    margin-bottom: 2px;
-    padding: 12px 16px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    padding: 10px 12px;
+  }
+
+  .mega-link:hover {
+    transform: none; /* Remove horizontal shift on mobile */
+  }
+
+  .mega-icon-box {
+    width: 28px;
+    height: 28px;
+    font-size: 14px;
+  }
+
+  .user-actions-right {
+    flex-wrap: wrap;
+    margin-top: 20px;
+    padding-top: 20px;
+    border-top: 1px solid #edf2f7;
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .top-contact-bar {
+    display: none; /* Hide top contact bar on very small devices to save vertical space */
   }
 }
 
