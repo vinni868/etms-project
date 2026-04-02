@@ -240,9 +240,23 @@ public class AdminController {
     }
 
     @PatchMapping("/users/approve/{id}")
-    public ResponseEntity<?> approveUser(@PathVariable Long id, @RequestBody(required = false) Map<String, String> payload) {
+    public ResponseEntity<?> approveUser(@PathVariable Long id, @RequestBody(required = false) Map<String, String> payload, org.springframework.security.core.Authentication auth) {
         User user = userRepository.findById(id).orElseThrow(() -> new RuntimeException("User not found"));
         
+        // --- Hierarchical Approval Check ---
+        String creator = user.getCreatedBy();
+        
+        // Rule: Admins can ONLY approve users who self-registered ("self").
+        // If the user was created by ANY admin (indicated by not being "self"),
+        // the current admin (or ANY admin) is blocked from approving. 
+        // Only SuperAdmin can approve admin-created profiles.
+        if (creator != null && !creator.equalsIgnoreCase("self")) {
+            return ResponseEntity.status(403).body(Map.of(
+                "message", "Security Restriction: This user was created by an Admin. " +
+                           "Only a SuperAdmin has the authority to approve Admin-initiated registrations."
+            ));
+        }
+
         // ✅ SERVER-SIDE PROTECTION: ADM IS FOR STUDENTS ONLY
         if (!user.getRole().getRoleName().equals("STUDENT")) {
             return ResponseEntity.status(403).body(Map.of("message", "Security Alert: Admin is only authorized to approve Student accounts. Please contact Super Admin for other roles."));
@@ -624,7 +638,7 @@ public ResponseEntity<?> deleteSchedule(@PathVariable Long id) {
  }
 }
 @PostMapping("/create-trainer")
-public ResponseEntity<?> createTrainer(@RequestBody Map<String, String> payload) {
+public ResponseEntity<?> createTrainer(@RequestBody Map<String, String> payload, org.springframework.security.core.Authentication auth) {
     try {
 
         String email = payload.get("email");
@@ -647,8 +661,13 @@ public ResponseEntity<?> createTrainer(@RequestBody Map<String, String> payload)
         }
         trainer.setPhone(phone);
         trainer.setPassword(passwordEncoder.encode(plainPass)); // hashed
-        trainer.setStatus(Status.ACTIVE); // Auto-approved if created by Admin
-        trainer.setApprovalStatus(com.lms.enums.ApprovalStatus.APPROVED);
+        trainer.setStatus(Status.PENDING); // Admin-created users are PENDING by default
+        trainer.setApprovalStatus(com.lms.enums.ApprovalStatus.PENDING);
+
+        // Identify Creator
+        if (auth != null && auth.getPrincipal() instanceof com.lms.security.CustomUserDetails) {
+            trainer.setCreatedBy(((com.lms.security.CustomUserDetails) auth.getPrincipal()).getUser().getEmail());
+        }
         
         // ✅ MANUAL OR AUTO-GENERATED ID
         String trainerId = payload.get("studentId");
@@ -669,10 +688,10 @@ public ResponseEntity<?> createTrainer(@RequestBody Map<String, String> payload)
         trainer.setRole(role);
 
         userRepository.save(trainer);
-        // Trainer creation goes to Super Admin for oversight
-        notificationService.createNotification("New trainer profile created: " + trainer.getName(), "USER_CREATION", "SUPERADMIN");
+        // Trainer creation goes to Super Admin for oversight and approval
+        notificationService.createNotification("New trainer profile created by " + trainer.getCreatedBy() + " (Awaiting SuperAdmin Approval): " + trainer.getName(), "USER_CREATION", "SUPERADMIN");
 
-        return ResponseEntity.ok(Map.of("message", "Trainer created and approved successfully!"));
+        return ResponseEntity.ok(Map.of("message", "Trainer created successfully! Please wait for SuperAdmin approval."));
 
     } catch (Exception e) {
         return ResponseEntity.badRequest()
@@ -735,7 +754,7 @@ public ResponseEntity<?> updateTrainer(@PathVariable Long id,
 
     // ----- GENERIC ADMIN USER CREATION (SUBJECT TO SUPERADMIN APPROVAL) -----
     @PostMapping("/users/create")
-    public ResponseEntity<?> createGenericUser(@RequestBody Map<String, String> payload) {
+    public ResponseEntity<?> createGenericUser(@RequestBody Map<String, String> payload, org.springframework.security.core.Authentication auth) {
         String roleName = payload.get("roleName");
         if (roleName == null || roleName.isEmpty()) {
             return ResponseEntity.badRequest().body(Map.of("message", "Role is required."));
@@ -769,10 +788,15 @@ public ResponseEntity<?> updateTrainer(@PathVariable Long id,
         String plainPass = payload.get("password");
         user.setPassword(passwordEncoder.encode(plainPass));
         
-        // Auto-approved if created by Admin
-        user.setStatus(Status.ACTIVE);
-        user.setApprovalStatus(com.lms.enums.ApprovalStatus.APPROVED);
+        // Admin-created users now default to PENDING
+        user.setStatus(Status.PENDING);
+        user.setApprovalStatus(com.lms.enums.ApprovalStatus.PENDING);
         user.setRole(role);
+
+        // Identify Creator
+        if (auth != null && auth.getPrincipal() instanceof com.lms.security.CustomUserDetails) {
+            user.setCreatedBy(((com.lms.security.CustomUserDetails) auth.getPrincipal()).getUser().getEmail());
+        }
 
         // ✅ MANUAL OR AUTO-GENERATED ID
         try {
@@ -802,12 +826,14 @@ public ResponseEntity<?> updateTrainer(@PathVariable Long id,
         }
 
         userRepository.save(user);
-        // Student creation goes to both Admin and SuperAdmin
-        notificationService.createNotification("New student profile created: " + user.getName(), "USER_CREATION", "ADMIN");
-        notificationService.createNotification("New student profile created: " + user.getName(), "USER_CREATION", "SUPERADMIN");
+        // Student creation notification
+        notificationService.createNotification("New user (" + roleName + ") created by " + user.getCreatedBy() + " (Awaiting Approval): " + user.getName(), "USER_CREATION", "SUPERADMIN");
+        if (roleName.equals("STUDENT")) {
+             notificationService.createNotification("New student created by Admin: " + user.getName(), "USER_CREATION", "ADMIN");
+        }
 
         return ResponseEntity.ok(Map.of(
-            "message", "User " + user.getName() + " created and approved successfully!"
+            "message", "User " + user.getName() + " created successfully! Awaiting approval."
         ));
     }
 

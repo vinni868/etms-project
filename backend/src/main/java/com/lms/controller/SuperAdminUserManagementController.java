@@ -84,7 +84,9 @@ public class SuperAdminUserManagementController {
         }
         user.setPhone(phone);
         user.setPassword(passwordEncoder.encode(payload.get("password")));
-        user.setStatus(Status.ACTIVE);
+        user.setStatus(Status.ACTIVE); // Master Authority: SuperAdmin created users are ACTIVE
+        user.setApprovalStatus(com.lms.enums.ApprovalStatus.APPROVED);
+        user.setCreatedBy("SUPERADMIN");
         user.setRole(role);
 
         // ✅ HANDLE MANUAL OR AUTO-GENERATED ID

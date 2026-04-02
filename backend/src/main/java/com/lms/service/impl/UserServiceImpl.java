@@ -18,6 +18,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class UserServiceImpl implements UserService {
+    @Autowired
+    private NotificationService notificationService;
 
     @Autowired
     private UserRepository userRepository;
@@ -83,17 +85,20 @@ public class UserServiceImpl implements UserService {
         user.setPortalId(portalId);
         user.setStudentId(portalId); // Sync old field for backward compatibility
 
-        // 🔥 MAIN LOGIC
-        if (roleName.equals("STUDENT") || roleName.equals("TRAINER")) {
-            user.setStatus(Status.PENDING);
-            user.setApprovalStatus(com.lms.enums.ApprovalStatus.PENDING);
-        } else {
-            user.setStatus(Status.ACTIVE);
-            user.setApprovalStatus(com.lms.enums.ApprovalStatus.APPROVED);
-        }
+        // 🔥 HIERARCHICAL APPROVAL LOGIC
+        // Any self-signup or non-SuperAdmin creation defaults to PENDING
+        user.setStatus(Status.PENDING);
+        user.setApprovalStatus(com.lms.enums.ApprovalStatus.PENDING);
         user.setCreatedBy("self");
 
-        return userRepository.save(user);
+        User savedUser = userRepository.save(user);
+        
+        // Notify both Admin and SuperAdmin for self-registrations
+        String msg = "New self-registered " + roleName + " (Awaiting Approval): " + user.getName();
+        notificationService.createNotification(msg, "USER_CREATION", "ADMIN");
+        notificationService.createNotification(msg, "USER_CREATION", "SUPERADMIN");
+
+        return savedUser;
     }
 
     @Override
