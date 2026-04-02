@@ -160,7 +160,13 @@ public class AuthController {
         userRepository.save(user);
 
         // ✅ Send Email
-        emailService.sendOtpEmail(user.getEmail(), otp);
+        try {
+            emailService.sendOtpEmail(user.getEmail(), otp);
+        } catch (Exception e) {
+            System.err.println("SMTP ERROR for " + email + ": " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("message", "Failed to send reset email. Please try again later or contact support."));
+        }
 
         // ✅ Send SMS (if phone exists)
         if (user.getPhone() != null) {

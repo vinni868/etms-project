@@ -25,6 +25,16 @@ function GoogleSignup() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+  const [resendTimer, setResendTimer] = useState(0);
+
+  // Timer Effect for Resend OTP
+  useEffect(() => {
+    let interval;
+    if (resendTimer > 0) {
+      interval = setInterval(() => setResendTimer((prev) => prev - 1), 1000);
+    }
+    return () => clearInterval(interval);
+  }, [resendTimer]);
 
   // ── 1. Google Identity Services Setup ──
   useEffect(() => {
@@ -168,6 +178,23 @@ function GoogleSignup() {
     }
   };
 
+  const handleResendOtp = async () => {
+    if (resendTimer > 0 || loading) return;
+    
+    setError("");
+    setSuccess("");
+    setLoading(true);
+    try {
+      const res = await api.post("/auth/send-signup-otp", { email });
+      setSuccess(res.data.message || "A new OTP has been sent.");
+      setResendTimer(60);
+    } catch (err) {
+      setError(err.response?.data?.message || "Failed to resend OTP. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
 
   return (
     <div className="gs-container">
@@ -246,35 +273,62 @@ function GoogleSignup() {
 
           {/* STEP 3: OTP VERIFICATION */}
           {step === 'OTP_INPUT' && (
-            <form onSubmit={handleVerifyOtp} style={{display: 'flex', flexDirection: 'column', gap: '15px'}}>
-              <div style={{fontSize: '13px', color: '#64748b', textAlign: 'center', marginBottom: '5px'}}>
-                We sent a 6-digit code to <strong>{email}</strong>
-              </div>
+            <div style={{display: 'flex', flexDirection: 'column', gap: '15px'}}>
+              <form onSubmit={handleVerifyOtp} style={{display: 'flex', flexDirection: 'column', gap: '15px'}}>
+                <div style={{fontSize: '13px', color: '#64748b', textAlign: 'center', marginBottom: '5px'}}>
+                  We sent a 6-digit code to <strong>{email}</strong>
+                </div>
 
-              <div style={{display: 'flex', flexDirection: 'column', gap: '5px'}}>
-                <label style={{fontSize: '14px', fontWeight: '600', color: '#1e293b'}}>Verification Code</label>
-                <input 
-                  type="text" 
-                  autoFocus
-                  placeholder="Enter 6-digit OTP" 
-                  value={otp}
-                  onChange={(e) => setOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
-                  required
-                  style={{padding: '12px 14px', border: '1px solid #cbd5e1', borderRadius: '8px', fontSize: '16px', letterSpacing: '4px', textAlign: 'center', outline: 'none', transition: '0.2s', fontWeight: 'bold'}}
-                  onFocus={(e) => e.target.style.borderColor = '#2563eb'}
-                  onBlur={(e) => e.target.style.borderColor = '#cbd5e1'}
-                />
-              </div>
+                <div style={{display: 'flex', flexDirection: 'column', gap: '5px'}}>
+                  <label style={{fontSize: '14px', fontWeight: '600', color: '#1e293b'}}>Verification Code</label>
+                  <input 
+                    type="text" 
+                    autoFocus
+                    placeholder="Enter 6-digit OTP" 
+                    value={otp}
+                    onChange={(e) => setOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                    required
+                    style={{padding: '12px 14px', border: '1px solid #cbd5e1', borderRadius: '8px', fontSize: '16px', letterSpacing: '4px', textAlign: 'center', outline: 'none', transition: '0.2s', fontWeight: 'bold'}}
+                    onFocus={(e) => e.target.style.borderColor = '#2563eb'}
+                    onBlur={(e) => e.target.style.borderColor = '#cbd5e1'}
+                  />
+                </div>
 
-              <div style={{display: 'flex', gap: '10px', marginTop: '5px'}}>
-                <button type="button" onClick={() => {setStep('EMAIL_INPUT'); setOtp(""); setError(""); setSuccess("");}} style={{flex: 1, padding: '12px', background: '#f1f5f9', border: 'none', borderRadius: '8px', color: '#475569', fontWeight: '600', cursor: 'pointer'}}>
-                  Back
-                </button>
-                <button type="submit" disabled={loading} style={{flex: 2, padding: '12px', background: '#22c55e', border: 'none', borderRadius: '8px', color: 'white', fontWeight: '600', cursor: loading ? 'not-allowed' : 'pointer', opacity: loading ? 0.7 : 1}}>
-                  {loading ? 'Verifying...' : 'Verify OTP'}
-                </button>
+                <div style={{display: 'flex', gap: '10px', marginTop: '5px'}}>
+                  <button type="button" onClick={() => {setStep('EMAIL_INPUT'); setOtp(""); setError(""); setSuccess("");}} style={{flex: 1, padding: '12px', background: '#f1f5f9', border: 'none', borderRadius: '8px', color: '#475569', fontWeight: '600', cursor: 'pointer'}}>
+                    Back
+                  </button>
+                  <button type="submit" disabled={loading} style={{flex: 2, padding: '12px', background: '#22c55e', border: 'none', borderRadius: '8px', color: 'white', fontWeight: '600', cursor: loading ? 'not-allowed' : 'pointer', opacity: loading ? 0.7 : 1}}>
+                    {loading ? 'Verifying...' : 'Verify OTP'}
+                  </button>
+                </div>
+              </form>
+              
+              <div style={{textAlign: 'center', marginTop: '10px', padding: '10px', borderTop: '1px solid #f1f5f9'}}>
+                <p style={{fontSize: '13px', color: '#64748b'}}>
+                  Didn't receive the code?{' '}
+                  {resendTimer > 0 ? (
+                    <span style={{color: '#1e293b', fontWeight: '600'}}>Resend in {resendTimer}s</span>
+                  ) : (
+                    <button 
+                      onClick={handleResendOtp} 
+                      disabled={loading}
+                      style={{
+                        background: 'none', 
+                        border: 'none', 
+                        color: '#2563eb', 
+                        textDecoration: 'underline', 
+                        cursor: loading ? 'not-allowed' : 'pointer', 
+                        fontWeight: '600',
+                        fontSize: '13px'
+                      }}
+                    >
+                      Resend Code
+                    </button>
+                  )}
+                </p>
               </div>
-            </form>
+            </div>
           )}
 
         </div>

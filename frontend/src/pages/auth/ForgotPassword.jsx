@@ -1,8 +1,8 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import api from "../../api/axiosConfig";
-import { FaEnvelope, FaArrowLeft, FaShieldAlt } from "react-icons/fa";
-import "./Auth.css"; // We'll create this shared style
+import { FaFingerprint, FaArrowLeft, FaShieldAlt, FaEnvelope } from "react-icons/fa";
+import "./Auth.css";
 
 const ForgotPassword = () => {
   const [email, setEmail] = useState("");
@@ -19,12 +19,17 @@ const ForgotPassword = () => {
 
     try {
       const response = await api.post("/auth/forgot-password", { email });
-      setMessage(response.data.message);
+      setMessage(response.data.message || "Reset code sent successfully!");
       // Store email for subsequent steps
       sessionStorage.setItem("resetEmail", email);
+      
+      // Delay navigation to let user see success message
       setTimeout(() => navigate("/verify-otp"), 2000);
     } catch (err) {
-      setError(err.response?.data?.message || "Failed to send OTP. Please try again.");
+      console.error("Forgot Password Error:", err);
+      // Catch specific errors from backend
+      const errMsg = err.response?.data?.message || "Failed to send reset code. Please check your connection.";
+      setError(errMsg);
     } finally {
       setLoading(false);
     }
@@ -35,23 +40,26 @@ const ForgotPassword = () => {
       <div className="auth-card">
         <div className="auth-header">
           <div className="auth-icon-circle">
-            <FaShieldAlt className="auth-icon" />
+            <FaFingerprint className="auth-icon" />
           </div>
-          <h1>Forgot Password?</h1>
-          <p>Enter your email to receive a 6-digit reset code.</p>
+          <h1>Password Reset</h1>
+          <p>Don't worry! Enter your email and we'll send you a 6-digit verification code.</p>
         </div>
 
         <form onSubmit={handleSubmit} className="auth-form">
           <div className="form-group">
-            <label>Email Address</label>
+            <label htmlFor="email">Registered Email Address</label>
             <div className="input-with-icon">
-        
+              <FaEnvelope className="input-icon" />
               <input
+                id="email"
                 type="email"
-                placeholder="vinayaka@example.com"
+                placeholder="your.name@example.com"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 required
+                disabled={loading}
+                autoFocus
               />
             </div>
           </div>
@@ -59,8 +67,16 @@ const ForgotPassword = () => {
           {error && <div className="auth-error">{error}</div>}
           {message && <div className="auth-success">{message}</div>}
 
-          <button type="submit" className="auth-btn" disabled={loading}>
-            {loading ? "Sending..." : "Send Reset Code"}
+          <button 
+            type="submit" 
+            className="auth-btn" 
+            disabled={loading || !email}
+          >
+            {loading ? (
+              <span className="btn-loading flex items-center justify-center gap-2">
+                Sending Code...
+              </span>
+            ) : "Send Reset Code"}
           </button>
         </form>
 

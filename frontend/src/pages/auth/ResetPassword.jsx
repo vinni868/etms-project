@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import api from "../../api/axiosConfig";
-import { FaLock, FaCheckCircle } from "react-icons/fa";
+import { FaLock, FaCheckCircle, FaKey } from "react-icons/fa";
 import "./Auth.css";
 
 const ResetPassword = () => {
@@ -46,9 +46,11 @@ const ResetPassword = () => {
     return (
       <div className="auth-container">
         <div className="auth-card" style={{ textAlign: 'center' }}>
-          <FaCheckCircle style={{ fontSize: '4rem', color: '#4ade80', marginBottom: '1.5rem' }} />
-          <h1>Success!</h1>
-          <p>Your password has been reset. Redirecting to login...</p>
+          <div className="auth-icon-circle" style={{ background: '#f0fdf4' }}>
+             <FaCheckCircle style={{ fontSize: '24px', color: '#16a34a' }} />
+          </div>
+          <h1 style={{ color: '#16a34a' }}>Success!</h1>
+          <p>Your password has been reset successfully. <br/>Redirecting to login...</p>
         </div>
       </div>
     );
@@ -59,45 +61,50 @@ const ResetPassword = () => {
       <div className="auth-card">
         <div className="auth-header">
           <div className="auth-icon-circle">
-            <FaLock className="auth-icon" />
+            <FaKey className="auth-icon" />
           </div>
-          <h1>Reset Password</h1>
-          <p>Create a strong new password for your account.</p>
+          <h1>Create New Password</h1>
+          <p>Secure your account with a strong password.</p>
         </div>
 
         <form onSubmit={handleSubmit} className="auth-form">
           <div className="form-group">
-            <label>New Password</label>
+            <label htmlFor="newPassword">New Password</label>
             <div className="input-with-icon">
-          
+              <FaLock className="input-icon" />
               <input
+                id="newPassword"
                 type="password"
                 placeholder="••••••••"
                 value={newPassword}
                 onChange={(e) => setNewPassword(e.target.value)}
                 required
+                disabled={loading}
+                autoFocus
               />
             </div>
           </div>
 
           <div className="form-group">
-            <label>Confirm Password</label>
+            <label htmlFor="confirmPassword">Confirm Password</label>
             <div className="input-with-icon">
-              
+               <FaLock className="input-icon" />
               <input
+                id="confirmPassword"
                 type="password"
                 placeholder="••••••••"
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 required
+                disabled={loading}
               />
             </div>
           </div>
 
           {error && <div className="auth-error">{error}</div>}
 
-          <button type="submit" className="auth-btn" disabled={loading}>
-            {loading ? "Resetting..." : "Reset Password"}
+          <button type="submit" className="auth-btn" disabled={loading || !newPassword || !confirmPassword}>
+            {loading ? "Updating Password..." : "Reset Password"}
           </button>
         </form>
       </div>
