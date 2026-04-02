@@ -39,7 +39,7 @@ function addSessionActivity(icon, text, color = "blue") {
     icon,
     text,
     color,
-    time:  new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+    time:  new Date().toLocaleTimeString('en-US', { hour: "2-digit", minute: "2-digit", hour12: true }).toUpperCase(),
   };
 
   // Deduplicate — skip if same text logged within last 60 seconds
@@ -456,7 +456,7 @@ function StudentDashboard() {
     pushActivity("🔔", "Marked all notifications as read", "amber");
   };
 
-  const timeStr = currentTime.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+  const timeStr = currentTime.toLocaleTimeString('en-US', { hour: "2-digit", minute: "2-digit", hour12: true }).toUpperCase();
   const dateStr = currentTime.toLocaleDateString([], { weekday: "long", month: "long", day: "numeric" });
 
   const activityColors = {

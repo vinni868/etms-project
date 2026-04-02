@@ -226,7 +226,7 @@ function TrainerDashboard() {
           <div className="td-hero__right">
             <div className="td-live-clock">
               <div className="td-clock__time">
-                {nowTime.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                {nowTime.toLocaleTimeString('en-US', { hour: "2-digit", minute: "2-digit", hour12: true }).toUpperCase()}
               </div>
               <div className="td-clock__date">
                 {nowTime.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" })}

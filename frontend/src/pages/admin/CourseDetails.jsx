@@ -109,7 +109,7 @@ function MapStudentModal({ courseId, enrolledStudentIds = [], onClose, onSaved }
     const fetchStudents = async () => {
       try {
         const res = await api.get("/admin/students");
-        setStudents(res.data.filter(s => s.status !== "INACTIVE"));
+        setStudents(res.data.filter(s => s.status === "ACTIVE"));
       } catch (err) {
         setError("Failed to load students list.");
       } finally {
@@ -139,7 +139,7 @@ function MapStudentModal({ courseId, enrolledStudentIds = [], onClose, onSaved }
   };
 
   const filteredStudents = students
-    .filter(s => s.status !== "INACTIVE" && (s.portalId || s.studentId))
+    .filter(s => s.status === "ACTIVE" && (s.portalId || s.studentId))
     // Filter out already enrolled students
     .filter(s => !enrolledStudentIds.includes(s.id))
     .filter(s => 

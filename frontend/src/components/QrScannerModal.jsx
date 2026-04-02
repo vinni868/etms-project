@@ -190,14 +190,14 @@ export default function QrScannerModal({ isOpen, onClose, onSuccess }) {
             <div className="qr-session-details">
               <div className="qr-session-row">
                 <span>Arrival</span>
-                <span>{new Date(si.loginTime).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true })}</span>
+                <span>{new Date(si.loginTime).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true }).toUpperCase()}</span>
               </div>
 
               {si.logoutTime && (
                 <>
                   <div className="qr-session-row">
                     <span>Departure</span>
-                    <span>{new Date(si.logoutTime).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true })}</span>
+                    <span>{new Date(si.logoutTime).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true }).toUpperCase()}</span>
                   </div>
                   <div className="qr-divider" />
                   <div className="qr-session-row">

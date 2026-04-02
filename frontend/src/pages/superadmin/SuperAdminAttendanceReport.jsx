@@ -27,12 +27,14 @@ export default function SuperAdminAttendanceReport() {
     }
   };
 
-  const fmtTime = (dateStr) =>
+  const formatTime = (dateStr) =>
     dateStr
-      ? new Date(dateStr).toLocaleTimeString('en-IN', {
-          hour: '2-digit', minute: '2-digit', hour12: true,
-        })
-      : '—';
+      ? new Date(dateStr).toLocaleTimeString('en-US', {
+          hour: '2-digit',
+          minute: '2-digit',
+          hour12: true
+        }).toUpperCase()
+      : "—";
 
   const fmtDate = (dateStr) =>
     new Date(dateStr).toLocaleDateString('en-IN', {

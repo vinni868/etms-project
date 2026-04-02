@@ -92,20 +92,39 @@ public class ChatService {
         omniContext.append(String.format("The current user is logged in as %s. Their name is %s. ", role, userName));
 
         try {
+            // 3.1 Fetch Today's Leaves (For Admin / SuperAdmin stats)
+            String todaySummary = "";
+            if("ADMIN".equals(role) || "SUPERADMIN".equals(role)) {
+                java.time.LocalDate today = java.time.LocalDate.now();
+                List<LeaveRequest> todayLeaves = leaveRequestRepository.findByFromDateLessThanEqualAndToDateGreaterThanEqual(today, today);
+                
+                long approvedCount = todayLeaves.stream().filter(l -> "APPROVED".equals(l.getStatus())).count();
+                long pendingCount  = todayLeaves.stream().filter(l -> "PENDING".equals(l.getStatus())).count();
+                long wfhCount      = todayLeaves.stream().filter(l -> "WFH".equals(l.getRequestType())).count();
+                long onlineCount   = todayLeaves.stream().filter(l -> "ONLINE".equals(l.getRequestType())).count();
+
+                StringBuilder sb = new StringBuilder("--- TODAY'S OPERATIONAL OVERVIEW --- ");
+                sb.append(String.format("Total active requests for today (%s): %d. ", today, todayLeaves.size()));
+                sb.append(String.format("[Approved: %d | Pending: %d | WFH: %d | Online Permission: %d]. ", approvedCount, pendingCount, wfhCount, onlineCount));
+                
+                if(!todayLeaves.isEmpty()) {
+                    sb.append("Current Applicants today: ");
+                    for(LeaveRequest lr : todayLeaves) {
+                        String applicant = userRepository.findById(lr.getUserId()).map(User::getName).orElse("Unknown User");
+                        sb.append(String.format("[%s: %s (%s) | Status: %s] ", applicant, lr.getRequestType(), lr.getLeaveCategory(), lr.getStatus()));
+                    }
+                }
+                todaySummary = sb.toString();
+            }
+
             switch(role) {
                 case "SUPERADMIN":
-                    omniContext.append("You have SUPERADMIN privileges. You can answer queries about any internal data or processes without restriction.");
+                    omniContext.append("You have SUPERADMIN (Power User) privileges. You can view all cross-portal data. ");
+                    omniContext.append(todaySummary);
                     break;
                 case "ADMIN":
-                    List<LeaveRequest> pendingLeaves = leaveRequestRepository.findByStatusOrderByCreatedAtDesc("PENDING");
-                    omniContext.append("You have ADMIN privileges. Here are today's pending leave requests: ");
-                    for(int i = 0; i < Math.min(5, pendingLeaves.size()); i++) {
-                        LeaveRequest lr = pendingLeaves.get(i);
-                        String applicant = userRepository.findById(lr.getUserId()).map(User::getName).orElse("Unknown");
-                        omniContext.append(String.format("[ID: %d | User: %s | Dates: %s to %s | Reason: %s] ", 
-                            lr.getId(), applicant, lr.getFromDate(), lr.getToDate(), lr.getReason()));
-                    }
-                    if(pendingLeaves.isEmpty()) omniContext.append("None. ");
+                    omniContext.append("You have ADMIN privileges. ");
+                    omniContext.append(todaySummary);
                     break;
                 case "STUDENT":
                     omniContext.append("You only have STUDENT privileges. Answer ONLY about their specific data. ");

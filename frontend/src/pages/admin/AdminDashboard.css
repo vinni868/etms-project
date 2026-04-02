@@ -301,14 +301,131 @@
 .adm-sec-tab--active .adm-tab-chip { background: rgba(255,255,255,.2); color: #fff; }
 
 .adm-tab-stats { display: flex; gap: 8px; margin-left: auto; flex-wrap: wrap; }
-.adm-tab-stat {
-  display: inline-flex; align-items: center; gap: 5px;
-  font-size: 12px; font-weight: 700; padding: 6px 12px;
-  border-radius: 20px; white-space: nowrap;
-}
-.adm-tab-stat--student { background: var(--adm-blue-lt);   color: var(--adm-blue);   border: 1px solid var(--adm-blue-md); }
-.adm-tab-stat--trainer { background: var(--adm-purple-lt); color: var(--adm-purple); border: 1px solid #ddd6fe; }
 .adm-tab-stat--active  { background: var(--adm-green-lt);  color: var(--adm-green);  border: 1px solid #bbf7d0; }
+
+/* ============================================================
+   STATUS OVERVIEW CARDS
+   ============================================================ */
+.adm-status-overview {
+  display: flex; gap: 16px; margin-bottom: 24px;
+}
+
+.adm-status-card {
+  flex: 1;
+  background: var(--adm-white);
+  border: 1.5px solid var(--adm-border);
+  border-radius: var(--adm-radius);
+  padding: 18px 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  box-shadow: var(--adm-shadow);
+  transition: transform .2s, border-color .2s;
+  animation: adm-fadein .4s ease both;
+}
+.adm-status-card:hover { transform: translateY(-3px); border-color: var(--adm-blue-md); }
+
+.adm-status-card__meta {
+  display: flex; align-items: center; gap: 6px;
+  font-size: 13px; font-weight: 700; color: var(--adm-muted);
+}
+.adm-status-card__val {
+  font-size: 24px; font-weight: 900; color: var(--adm-navy);
+}
+
+.adm-status-card--student .adm-status-card__meta svg { color: var(--adm-blue); }
+.adm-status-card--trainer .adm-status-card__meta svg { color: var(--adm-purple); }
+.adm-status-card--active  .adm-status-card__meta     { color: var(--adm-green); }
+
+/* Live Pulse Indicator */
+.adm-live-pulse {
+  width: 8px; height: 8px; border-radius: 50%;
+  background: var(--adm-green);
+  position: relative;
+}
+.adm-live-pulse::after {
+  content: ''; position: absolute; inset: -4px;
+  border: 2px solid var(--adm-green); border-radius: 50%;
+  animation: adm-pulse 1.8s infinite;
+}
+
+@keyframes adm-pulse {
+  0% { transform: scale(1); opacity: 1; }
+  100% { transform: scale(2.2); opacity: 0; }
+}
+
+/* ============================================================
+   RECENT ACTIVITY WIDGET
+   ============================================================ */
+.adm-activity-widget {
+  margin-top: 10px;
+  margin-bottom: 25px;
+  animation: adm-fadein 0.6s ease both;
+}
+
+.adm-activity-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 15px;
+  padding: 18px;
+}
+
+.adm-activity-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  background: #f8fafc;
+  padding: 14px;
+  border-radius: 12px;
+  border: 1px solid var(--adm-border);
+  border-left: 4px solid var(--adm-blue);
+  transition: all 0.2s;
+  position: relative;
+}
+
+.adm-activity-item:hover {
+  background: #fff;
+  box-shadow: 0 4px 12px rgba(15,23,42,0.06);
+  transform: translateY(-2px);
+}
+
+.adm-activity-item--leave { border-left-color: var(--adm-amber); }
+.adm-activity-item--enroll { border-left-color: var(--adm-green); }
+.adm-activity-item--fees   { border-left-color: var(--adm-purple); }
+
+.adm-activity-content {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.adm-activity-msg {
+  font-size: 13.5px;
+  font-weight: 700;
+  color: var(--adm-navy);
+  line-height: 1.4;
+}
+
+.adm-activity-meta {
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--adm-muted);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.adm-activity-dot {
+  font-size: 8px;
+  opacity: 0.5;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
 
 /* ============================================================
    SHARED CARD

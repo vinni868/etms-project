@@ -103,7 +103,7 @@ const formatTime12h = (dateStr) => {
       hour: '2-digit',
       minute: '2-digit',
       hour12: true
-    });
+    }).toUpperCase();
   } catch (e) { return "—"; }
 };
 

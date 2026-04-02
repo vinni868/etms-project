@@ -101,7 +101,7 @@ const QuickPunch = ({ variant = 'card' }) => {
                     {lastLog && (
                         <div className="qp-info-text">
                             <FaClock size={12} style={{marginRight: '6px'}} /> 
-                            Last: {new Date(lastLog.loginTime).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                            Last: {new Date(lastLog.loginTime).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true }).toUpperCase()}
                         </div>
                     )}
                 </div>

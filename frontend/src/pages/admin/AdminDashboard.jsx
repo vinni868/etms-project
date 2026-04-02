@@ -5,7 +5,6 @@ import {
   FaSync, FaCalendarTimes
 } from "react-icons/fa";
 import { useEffect, useState } from "react";
-import { createPortal } from "react-dom";
 import { useNavigate, Link } from "react-router-dom";
 import api from "../../api/axiosConfig";
 import "./AdminDashboard.css";
@@ -134,35 +133,20 @@ function Pagination({ currentPage, totalPages, onChange, total, pageSize }) {
   );
 }
 
-/* ══════════════════════════════════════════════════
-   NOTIFICATION DROPDOWN — rendered via React Portal
-   directly into document.body so it sits OUTSIDE the
-   hero's stacking context (backdrop-filter on stat
-   pills creates an isolated stacking context that
-   traps any child regardless of z-index).
-   Position is calculated from the button's bounding rect.
-   ══════════════════════════════════════════════════ */
-// Redundant NotifDropdown removed as notifications are now global in Navbar
-
-/* ══════════════════════════════════════════════════
-   MAIN COMPONENT
-   ══════════════════════════════════════════════════ */
 function AdminDashboard() {
+  const navigate = useNavigate();
   const user = JSON.parse(localStorage.getItem("user") || "{}");
 
   const [data, setData] = useState({
-    totalCourses: 0, totalTrainers: 0, totalStudents: 0, activeBatches: 0
+    totalCourses: 0, totalTrainers: 0, totalStudents: 0, activeBatches: 0, pendingApprovals: 0
   });
   const [users,   setUsers]   = useState([]);
   const [loading, setLoading] = useState(false);
   const [recentNotifs, setRecentNotifs] = useState([]);
 
-
   const [activeSection, setActiveSection] = useState("approval");
-
   const [approvalSearch, setApprovalSearch] = useState("");
   const [approvalPage,   setApprovalPage]   = useState(1);
-
   const [userSearch,   setUserSearch]   = useState("");
   const [roleFilter,   setRoleFilter]   = useState("ALL");
   const [statusFilter, setStatusFilter] = useState("ALL");
@@ -181,7 +165,6 @@ function AdminDashboard() {
     return "Good Evening";
   })();
 
-
   useEffect(() => { setApprovalPage(1); }, [approvalSearch]);
   useEffect(() => { setUserPage(1); }, [userSearch, roleFilter, statusFilter]);
 
@@ -193,10 +176,8 @@ function AdminDashboard() {
   const fetchAllUsers = async () => {
     setLoading(true);
     try {
-      // ✅ SINGLE SOURCE OF TRUTH: '/admin/all-users' already returns Students, Trainers, Marketers & Counselors
       const res = await api.get("/admin/all-users");
       const list = res.data || [];
-      // ✅ EXCLUDE SUPERADMIN FROM VIEW
       setUsers(list.filter(u => u.role?.roleName !== "SUPERADMIN"));
     } catch (err) { 
       console.error("Dashboard reload failed:", err); 
@@ -216,7 +197,7 @@ function AdminDashboard() {
 
   const approveUser    = async (id) => { 
     let overrideId = window.prompt("To auto-generate ID, leave blank. To manually assign an ID, enter it below:");
-    if (overrideId === null) return; // Cancelled
+    if (overrideId === null) return; 
     await api.patch(`/admin/users/approve/${id}`, { generatedId: overrideId });
     fetchAllUsers(); fetchDashboardData(); 
   };
@@ -233,7 +214,6 @@ function AdminDashboard() {
   const counselorsCount = users.filter(u => u.role?.roleName === "COUNSELOR").length;
   const activeCount   = users.filter(u => u.status === "ACTIVE").length;
 
-  // ── VISIBILITY: Admin can see all, but can only approve STUDENT ──
   const approvalList = users
     .filter(u => {
       const t = approvalSearch.toLowerCase();
@@ -298,14 +278,12 @@ function AdminDashboard() {
           <div className="adm-hero__right">
             <div className="adm-live-clock">
               <div className="adm-clock__time">
-                {nowTime.toLocaleTimeString([], { hour:"2-digit", minute:"2-digit" })}
+                {nowTime.toLocaleTimeString('en-US', { hour:"2-digit", minute:"2-digit", hour12:true }).toUpperCase()}
               </div>
               <div className="adm-clock__date">
                 {nowTime.toLocaleDateString("en-US", { weekday:"long", month:"long", day:"numeric" })}
               </div>
             </div>
-
-
 
             <button className="adm-refresh-btn" onClick={handleRefresh} title="Refresh">
               <FaSync />
@@ -326,11 +304,62 @@ function AdminDashboard() {
           ))}
         </div>
       </header>
+
       {/* ══════════ QUICK PUNCH (HORIZONTAL BAR) ══════════ */}
       <div className="adm-punch-container" style={{ margin: '20px 30px 10px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
         <QuickPunch variant="horizontal" />
         <AttendanceRules />
       </div>
+
+      {/* ══════════ LIVE STATUS OVERVIEW ══════════ */}
+      <div className="adm-status-overview">
+        <div className="adm-status-card adm-status-card--student">
+          <div className="adm-status-card__meta"><FaUserGraduate /> Students</div>
+          <div className="adm-status-card__val">{studentsCount}</div>
+        </div>
+        <div className="adm-status-card adm-status-card--trainer">
+          <div className="adm-status-card__meta"><FaUserTie /> Trainers</div>
+          <div className="adm-status-card__val">{trainersCount}</div>
+        </div>
+        <div className="adm-status-card adm-status-card--active">
+          <div className="adm-status-card__meta"><div className="adm-live-pulse" /> Live Active</div>
+          <div className="adm-status-card__val">{activeCount}</div>
+        </div>
+      </div>
+
+      {/* ══════════ RECENT ACTIVITY ══════════ */}
+      {recentNotifs.length > 0 && (
+        <div className="adm-activity-widget">
+          <div className="adm-card" style={{ marginBottom: 0 }}>
+            <div className="adm-card__toolbar">
+               <h3 className="adm-card__title">Recent System Activity</h3>
+               <Link to="/admin/notifications" className="adm-link" style={{ fontSize: '12px' }}>History →</Link>
+            </div>
+            <div className="adm-activity-grid">
+              {recentNotifs.map(n => {
+                const isLeave  = n.type?.toUpperCase() === "LEAVE" || n.message?.toLowerCase().includes("leave");
+                const isEnroll = n.message?.toLowerCase().includes("enrol") || n.message?.toLowerCase().includes("mapping");
+                const isFee    = n.type?.toUpperCase() === "FEE" || n.message?.toLowerCase().includes("pay");
+                
+                const itemClass = isLeave ? "adm-activity-item--leave" : isEnroll ? "adm-activity-item--enroll" : isFee ? "adm-activity-item--fees" : "";
+                
+                return (
+                  <div key={n.id} className={`adm-activity-item ${itemClass}`}>
+                    <div className="adm-activity-content">
+                      <div className="adm-activity-msg">{n.message}</div>
+                      <div className="adm-activity-meta">
+                        {new Date(n.createdAt).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true }).toUpperCase()}
+                        <span className="adm-activity-dot">●</span>
+                        {n.type || "System"}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* ══════════ SECTION TABS ══════════ */}
       <div className="adm-section-tabs">
@@ -348,252 +377,74 @@ function AdminDashboard() {
           <FaUsers /> All Users
           <span className="adm-tab-chip">{users.length}</span>
         </button>
-
-        <div className="adm-tab-stats">
-          <span className="adm-tab-stat adm-tab-stat--student">
-            <FaUserGraduate /> {studentsCount} Students
-          </span>
-          <span className="adm-tab-stat adm-tab-stat--trainer">
-            <FaUserTie /> {trainersCount} Trainers
-          </span>
-          <span className="adm-tab-stat adm-tab-stat--active">
-            <FaCheckCircle /> {activeCount} Active
-          </span>
-        </div>
       </div>
 
-      {/* ══════════ RECENT ACTIVITY WIDGET ══════════ */}
-      {recentNotifs.length > 0 && (
-        <div className="adm-activity-widget" style={{margin: '0 30px 30px', animation: 'fadeIn 0.5s ease-out'}}>
-          <div className="adm-card">
-            <div className="adm-card__toolbar">
-               <h3 className="adm-card__title">Recent System Activity</h3>
-               <Link to="/admin/notifications" className="adm-link" style={{fontSize: '12px'}}>History →</Link>
-            </div>
-            <div className="adm-activity-list" style={{display: 'flex', flexWrap: 'wrap', gap: '15px', padding: '15px'}}>
-              {recentNotifs.map(n => (
-                <div key={n.id} className="adm-activity-item" style={{
-                  flex: '1', minWidth: '250px', background: '#f8fafc', padding: '12px', borderLeft: '3px solid #2563eb', borderRadius: '8px'
-                }}>
-                  <div style={{fontSize: '13px', fontWeight: '600', color: '#1e293b', marginBottom: '4px'}}>{n.message}</div>
-                  <div style={{fontSize: '11px', color: '#64748b'}}>{new Date(n.createdAt).toLocaleTimeString()} · {n.type}</div>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* ══════════════════════════════════════
-          SECTION 1 — USER APPROVALS
-         ══════════════════════════════════════ */}
-      {activeSection === "approval" && (
+      {/* ══════════ TABLE CONTENT ══════════ */}
+      {activeSection === "approval" ? (
         <div className="adm-card">
           <div className="adm-card__toolbar">
             <div className="adm-card__toolbar-left">
               <h3 className="adm-card__title">User Approvals</h3>
-              {pendingCount > 0 && (
-                <span className="adm-pending-chip">⚠ {pendingCount} pending</span>
-              )}
+              {pendingCount > 0 && <span className="adm-pending-chip">⚠ {pendingCount} pending</span>}
             </div>
             <div className="adm-search">
               <span className="adm-search__ico">🔍</span>
-              <input className="adm-search__inp" type="text"
-                placeholder="Search by name or email…"
-                value={approvalSearch}
-                onChange={e => setApprovalSearch(e.target.value)} />
-              {approvalSearch && (
-                <button className="adm-search__clr" onClick={() => setApprovalSearch("")}>✕</button>
-              )}
+              <input className="adm-search__inp" type="text" placeholder="Search by name or email…" value={approvalSearch} onChange={e => setApprovalSearch(e.target.value)} />
             </div>
           </div>
-
-          <Pagination currentPage={approvalPage} totalPages={approvalTotalPages}
-            onChange={setApprovalPage} total={approvalList.length} pageSize={PAGE_SIZE_APPROVAL} />
-
+          <Pagination currentPage={approvalPage} totalPages={approvalTotalPages} onChange={setApprovalPage} total={approvalList.length} pageSize={PAGE_SIZE_APPROVAL} />
           <div className="adm-table-wrap">
             <table className="adm-table responsive-card-table">
-              <thead>
-                <tr>
-                  <th>#</th>
-                  <th>User Details</th>
-                  <th>Role</th>
-                  <th>Status</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
+              <thead><tr><th>#</th><th>User Details</th><th>Role</th><th>Status</th><th>Actions</th></tr></thead>
               <tbody>
-                {loading ? (
-                  <tr><td colSpan="5" className="adm-td-state">
-                    <div className="adm-state-row"><div className="adm-spinner"/>Loading…</div>
-                  </td></tr>
-                ) : approvalPaged.length === 0 ? (
-                  <tr><td colSpan="5" className="adm-td-state">
-                    <div className="adm-empty">
-                      <span className="adm-empty__ico">👥</span>
-                      <p>No users found.</p>
-                    </div>
-                  </td></tr>
-                ) : approvalPaged.map((u, i) => {
-                  const idx = (approvalPage-1)*PAGE_SIZE_APPROVAL + i;
-                  return (
-                    <tr key={u.id} className={u.status==="PENDING" ? "adm-row--pending" : ""}>
-                      <td className="adm-td adm-td--num" data-label="#">
-                        <span className="adm-rnum">{idx+1}</span>
-                      </td>
-                      <td className="adm-td" data-label="User Details">
-                        <div className="adm-user-cell">
-                          <Avatar name={u.name} idx={idx} />
-                          <div className="adm-user-cell__info">
-                            <span className="adm-user-cell__name">{u.name}</span>
-                            <span className="adm-user-cell__sub">{u.portalId || u.studentId || u.email}</span>
-                            {(u.portalId || u.studentId) && <span className="adm-user-cell__sub">{u.email}</span>}
-                            {u.phone && <span className="adm-user-cell__sub">{u.phone}</span>}
-                          </div>
-                        </div>
-                      </td>
-                      <td className="adm-td" data-label="Role"><RoleTag role={u.role?.roleName} /></td>
-                      <td className="adm-td" data-label="Status"><StatusBadge status={u.status} /></td>
-                      <td className="adm-td adm-td--actions" data-label="Actions">
-                        <ActionBtns user={u}
-                          onApprove={approveUser} onReject={rejectUser}
-                          onDeactivate={deactivateUser} onActivate={reactivateUser} />
-                      </td>
-                    </tr>
-                  );
-                })}
+                {loading ? <tr><td colSpan="5"><div className="adm-spinner"/></td></tr> : approvalPaged.length === 0 ? <tr><td colSpan="5">No users found.</td></tr> :
+                  approvalPaged.map((u, i) => {
+                    const idx = (approvalPage-1)*PAGE_SIZE_APPROVAL + i;
+                    return (
+                      <tr key={u.id} className={u.status==="PENDING" ? "adm-row--pending" : ""}>
+                        <td className="adm-td--num"><span className="adm-rnum">{idx+1}</span></td>
+                        <td className="adm-td"><div className="adm-user-cell"><Avatar name={u.name} idx={idx} /><div><div className="adm-user-cell__name">{u.name}</div><div className="adm-user-cell__sub">{u.email}</div></div></div></td>
+                        <td className="adm-td"><RoleTag role={u.role?.roleName} /></td>
+                        <td className="adm-td"><StatusBadge status={u.status} /></td>
+                        <td className="adm-td--actions"><ActionBtns user={u} onApprove={approveUser} onReject={rejectUser} onDeactivate={deactivateUser} onActivate={reactivateUser} /></td>
+                      </tr>
+                    );
+                  })
+                }
               </tbody>
             </table>
           </div>
         </div>
-      )}
-
-      {/* ══════════════════════════════════════
-          SECTION 2 — ALL USERS
-         ══════════════════════════════════════ */}
-      {activeSection === "users" && (
+      ) : (
         <div className="adm-card">
           <div className="adm-card__toolbar adm-card__toolbar--wrap">
-            <div className="adm-card__toolbar-left">
-              <h3 className="adm-card__title">All Users</h3>
-              <span className="adm-count-chip">{allUsersList.length} records</span>
-            </div>
-
+            <div className="adm-card__toolbar-left"><h3 className="adm-card__title">All Users</h3></div>
             <div className="adm-filters-row">
               <div className="adm-filter-tabs">
                 {["ALL","STUDENT","TRAINER", "MARKETER", "COUNSELOR"].map(r => (
-                  <button key={r}
-                    className={`adm-ftab ${roleFilter===r ? "adm-ftab--on" : ""}`}
-                    onClick={() => {
-                      setRoleFilter(r);
-                      setUserSearch("");
-                      setUserPage(1);
-                    }}
-                  >
-                    {r==="ALL"       ? `All (${users.length})`
-                    :r==="STUDENT"   ? `Students (${studentsCount})`
-                    :r==="TRAINER"   ? `Trainers (${trainersCount})`
-                    :r==="MARKETER"  ? `Marketers (${marketersCount})`
-                    :                 `Counselors (${counselorsCount})`}
-                  </button>
+                  <button key={r} className={`adm-ftab ${roleFilter===r ? "adm-ftab--on" : ""}`} onClick={() => { setRoleFilter(r); setUserPage(1); }}>{r}</button>
                 ))}
               </div>
-
-              <div className="adm-select-wrap">
-                <select className="adm-select" value={statusFilter}
-                  onChange={e => setStatusFilter(e.target.value)}>
-                  <option value="ALL">All Statuses</option>
-                  <option value="ACTIVE">Active</option>
-                  <option value="PENDING">Pending</option>
-                  <option value="INACTIVE">Inactive</option>
-                  <option value="REJECTED">Rejected</option>
-                </select>
-                <span className="adm-select-arrow">▾</span>
-              </div>
-
               <div className="adm-search">
-                <span className="adm-search__ico">🔍</span>
-                <input className="adm-search__inp" type="text"
-                  placeholder="Search name, email, phone…"
-                  value={userSearch}
-                  onChange={e => setUserSearch(e.target.value)} />
-                {userSearch && (
-                  <button className="adm-search__clr" onClick={() => setUserSearch("")}>✕</button>
-                )}
+                 <input className="adm-search__inp" type="text" placeholder="Search..." value={userSearch} onChange={e => setUserSearch(e.target.value)} />
               </div>
             </div>
           </div>
-
-          <Pagination currentPage={userPage} totalPages={userTotalPages}
-            onChange={setUserPage} total={allUsersList.length} pageSize={PAGE_SIZE_USERS} />
-
+          <Pagination currentPage={userPage} totalPages={userTotalPages} onChange={setUserPage} total={allUsersList.length} pageSize={PAGE_SIZE_USERS} />
           <div className="adm-table-wrap">
             <table className="adm-table responsive-card-table">
-              <thead>
-                <tr>
-                  <th>#</th>
-                  <th>Name</th>
-                  <th>Email</th>
-                  <th>Phone</th>
-                  {showRoleColumn && <th>Role</th>}
-                  <th>Status</th>
-                  <th>Actions</th>
-                </tr>
-              </thead>
+              <thead><tr><th>#</th><th>Name</th><th>Email</th>{showRoleColumn && <th>Role</th>}<th>Status</th><th>Actions</th></tr></thead>
               <tbody>
-                {loading ? (
-                  <tr><td colSpan={showRoleColumn ? 7 : 6} className="adm-td-state">
-                    <div className="adm-state-row"><div className="adm-spinner"/>Loading…</div>
-                  </td></tr>
-                ) : userPaged.length === 0 ? (
-                  <tr><td colSpan={showRoleColumn ? 7 : 6} className="adm-td-state">
-                    <div className="adm-empty">
-                      <span className="adm-empty__ico">🔎</span>
-                      <p>No matches found in the <strong>{roleFilter === 'ALL' ? 'Registry' : roleFilter + 's'}</strong> list.</p>
-                      {userSearch && (
-                        <button 
-                          className="adm-btn adm-btn--activate" 
-                          onClick={() => { setUserSearch(""); setUserPage(1); }}
-                          style={{marginTop: '10px'}}
-                        >
-                          Clear Search
-                        </button>
-                      )}
-                    </div>
-                  </td></tr>
-                ) : userPaged.map((u, i) => {
+                {loading ? <tr><td colSpan="6">Loading...</td></tr> : userPaged.map((u, i) => {
                   const idx = (userPage-1)*PAGE_SIZE_USERS + i;
                   return (
                     <tr key={u.id}>
-                      <td className="adm-td adm-td--num" data-label="#">
-                        <span className="adm-rnum">{idx+1}</span>
-                      </td>
-                      <td className="adm-td" data-label="Name">
-                        <div className="adm-user-cell">
-                          <Avatar name={u.name} idx={idx} />
-                          <span className="adm-user-cell__name">{u.name}</span>
-                        </div>
-                      </td>
-                      <td className="adm-td" data-label="Email">
-                        <div className="adm-link-group" style={{display: 'flex', flexDirection: 'column'}}>
-                          {(u.portalId || u.studentId) && (
-                            <span className="adm-id-text" style={{fontSize: '11px', color: '#64748b'}}>
-                              {u.portalId || u.studentId}
-                            </span>
-                          )}
-                          <a href={`mailto:${u.email}`} className="adm-link">{u.email}</a>
-                        </div>
-                      </td>
-                      <td className="adm-td adm-td--phone" data-label="Phone">{u.phone || "—"}</td>
-                      {showRoleColumn && (
-                        <td className="adm-td" data-label="Role"><RoleTag role={u.role?.roleName} /></td>
-                      )}
-                      <td className="adm-td" data-label="Status"><StatusBadge status={u.status} /></td>
-                      <td className="adm-td adm-td--actions" data-label="Actions">
-                        <ActionBtns user={u}
-                          onApprove={approveUser} onReject={rejectUser}
-                          onDeactivate={deactivateUser} onActivate={reactivateUser} />
-                      </td>
+                      <td className="adm-td--num"><span className="adm-rnum">{idx+1}</span></td>
+                      <td className="adm-td"><div className="adm-user-cell"><Avatar name={u.name} idx={idx} /><span className="adm-user-cell__name">{u.name}</span></div></td>
+                      <td className="adm-td">{u.email}</td>
+                      {showRoleColumn && <td className="adm-td"><RoleTag role={u.role?.roleName} /></td>}
+                      <td className="adm-td"><StatusBadge status={u.status} /></td>
+                      <td className="adm-td--actions"><ActionBtns user={u} onApprove={approveUser} onReject={rejectUser} onDeactivate={deactivateUser} onActivate={reactivateUser} /></td>
                     </tr>
                   );
                 })}

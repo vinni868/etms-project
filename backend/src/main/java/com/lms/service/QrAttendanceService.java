@@ -90,7 +90,7 @@ public class QrAttendanceService {
         // Stats
         double totalMinutes = logs.stream()
                 .filter(t -> t.getTotalMinutes() != null)
-                .mapToInt(TimeTracking::getTotalMinutes)
+                .mapToDouble(TimeTracking::getTotalMinutes)
                 .sum();
 
         int totalDays = (int) logs.stream().map(TimeTracking::getDate).distinct().count();
@@ -98,7 +98,7 @@ public class QrAttendanceService {
                 ? String.format("%.1fh", (totalMinutes / totalDays) / 60.0)
                 : "0h";
 
-        boolean isActiveToday = trackingRepo.findOpenSessionForToday(userId, LocalDate.now()).isPresent();
+        boolean isActiveToday = !trackingRepo.findOpenSessionsForToday(userId, LocalDate.now()).isEmpty();
 
         Map<String, Object> stats = new HashMap<>();
         stats.put("avgHours",    avgHours);
@@ -278,8 +278,8 @@ public class QrAttendanceService {
         LocalDateTime now = LocalDateTime.now();
 
         // Check if there is already an open session today
-        Optional<TimeTracking> openOpt = trackingRepo.findOpenSessionForToday(userId, today);
-        if (openOpt.isPresent()) {
+        List<TimeTracking> openSessions = trackingRepo.findOpenSessionsForToday(userId, today);
+        if (!openSessions.isEmpty()) {
             throw new ResponseStatusException(HttpStatus.CONFLICT,
                     "You are already punched in. Please punch out first.");
         }
@@ -289,20 +289,17 @@ public class QrAttendanceService {
         record.setDate(today);
         record.setLoginTime(now);
         record.setCreatedAt(now);
+        record.setPunchMethod("QUICK_PUNCH");
+        record.setDistanceFromOffice(distance);
         record.setLatitude(latitude);
         record.setLongitude(longitude);
-        record.setDistanceFromOffice(distance);
-        record.setPunchMethod("QUICK_PUNCH");
+        
+        int sessionNumber = trackingRepo.findOpenSessionsForToday(userId, today).size() + 1;
         trackingRepo.save(record);
 
-        int sessionNumber = trackingRepo.findByUserIdAndDateOrderByLoginTimeDesc(userId, today).size();
         return Map.of(
-            "status",         "success",
-            "punchType",      "IN",
-            "message",        String.format("Punched In! Session #%d started.", sessionNumber),
-            "loginTime",      now.toString(),
-            "date",           today.toString(),
-            "sessionNumber",  sessionNumber
+                "status", "SUCCESS",
+                "message", String.format("Punched In successfully! Session #%d at %s", sessionNumber, now.format(java.time.format.DateTimeFormatter.ofPattern("hh:mm a")))
         );
     }
 
@@ -318,30 +315,32 @@ public class QrAttendanceService {
         LocalDate today = LocalDate.now();
         LocalDateTime now = LocalDateTime.now();
 
-        Optional<TimeTracking> openOpt = trackingRepo.findOpenSessionForToday(userId, today);
-        if (openOpt.isEmpty()) {
+        List<TimeTracking> openSessions = trackingRepo.findOpenSessionsForToday(userId, today);
+        if (openSessions.isEmpty()) {
             throw new ResponseStatusException(HttpStatus.CONFLICT,
                     "No active punch-in session found. Please punch in first.");
         }
-
-        TimeTracking record = openOpt.get();
+        
+        TimeTracking record = openSessions.get(0);
         record.setLogoutTime(now);
         record.setCheckoutReason("MANUAL");
-        long diffMinutes = java.time.Duration.between(record.getLoginTime(), now).toMinutes();
+        
+        long diffMinutes = 0;
+        if (record.getLoginTime() != null) {
+            diffMinutes = java.time.Duration.between(record.getLoginTime(), now).toMinutes();
+        }
         record.setTotalMinutes((int) diffMinutes);
-        trackingRepo.save(record);
-
+        
         long hours = diffMinutes / 60;
         long mins  = diffMinutes % 60;
         String duration = hours > 0 ? String.format("%dh %dm", hours, mins) : String.format("%dm", mins);
 
+        trackingRepo.save(record);
+
         return Map.of(
-            "status",        "success",
-            "punchType",     "OUT",
-            "message",       String.format("Punched Out! Duration: %s.", duration),
-            "logoutTime",    now.toString(),
-            "totalMinutes",  (int) diffMinutes,
-            "duration",      duration
+                "status", "SUCCESS",
+                "message", String.format("Punched Out successful! Duration: %s", duration),
+                "duration", duration
         );
     }
 
@@ -351,12 +350,12 @@ public class QrAttendanceService {
         LocalDate today = LocalDate.now();
         LocalDateTime now = LocalDateTime.now();
 
-        Optional<TimeTracking> openOpt = trackingRepo.findOpenSessionForToday(userId, today);
-        if (openOpt.isEmpty()) {
+        List<TimeTracking> openSessions = trackingRepo.findOpenSessionsForToday(userId, today);
+        if (openSessions.isEmpty()) {
             return Map.of("status", "ALREADY_CLOSED", "message", "No active session found.");
         }
 
-        TimeTracking record = openOpt.get();
+        TimeTracking record = openSessions.get(0);
         record.setLogoutTime(now);
         record.setCheckoutReason(reason != null ? reason : "GEOFENCE_EXIT");
         long diffMinutes = java.time.Duration.between(record.getLoginTime(), now).toMinutes();

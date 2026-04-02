@@ -11,6 +11,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.Map;
+import org.springframework.web.server.ResponseStatusException;
 
 @RestController
 @RequestMapping("/api/qr")
@@ -51,23 +52,47 @@ public class QrAttendanceController {
     // ─── Direct Punch In (portal button — already authenticated) ─────────────
     @PostMapping("/punch-in")
     public ResponseEntity<?> punchIn(@RequestBody(required = false) Map<String, Object> body, Authentication authentication) {
-        User user = getUserFromAuth(authentication);
-        Double lat = body != null && body.get("latitude") != null ? Double.parseDouble(body.get("latitude").toString()) : null;
-        Double lng = body != null && body.get("longitude") != null ? Double.parseDouble(body.get("longitude").toString()) : null;
-        
-        Map<String, Object> result = qrService.directPunchIn(user.getId(), lat, lng);
-        return ResponseEntity.ok(result);
+        try {
+            User user = getUserFromAuth(authentication);
+            Double lat = null;
+            Double lng = null;
+            
+            if (body != null) {
+                if (body.get("latitude") != null) lat = Double.parseDouble(body.get("latitude").toString());
+                if (body.get("longitude") != null) lng = Double.parseDouble(body.get("longitude").toString());
+            }
+            
+            Map<String, Object> result = qrService.directPunchIn(user.getId(), lat, lng);
+            return ResponseEntity.ok(result);
+        } catch (ResponseStatusException e) {
+            throw e;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(500).body(Map.of("status", "error", "message", "Internal server error: " + e.getMessage()));
+        }
     }
 
     // ─── Direct Punch Out (portal button — already authenticated) ────────────
     @PostMapping("/punch-out")
     public ResponseEntity<?> punchOut(@RequestBody(required = false) Map<String, Object> body, Authentication authentication) {
-        User user = getUserFromAuth(authentication);
-        Double lat = body != null && body.get("latitude") != null ? Double.parseDouble(body.get("latitude").toString()) : null;
-        Double lng = body != null && body.get("longitude") != null ? Double.parseDouble(body.get("longitude").toString()) : null;
+        try {
+            User user = getUserFromAuth(authentication);
+            Double lat = null;
+            Double lng = null;
+            
+            if (body != null) {
+                if (body.get("latitude") != null) lat = Double.parseDouble(body.get("latitude").toString());
+                if (body.get("longitude") != null) lng = Double.parseDouble(body.get("longitude").toString());
+            }
 
-        Map<String, Object> result = qrService.directPunchOut(user.getId(), lat, lng);
-        return ResponseEntity.ok(result);
+            Map<String, Object> result = qrService.directPunchOut(user.getId(), lat, lng);
+            return ResponseEntity.ok(result);
+        } catch (ResponseStatusException e) {
+            throw e;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return ResponseEntity.status(500).body(Map.of("status", "error", "message", "Internal server error: " + e.getMessage()));
+        }
     }
 
     // ─── Get my time logs ───────────────────────────────────────────────────

@@ -21,7 +21,7 @@ public interface TimeTrackingRepository extends JpaRepository<TimeTracking, Long
 
     // Find the latest open session (no logout) for today
     @Query("SELECT t FROM TimeTracking t WHERE t.userId = :userId AND t.date = :date AND t.logoutTime IS NULL ORDER BY t.loginTime DESC")
-    Optional<TimeTracking> findOpenSessionForToday(@Param("userId") Long userId, @Param("date") LocalDate date);
+    List<TimeTracking> findOpenSessionsForToday(@Param("userId") Long userId, @Param("date") LocalDate date);
 
     // All sessions for all users, newest first
     List<TimeTracking> findByOrderByLoginTimeDesc();

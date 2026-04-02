@@ -117,7 +117,7 @@ export default function StudentTimeTracking() {
 
   /* Formatters */
   const fmtTime = (d) =>
-    d ? new Date(d).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true }) : '—';
+    d ? new Date(d).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true }).toUpperCase() : '—';
   const fmtDate = (d) =>
     new Date(d).toLocaleDateString('en-IN', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' });
   const fmtDuration = (m) => {
@@ -128,7 +128,7 @@ export default function StudentTimeTracking() {
   const todayMinutes = todaySessions.reduce((s, l) => s + (l.totalMinutes || 0), 0);
   const pastLogs     = timeLogs.filter(l => new Date(l.date).toDateString() !== new Date().toDateString());
 
-  const clockStr = now.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true });
+  const clockStr = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true }).toUpperCase();
   const dateStr  = now.toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
 
   // Access Control

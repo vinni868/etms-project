@@ -102,16 +102,31 @@ export default function UserTimeTracking() {
   const handleDirectPunch = async () => {
     setActionLoading(true);
     try {
+      let coords = { latitude: null, longitude: null };
+      
+      // Attempt to get location for the punch
+      if (navigator.geolocation) {
+        try {
+          const pos = await new Promise((res, rej) => {
+            navigator.geolocation.getCurrentPosition(res, rej, { enableHighAccuracy: true, timeout: 5000 });
+          });
+          coords = { latitude: pos.coords.latitude, longitude: pos.coords.longitude };
+        } catch (e) {
+          console.warn("Location fetch failed for direct punch:", e);
+        }
+      }
+
+      const payload = { ...coords, userId };
       if (isPunchedIn) {
-        await api.post('/qr/punch-out', { userId });
+        await api.post('/qr/punch-out', payload);
         showToast('success', '✅ Punched Out successfully!');
       } else {
-        await api.post('/qr/punch-in', { userId });
+        await api.post('/qr/punch-in', payload);
         showToast('success', '✅ Punched In successfully!');
       }
       await loadData();
     } catch (err) {
-      showToast('error', err?.response?.data?.message || 'Action failed. Please try again.');
+      showToast('error', err?.response?.data?.message || 'Location access required or action failed. Please try again.');
     } finally {
       setActionLoading(false);
     }
@@ -124,8 +139,20 @@ export default function UserTimeTracking() {
   };
 
   /* ─── Formatters ─────────────────────────────────────────────────────── */
-  const fmtTime = (d) =>
-    d ? new Date(d).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true }) : '—';
+  const fmtTime = (d) => {
+    if (!d) return '—';
+    try {
+      const dt = new Date(d);
+      if (isNaN(dt.getTime())) return '—';
+      return dt.toLocaleTimeString('en-US', {
+        hour: '2-digit',
+        minute: '2-digit',
+        hour12: true
+      }).toUpperCase();
+    } catch (e) {
+      return '—';
+    }
+  };
   const fmtDate = (d) =>
     new Date(d).toLocaleDateString('en-IN', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' });
   const fmtDuration = (m) => {
@@ -136,8 +163,8 @@ export default function UserTimeTracking() {
   const todayMinutes = todaySessions.reduce((s, l) => s + (l.totalMinutes || 0), 0);
   const pastLogs     = timeLogs.filter(l => new Date(l.date).toDateString() !== new Date().toDateString());
 
-  const clockStr = now.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true });
-  const dateStr  = now.toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+  const clockStr = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true });
+  const dateStr  = now.toLocaleDateString('en-US', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
 
   const toastColors = {
     success: { bg: '#dcfce7', color: '#16a34a', border: '#bbf7d0' },

@@ -11,5 +11,6 @@ public interface LeaveRequestRepository extends JpaRepository<LeaveRequest, Long
     List<LeaveRequest> findByStatusOrderByCreatedAtDesc(String status);
     List<LeaveRequest> findByBatchIdAndStatusOrderByCreatedAtDesc(Long batchId, String status);
     List<LeaveRequest> findAllByOrderByCreatedAtDesc();
+    List<LeaveRequest> findByFromDateLessThanEqualAndToDateGreaterThanEqual(java.time.LocalDate date1, java.time.LocalDate date2);
     long countByStatus(String status);
 }

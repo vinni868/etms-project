@@ -160,7 +160,7 @@ function MapStudentModal({ batchId, onClose, onSaved }) {
     const fetchStudents = async () => {
       try {
         const res = await api.get("/admin/students");
-        setStudents(res.data.filter(s => s.status !== "INACTIVE"));
+        setStudents(res.data.filter(s => s.status === "ACTIVE"));
       } catch (err) {
         setError("Failed to load students list.");
       } finally {
@@ -190,10 +190,10 @@ function MapStudentModal({ batchId, onClose, onSaved }) {
   };
 
   const filteredStudents = students
-    .filter(s => s.status !== "INACTIVE" && (s.portalId || s.studentId))
+    .filter(s => s.status === "ACTIVE" && (s.portalId || s.studentId))
     .filter(s => 
-      s.studentName?.toLowerCase().includes(searchTerm.toLowerCase()) || 
-      s.studentEmail?.toLowerCase().includes(searchTerm.toLowerCase())
+      s.name?.toLowerCase().includes(searchTerm.toLowerCase()) || 
+      s.email?.toLowerCase().includes(searchTerm.toLowerCase())
     );
 
   return createPortal(
@@ -229,7 +229,7 @@ function MapStudentModal({ batchId, onClose, onSaved }) {
               <select className="cb-input" value={selectedId} onChange={(e) => setSelectedId(e.target.value)} size={6} style={{ height: 'auto', padding: '0.25rem' }}>
                 <option value="" disabled>-- Select a student --</option>
                 {filteredStudents.map(s => (
-                  <option key={s.studentId} value={s.studentId}>{s.studentName} ({s.studentEmail})</option>
+                  <option key={s.id} value={s.id}>{s.name} ({s.email})</option>
                 ))}
               </select>
             </div>
