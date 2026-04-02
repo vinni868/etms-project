@@ -24,7 +24,7 @@ public class EmailServiceImpl implements EmailService {
             MimeMessage message = mailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
 
-            helper.setFrom("LMS Support <" + fromEmail + ">");
+            helper.setFrom(fromEmail);
             helper.setTo(toEmail);
             helper.setSubject("Secure OTP for Password Reset - LMS");
 
