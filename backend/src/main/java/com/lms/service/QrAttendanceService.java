@@ -14,6 +14,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
+import com.lms.enums.Status;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -107,6 +108,11 @@ public class QrAttendanceService {
         Map<String, Object> response = new HashMap<>();
         response.put("logs",  logDtos);
         response.put("stats", stats);
+
+        // Include current user status for frontend locking
+        User user = userRepo.findById(userId).orElse(null);
+        response.put("userStatus", user != null ? user.getStatus() : "ACTIVE");
+        
         return response;
     }
 
@@ -154,9 +160,15 @@ public class QrAttendanceService {
         User user = userRepo.findById(userId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
 
+        // 2. Status / Access Check
+        if (user.getStatus() != Status.ACTIVE) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN,
+                    "Your account is currently INACTIVE. Attendance tracking is disabled. Please contact administration.");
+        }
+
         String roleName = user.getRole() != null ? user.getRole().getRoleName().toUpperCase() : "";
 
-        // 2. Super Admin exempt
+        // 3. Super Admin exempt
         if ("SUPER_ADMIN".equals(roleName) || "SUPERADMIN".equals(roleName)) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN,
                     "Super Admins are exempt from punch-in requirements.");
@@ -246,6 +258,12 @@ public class QrAttendanceService {
     public Map<String, Object> directPunchIn(Long userId, Double latitude, Double longitude) {
         User user = userRepo.findById(userId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
+
+        // 2. Status / Access Check
+        if (user.getStatus() != Status.ACTIVE) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN,
+                    "Your account status is INACTIVE. Quick Punch is disabled.");
+        }
 
         String roleName = user.getRole() != null ? user.getRole().getRoleName().toUpperCase() : "";
         if ("SUPER_ADMIN".equals(roleName) || "SUPERADMIN".equals(roleName)) {

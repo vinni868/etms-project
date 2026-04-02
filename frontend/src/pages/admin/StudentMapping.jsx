@@ -587,8 +587,8 @@ function StudentMapping() {
                           >
                             <FaAward /> Issue Cert
                           </button>
-                          <span className={`ms-status-badge ms-status-badge--${activeStatus ? "active" : "completed"}`}>
-                            {activeStatus ? "● Active" : "✓ Inactive"}
+                          <span className={`ms-status-badge ms-status-badge--${item.status === 'ACTIVE' ? "active" : "completed"}`}>
+                            {item.status === 'ACTIVE' ? "● Active" : "✓ Inactive"}
                           </span>
                         </div>
                       </div>

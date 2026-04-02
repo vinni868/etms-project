@@ -1,5 +1,5 @@
 import {
-  FaBook, FaChalkboardTeacher, FaUsers, FaBell,
+  FaBook, FaChalkboardTeacher, FaUsers,
   FaLayerGroup, FaCheckCircle, FaTimesCircle,
   FaUserSlash, FaUserCheck, FaUserGraduate, FaUserTie,
   FaSync, FaCalendarTimes
@@ -305,19 +305,7 @@ function AdminDashboard() {
               </div>
             </div>
 
-            <div className="adm-notif-wrap">
-              <div 
-                className="adm-notif-btn" 
-                style={{cursor: 'pointer'}} 
-                onClick={() => navigate("/admin/notifications")}
-                title="System Notifications"
-              >
-                <FaBell />
-                {recentNotifs.length > 0 && (
-                  <span className="adm-notif-badge">{recentNotifs.length}</span>
-                )}
-              </div>
-            </div>
+
 
             <button className="adm-refresh-btn" onClick={handleRefresh} title="Refresh">
               <FaSync />
@@ -339,11 +327,9 @@ function AdminDashboard() {
         </div>
       </header>
       {/* ══════════ QUICK PUNCH (HORIZONTAL BAR) ══════════ */}
-      <div className="adm-punch-wrapper" style={{ margin: '30px 30px 10px' }}>
+      <div className="adm-punch-container" style={{ margin: '20px 30px 10px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
         <QuickPunch variant="horizontal" />
-        <div style={{ marginTop: '1.5rem' }}>
-           <AttendanceRules />
-        </div>
+        <AttendanceRules />
       </div>
 
       {/* ══════════ SECTION TABS ══════════ */}

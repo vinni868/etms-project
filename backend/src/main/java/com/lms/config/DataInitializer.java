@@ -72,7 +72,6 @@ public class DataInitializer implements CommandLineRunner {
             superAdmin.setName("Super Admin");
             superAdmin.setEmail("superadmin@appteknow.com");
             superAdmin.setPassword(passwordEncoder.encode("admin123"));
-            superAdmin.setPlainPassword("admin123");
             superAdmin.setStatus(com.lms.enums.Status.ACTIVE);
             
             RoleMaster saRole = roleRepository.findByRoleName("SUPERADMIN");
@@ -80,13 +79,6 @@ public class DataInitializer implements CommandLineRunner {
                 superAdmin.setRole(saRole);
                 userRepository.save(superAdmin);
             }
-        } else {
-            // Force reset password and status for testing
-            com.lms.entity.User sa = existingSA.get();
-            sa.setPassword(passwordEncoder.encode("admin123"));
-            sa.setPlainPassword("admin123");
-            sa.setStatus(com.lms.enums.Status.ACTIVE);
-            userRepository.save(sa);
         }
         
     }

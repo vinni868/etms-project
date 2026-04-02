@@ -84,7 +84,6 @@ public class SuperAdminUserManagementController {
         }
         user.setPhone(phone);
         user.setPassword(passwordEncoder.encode(payload.get("password")));
-        user.setPlainPassword(payload.get("password"));
         user.setStatus(Status.ACTIVE);
         user.setRole(role);
 
@@ -114,7 +113,19 @@ public class SuperAdminUserManagementController {
         }
 
         User savedUser = userRepository.save(user);
-        notificationService.createNotification("Super Admin created new " + roleName + ": " + user.getName(), "USER_CREATION", "ADMIN");
+        
+        // --- Targeted Notifications Logic ---
+        String notificationMsg = (roleName.equals("STUDENT") ? "New student profile created: " : "Super Admin created new " + roleName + ": ") + user.getName();
+        
+        if (roleName.equals("STUDENT")) {
+            // Student creation goes to both Admin and SuperAdmin
+            notificationService.createNotification(notificationMsg, "USER_CREATION", "ADMIN");
+            notificationService.createNotification(notificationMsg, "USER_CREATION", "SUPERADMIN");
+        } else {
+            // Staff creation goes ONLY to SuperAdmin for security and oversight
+            notificationService.createNotification(notificationMsg, "USER_CREATION", "SUPERADMIN");
+        }
+        
         return ResponseEntity.ok(savedUser);
     }
 

@@ -239,8 +239,9 @@ export default function AdminFees() {
               </div>
               
               <div className="calculation-preview">
-                <p><strong>Total Agreed:</strong> ₹{preview.total.toLocaleString()}</p>
-                <p className="small text-green">{preview.info}</p>
+                <p>Total Agreed Amount</p>
+                <strong>₹{preview.total.toLocaleString()}</strong>
+                <span className="small">{preview.info}</span>
               </div>
 
               <div className="form-group">

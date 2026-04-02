@@ -11,13 +11,19 @@ import {
   FaSyncAlt,
   FaCheckCircle,
   FaTimesCircle,
-  FaEllipsisV,
   FaArrowLeft,
   FaArrowRight,
   FaUserEdit,
   FaGlobe,
   FaUserSlash,
-  FaCircle
+  FaCircle,
+  FaIdCard,
+  FaBookOpen,
+  FaLayerGroup,
+  FaHandPointer,
+  FaProjectDiagram,
+  FaFingerprint,
+  FaTimes
 } from "react-icons/fa";
 import "./ManageStudents.css";
 
@@ -77,7 +83,6 @@ function ManageStudents() {
     e.preventDefault();
     setActionLoading(true);
     try {
-      // Clean payload: only send fields the backend expects for update
       const payload = {
         name: editingStudent.name,
         email: editingStudent.email,
@@ -93,7 +98,6 @@ function ManageStudents() {
     } catch (err) {
       const errorMsg = err.response?.data?.error || "Update failed. Please check your data.";
       showToast(errorMsg, "error");
-      console.error("Update Error:", err);
     } finally {
       setActionLoading(false);
     }
@@ -103,8 +107,7 @@ function ManageStudents() {
     setActionLoading(true);
     try {
       await api.patch(`/admin/student-course-mappings/${mappingId}/mode`, { courseMode: newMode });
-      showToast(`Mode updated to ${newMode} successfully!`);
-      // Update local state immediately for better UX
+      showToast(`Mode updated to ${newMode}`);
       setCourseMappings(prev => prev.map(m => 
         m.mappingId === mappingId ? { ...m, courseMode: newMode } : m
       ));
@@ -121,13 +124,10 @@ function ManageStudents() {
 
   /* ── Filtering Logic ── */
   const filteredStudents = students.filter(s => {
-    const matchesSearch = 
-      s.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      s.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (s.studentId || s.portalId)?.toLowerCase().includes(searchTerm.toLowerCase());
-    
-    const matchesStatus = statusFilter === "ALL" || s.status?.name === statusFilter || s.status === statusFilter;
-    
+    const searchString = `${s.name} ${s.email} ${s.studentId || s.portalId}`.toLowerCase();
+    const matchesSearch = searchString.includes(searchTerm.toLowerCase());
+    const sStatus = (s.status?.name || s.status || "ACTIVE").toUpperCase();
+    const matchesStatus = statusFilter === "ALL" || sStatus === statusFilter;
     return matchesSearch && matchesStatus;
   });
 
@@ -147,15 +147,15 @@ function ManageStudents() {
       {/* Header Section */}
       <div className="adm-hub__header">
         <div className="hub-info">
-          <h1 className="hub-title">Student Management Hub</h1>
-          <p className="hub-subtitle">Centralized controller for student profiles, modes, and academic status.</p>
+          <h1 className="hub-title">Student Registry</h1>
+          <p className="hub-subtitle">Manage student lifecycles, enrollment modes, and system access.</p>
         </div>
         <div className="hub-actions">
           <Link to="/admin/student-allotment" className="hub-link-btn">
-            🔗 Manage Allotments
+            <FaProjectDiagram /> Allotment Portal
           </Link>
           <Link to="/admin/create-user" className="hub-primary-btn">
-             Provision Student
+             <FaUserGraduate /> Provision Student
           </Link>
         </div>
       </div>
@@ -172,15 +172,15 @@ function ManageStudents() {
         <div className="stat-card">
           <div className="stat-icon stat-icon--green"><FaGlobe /></div>
           <div className="stat-content">
-            <span className="stat-label">Mode Sync</span>
-            <span className="stat-value">{courseMappings.length} Active</span>
+            <span className="stat-label">Active Modules</span>
+            <span className="stat-value">{courseMappings.length}</span>
           </div>
         </div>
         <div className="stat-card">
-          <div className="stat-icon stat-icon--purple"><FaFilter /></div>
+          <div className="stat-icon stat-icon--purple"><FaLayerGroup /></div>
           <div className="stat-content">
-            <span className="stat-label">Mapped Records</span>
-            <span className="stat-value">{batchMappings.length} Batches</span>
+            <span className="stat-label">Batch Load</span>
+            <span className="stat-value">{batchMappings.length}</span>
           </div>
         </div>
       </div>
@@ -191,7 +191,7 @@ function ManageStudents() {
           <FaSearch className="search-icon" />
           <input 
             type="text" 
-            placeholder="Search by name, email or ID..." 
+            placeholder="Search by name, email or Portal ID..." 
             value={searchTerm}
             onChange={(e) => { setSearchTerm(e.target.value); setCurrentPage(1); }}
           />
@@ -201,8 +201,8 @@ function ManageStudents() {
             <FaFilter className="filter-icon" />
             <select value={statusFilter} onChange={(e) => { setStatusFilter(e.target.value); setCurrentPage(1); }}>
               <option value="ALL">All Status</option>
-              <option value="ACTIVE">Active Only</option>
-              <option value="INACTIVE">Inactive Only</option>
+              <option value="ACTIVE">Active</option>
+              <option value="INACTIVE">Inactive</option>
             </select>
           </div>
           <button className="hub-refresh-btn" onClick={fetchData} title="Refresh Data">
@@ -216,28 +216,24 @@ function ManageStudents() {
         <table className="hub-table">
           <thead>
             <tr>
-              <th>STUDENT</th>
-              <th>CONTACT DETAILS</th>
-              <th>ENROLLMENTS</th>
-              <th>BATCH MAPPINGS</th>
-              <th>SYSTEM STATUS</th>
-              <th>ACTIONS</th>
+              <th>Member Identity</th>
+              <th>Contact Info</th>
+              <th>Course Enrollments</th>
+              <th>Assigned Batches</th>
+              <th>System Status</th>
+              <th>Actions</th>
             </tr>
           </thead>
           <tbody>
             {loading ? (
               [...Array(5)].map((_, i) => (
-                <tr key={i} className="skeleton-row">
-                  <td colSpan="6"><div className="skeleton-line" /></td>
-                </tr>
+                <tr key={i}><td colSpan="6" style={{padding: '40px', textAlign: 'center'}}><FaSyncAlt className="spin" /> Loading Registry...</td></tr>
               ))
             ) : pagedList.length === 0 ? (
               <tr>
-                <td colSpan="6" className="empty-cell">
-                  <div className="empty-state">
-                    <FaUserSlash />
-                    <p>No students found matching your filters.</p>
-                  </div>
+                <td colSpan="6" style={{padding: '80px', textAlign: 'center'}}>
+                    <FaUserSlash style={{fontSize: '48px', color: '#cbd5e1', marginBottom: '16px'}} />
+                    <p style={{color: '#64748b', fontWeight: 600}}>No students match your current criteria.</p>
                 </td>
               </tr>
             ) : pagedList.map((stu) => {
@@ -247,31 +243,34 @@ function ManageStudents() {
 
               return (
                 <tr key={stu.id}>
-                  <td data-label="STUDENT">
+                  <td>
                     <div className="stu-cell">
                       <div className="avatar-box">
                         {stu.name?.charAt(0).toUpperCase()}
                       </div>
                       <div className="stu-info">
                         <span className="stu-name">{stu.name}</span>
-                        <span className="stu-id">{stu.studentId || stu.portalId || "N/A"}</span>
+                        <span className="stu-id"><FaFingerprint size={10} /> {stu.studentId || stu.portalId || "TEMP-ID"}</span>
                       </div>
                     </div>
                   </td>
-                  <td data-label="CONTACT">
+                  <td>
                     <div className="contact-cell">
                       <div className="contact-item"><FaEnvelope /> {stu.email}</div>
-                      <div className="contact-item"><FaPhoneAlt /> {stu.phone || "No Contact"}</div>
+                      <div className="contact-item"><FaPhoneAlt /> {stu.phone || "---"}</div>
                     </div>
                   </td>
-                  <td data-label="ENROLLMENTS">
+                  <td>
                     <div className="enrollment-stack">
                       {enrollments.length === 0 ? (
-                        <span className="no-data">Not Enrolled</span>
+                        <span style={{color: '#94a3b8', fontSize: '12px', fontWeight: 700}}>No Courses Linked</span>
                       ) : (
                         enrollments.map(enr => (
                           <div key={enr.mappingId} className="enrollment-item">
-                            <span className="course-name">{enr.courseName}</span>
+                            <div className="course-header">
+                               <div className="course-icon-mini"><FaBookOpen /></div>
+                               <span className="course-name">{enr.courseName}</span>
+                            </div>
                             <select 
                               className={`mode-select mode-select--${enr.courseMode?.toLowerCase()}`}
                               value={enr.courseMode || "OFFLINE"}
@@ -284,29 +283,30 @@ function ManageStudents() {
                       )}
                     </div>
                   </td>
-                  <td data-label="BATCHES">
+                  <td>
                     <div className="batch-chips">
                       {batches.length === 0 ? (
-                        <span className="no-data">No Batches</span>
+                        <span style={{color: '#94a3b8', fontSize: '12px', fontWeight: 700}}>Unassigned</span>
                       ) : (
                         batches.map(b => (
                           <span key={b.mappingId} className="batch-chip">
-                            {b.batchName}
+                             <FaLayerGroup size={10} style={{marginRight: '6px', opacity: 0.6}} />
+                             {b.batchName}
                           </span>
                         ))
                       )}
                     </div>
                   </td>
-                  <td data-label="STATUS">
+                  <td>
                      <span className={`status-pill status-pill--${statusStr.toLowerCase()}`}>
-                       <FaCircle /> {statusStr}
+                       <FaCircle size={6} /> {statusStr}
                      </span>
                   </td>
-                  <td data-label="ACTIONS">
+                  <td>
                     <div className="hub-action-btns">
                       <button 
-                        className="action-btn action-btn--edit" 
-                        title="Edit Student Profile"
+                        className="action-btn" 
+                        title="Modify Profile"
                         onClick={() => {
                           setEditingStudent({...stu, status: statusStr});
                           setIsEditModalOpen(true);
@@ -326,31 +326,11 @@ function ManageStudents() {
       {/* Pagination */}
       {totalPages > 1 && (
         <div className="hub-pagination">
-          <button 
-            className="pg-btn" 
-            disabled={currentPage === 1}
-            onClick={() => setCurrentPage(prev => prev - 1)}
-          >
-            <FaArrowLeft />
-          </button>
-          <div className="pg-numbers">
-            {Array.from({ length: totalPages }, (_, i) => i + 1).map(num => (
-              <button 
-                key={num} 
-                className={`pg-num ${currentPage === num ? "active" : ""}`}
-                onClick={() => setCurrentPage(num)}
-              >
-                {num}
-              </button>
-            ))}
-          </div>
-          <button 
-            className="pg-btn" 
-            disabled={currentPage === totalPages}
-            onClick={() => setCurrentPage(prev => prev + 1)}
-          >
-            <FaArrowRight />
-          </button>
+          <button className="pg-num" disabled={currentPage === 1} onClick={() => setCurrentPage(p => p - 1)}><FaArrowLeft /></button>
+          {Array.from({ length: totalPages }, (_, i) => i + 1).map(num => (
+            <button key={num} className={`pg-num ${currentPage === num ? "active" : ""}`} onClick={() => setCurrentPage(num)}>{num}</button>
+          ))}
+          <button className="pg-num" disabled={currentPage === totalPages} onClick={() => setCurrentPage(p => p + 1)}><FaArrowRight /></button>
         </div>
       )}
 
@@ -359,14 +339,19 @@ function ManageStudents() {
         <div className="adm-modal-overlay">
           <div className="adm-modal">
             <div className="modal-header">
-              <h2><FaUserEdit /> Edit Student Profile</h2>
-              <button className="modal-close" onClick={() => setIsEditModalOpen(false)}><FaTimesCircle /></button>
+              <h2 style={{margin: 0, display: 'flex', alignItems: 'center', gap: '15px'}}>
+                <div className="avatar-box" style={{width: '40px', height: '40px', fontSize: '16px'}}>
+                    <FaUserEdit />
+                </div>
+                Edit Student Profile
+              </h2>
+              <button className="modal-close" onClick={() => setIsEditModalOpen(false)}><FaTimes /></button>
             </div>
             <form onSubmit={handleUpdateProfile}>
               <div className="modal-body">
                 <div className="modal-grid">
                   <div className="m-field">
-                    <label>Student ID / Portal ID</label>
+                    <label><FaIdCard /> Portal ID / Student ID</label>
                     <input 
                       type="text" 
                       required 
@@ -375,7 +360,7 @@ function ManageStudents() {
                     />
                   </div>
                   <div className="m-field">
-                    <label>Account Status</label>
+                    <label><FaCircle /> Account Status</label>
                     <select 
                       value={editingStudent.status}
                       onChange={(e) => setEditingStudent({...editingStudent, status: e.target.value})}
@@ -384,7 +369,7 @@ function ManageStudents() {
                     </select>
                   </div>
                   <div className="m-field m-field--full">
-                    <label>Full Name</label>
+                    <label><FaUserGraduate /> Full Name</label>
                     <input 
                       type="text" 
                       required 
@@ -393,7 +378,7 @@ function ManageStudents() {
                     />
                   </div>
                   <div className="m-field">
-                    <label>Email Address</label>
+                    <label><FaEnvelope /> Email Address</label>
                     <input 
                       type="email" 
                       required 
@@ -402,22 +387,41 @@ function ManageStudents() {
                     />
                   </div>
                   <div className="m-field">
-                    <label>Phone Number</label>
+                    <label><FaPhoneAlt /> Phone Number</label>
                     <input 
                       type="text" 
+                      placeholder="+91 XXXXX XXXXX"
                       value={editingStudent.phone || ""}
                       onChange={(e) => setEditingStudent({...editingStudent, phone: e.target.value})}
                     />
                   </div>
                 </div>
-                <div className="m-warning">
-                   ⚠️ Password reset is disabled in this module for security.
+                
+                <div style={{
+                  marginTop: '30px',
+                  background: '#fefce8', 
+                  border: '1.5px dashed #facc15', 
+                  padding: '20px', 
+                  borderRadius: '16px', 
+                  fontSize: '14px', 
+                  color: '#854d0e', 
+                  fontWeight: 600, 
+                  display: 'flex', 
+                  gap: '12px', 
+                  alignItems: 'center',
+                  lineHeight: '1.5'
+                }}>
+                   <FaFingerprint size={20} style={{minWidth: '20px'}} />
+                   <span>
+                     <strong>Security Protocol:</strong> Direct password modification is restricted here. 
+                     Please use the <em>Master Reset</em> function if the student cannot access their portal.
+                   </span>
                 </div>
               </div>
               <div className="modal-footer">
-                <button type="button" className="m-btn m-btn--cancel" onClick={() => setIsEditModalOpen(false)}>Cancel</button>
-                <button type="submit" className="m-btn m-btn--save" disabled={actionLoading}>
-                  {actionLoading ? "Saving..." : "Save Changes"}
+                <button type="button" className="hub-link-btn" style={{padding: '12px 24px'}} onClick={() => setIsEditModalOpen(false)}>Discard</button>
+                <button type="submit" className="hub-primary-btn" style={{padding: '12px 36px'}} disabled={actionLoading}>
+                   {actionLoading ? "Syncing..." : "Apply Changes"}
                 </button>
               </div>
             </form>

@@ -1,21 +1,37 @@
 package com.lms.service;
+
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
+import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 import com.lms.repository.AttendanceRepository;
+import com.lms.repository.LeaveRequestRepository;
+import com.lms.repository.UserRepository;
 import com.lms.entity.TrainerMarkedAttendance;
+import com.lms.entity.LeaveRequest;
 import com.lms.security.CustomUserDetails;
-import java.util.List;
+import com.lms.entity.User;
 
 @Service
 public class ChatService {
 
     @Autowired
     private AttendanceRepository attendanceRepository;
+
+    @Autowired
+    private LeaveRequestRepository leaveRequestRepository;
+
+    @Autowired
+    private UserRepository userRepository;
+
+    @Autowired
+    private NotificationService notificationService;
 
     private final Optional<ChatClient> chatClient;
     private Map<String, String> userSessions = new HashMap<>();
@@ -31,9 +47,10 @@ public class ChatService {
     public String getResponse(String sessionId, String message, org.springframework.security.core.Authentication authentication) {
         String input = message.toLowerCase();
         
-        // Context Tracking
-        String specificContext = "";
-        String userIdentity = "friend";
+        // 1. Resolve Identity and Role
+        String role = "PUBLIC";
+        String userName = "friend";
+        Long userId = null;
 
         if (authentication != null && authentication.isAuthenticated() && 
             !(authentication instanceof org.springframework.security.authentication.AnonymousAuthenticationToken)) {
@@ -41,60 +58,174 @@ public class ChatService {
                 Object principal = authentication.getPrincipal();
                 if (principal instanceof CustomUserDetails) {
                     CustomUserDetails details = (CustomUserDetails) principal;
-                    com.lms.entity.User dbUser = details.getUser();
-                    userIdentity = dbUser.getName();
-                    
-                    specificContext = String.format(" The user is LOGGED IN. Name: %s, Role: %s, Email: %s.", 
-                                                    userIdentity, dbUser.getRole().getRoleName(), dbUser.getEmail());
-
-                    if (dbUser.getRole().getRoleName().equalsIgnoreCase("STUDENT")) {
-                        // Dynamically pull their attendance stats
-                        List<TrainerMarkedAttendance> attList = attendanceRepository.findByStudentId(dbUser.getId().intValue());
-                        long totalDays = attList.size();
-                        long presentDays = attList.stream().filter(a -> "PRESENT".equalsIgnoreCase(a.getStatus())).count();
-                        long absentDays = attList.stream().filter(a -> "ABSENT".equalsIgnoreCase(a.getStatus())).count();
-                        
-                        specificContext += String.format(" Attendance Record: Total Days %d, Present %d, Absent %d. Use this verbatim if they ask about their attendance.", totalDays, presentDays, absentDays);
-                    }
+                    User dbUser = details.getUser();
+                    userName = dbUser.getName();
+                    userId = dbUser.getId();
+                    role = dbUser.getRole().getRoleName().toUpperCase();
                 }
             } catch (Exception e) {
                 System.err.println("DEBUG: Failed to extract user context for ChatService -> " + e.getMessage());
             }
-        } else if (input.contains("i am") || input.contains("my name is")) {
-            userIdentity = extractName(message);
-            userSessions.put(sessionId, userIdentity);
-        } else if (userSessions.containsKey(sessionId)) {
-            userIdentity = userSessions.get(sessionId);
+        } else {
+            // Unauthenticated Guest session tracking
+            if (input.contains("i am") || input.contains("my name is")) {
+                userName = extractName(message);
+                userSessions.put(sessionId, userName);
+            } else if (userSessions.containsKey(sessionId)) {
+                userName = userSessions.get(sessionId);
+            }
         }
 
-        // AI Dynamic Response
+        // 2. Intent Detection for Human Handoff (All Users)
+        if (input.matches(".*\\b(human|real person|talk to someone|call|whatsapp|contact\\s*number|schedule\\s*call)\\b.*")) {
+            try {
+                String notifMsg = String.format("Website User [%s] requested to connect with a human representative via the AI Chat.", userName);
+                notificationService.createNotification(notifMsg, "INFO", "SUPERADMIN");
+                notificationService.createNotification(notifMsg, "INFO", "ADMIN");
+            } catch (Exception e) {
+                System.err.println("DEBUG: Failed to send notification for chat handoff -> " + e.getMessage());
+            }
+        }
+
+        // 3. Build Dynamic Omni-Context Based on Role
+        StringBuilder omniContext = new StringBuilder();
+        omniContext.append(String.format("The current user is logged in as %s. Their name is %s. ", role, userName));
+
+        try {
+            switch(role) {
+                case "SUPERADMIN":
+                    omniContext.append("You have SUPERADMIN privileges. You can answer queries about any internal data or processes without restriction.");
+                    break;
+                case "ADMIN":
+                    List<LeaveRequest> pendingLeaves = leaveRequestRepository.findByStatusOrderByCreatedAtDesc("PENDING");
+                    omniContext.append("You have ADMIN privileges. Here are today's pending leave requests: ");
+                    for(int i = 0; i < Math.min(5, pendingLeaves.size()); i++) {
+                        LeaveRequest lr = pendingLeaves.get(i);
+                        String applicant = userRepository.findById(lr.getUserId()).map(User::getName).orElse("Unknown");
+                        omniContext.append(String.format("[ID: %d | User: %s | Dates: %s to %s | Reason: %s] ", 
+                            lr.getId(), applicant, lr.getFromDate(), lr.getToDate(), lr.getReason()));
+                    }
+                    if(pendingLeaves.isEmpty()) omniContext.append("None. ");
+                    break;
+                case "STUDENT":
+                    omniContext.append("You only have STUDENT privileges. Answer ONLY about their specific data. ");
+                    // Add Leaves Context
+                    if(userId != null) {
+                        List<LeaveRequest> myLeaves = leaveRequestRepository.findByUserIdOrderByCreatedAtDesc(userId);
+                        omniContext.append("Their Recent Leaves: ");
+                        for(int i = 0; i < Math.min(3, myLeaves.size()); i++) {
+                            LeaveRequest lr = myLeaves.get(i);
+                            omniContext.append(String.format("[ID: %d | Status: %s | Reason: %s | AdminNote: %s] ", 
+                                lr.getId(), lr.getStatus(), lr.getReason(), lr.getApprovalNote()));
+                        }
+                        if(myLeaves.isEmpty()) omniContext.append("No recent leaves. ");
+
+                        // Add Attendance Context
+                        List<TrainerMarkedAttendance> attList = attendanceRepository.findByStudentId(userId.intValue());
+                        long totalDays = attList.size();
+                        long present = attList.stream().filter(a -> "PRESENT".equalsIgnoreCase(a.getStatus())).count();
+                        long absent = attList.stream().filter(a -> "ABSENT".equalsIgnoreCase(a.getStatus())).count();
+                        omniContext.append(String.format("Attendance: Total Days %d, Present %d, Absent %d. ", totalDays, present, absent));
+                    }
+                    break;
+                case "COUNSELOR":
+                case "MARKETER":
+                case "TRAINER":
+                    omniContext.append(String.format("You are speaking to staff (Role: %s). Answer questions related to their workflow.", role));
+                    break;
+                case "PUBLIC":
+                default:
+                    omniContext.append("The user is an anonymous public guest.");
+                    break;
+            }
+        } catch (Exception e) {
+            System.err.println("DEBUG: Context building failed. " + e.getMessage());
+        }
+
+        // 4. Generate AI Prompt
         if (chatClient.isPresent()) {
             try {
                 String aiPrompt = String.format(
-                    "You are the 'AppTechno Careers' AI Support assistant. " +
-                    "Identity: You represent AppTechno Careers (an IT/Non-IT training & placement institute). " +
-                    "Knowledge: We offer Java Full Stack, Python AI, MERN, and Software Testing. We have 500+ partners and a 'Pay 50%% After Placement' model. " +
+                    "You are the 'AppTechno Careers' AI Agent. " +
+                    "Identity: You represent AppTechno Careers IT/Non-IT Institute. " +
+                    "Knowledge: We offer Java Full Stack, Python AI, MERN, and Software Testing. " +
                     "Tone: Professional, helpful, concise, and friendly. " +
-                    "Context Information: %s " +
-                    "User Message: %s. " +
-                    "Respond to the user naturally based on context.",
-                    specificContext.isEmpty() ? "The user is an anonymous guest." : specificContext, message
+                    "--- CORE SECURITY RULES --- " +
+                    "1. If the user is PUBLIC and asks about course fees/prices, EXPLICITLY state: 'Fees are negotiable. Please talk directly to our team member' and provide +91 7022928198. " +
+                    "2. If the user is STUDENT, COUNSELOR, MARKETER, or TRAINER, you must ONLY answer questions related to their specific role. If they ask about other users or unrelated admin operations, simply reply: 'I am only authorized to discuss your personal profile and role data.' " +
+                    "3. If the user asks for a human, call, or whatsapp, say 'I will connect you with a Senior Counselor. Please call or WhatsApp us at +91 7022928198'. " +
+                    "4. If the user is PUBLIC and hasn't given their name, politely ask for it and their current status (working/studying). If they ignore it, never ask again. " +
+                    "5. [AGENT COMMAND]: If the user is an ADMIN or SUPERADMIN, and they ask you to APPROVE or REJECT a specific Leave ID, you must include EXACTLY this tag in your response: [ACTION:APPROVE_LEAVE_id] or [ACTION:REJECT_LEAVE_id] (e.g., [ACTION:REJECT_LEAVE_53]). " +
+                    "--- CONTEXT DATA --- %s " +
+                    "User Message: %s. Respond naturally.",
+                    omniContext.toString(), message
                 );
                 
-                String response = chatClient.get().prompt(aiPrompt).call().content();
-                return (response != null && !response.isEmpty()) ? response : "I'm processing that. How else can I assist with your career goals?";
+                String rawResponse = chatClient.get().prompt(aiPrompt).call().content();
+                if(rawResponse == null) rawResponse = "";
+
+                // 5. Execute Action Parser (Agentic Mutations)
+                return executeSystemActions(rawResponse, authentication);
+
             } catch (Exception e) {
                 System.err.println("DEBUG: AI Chat Error: " + e.getMessage());
             }
         }
 
-        // Reliable Fallback if AI or Client fails
-        return "Thanks for reaching out! AppTechno Careers offers top-tier training in Java, Python, and MERN with placement support. Please call +91 7022928198.";
+        return "Thanks for reaching out! AppTechno Careers offers top-tier training. Please call +91 7022928198.";
+    }
+
+    private String executeSystemActions(String aiResponse, org.springframework.security.core.Authentication auth) {
+        if(aiResponse == null || !aiResponse.contains("[ACTION:")) {
+            return aiResponse;
+        }
+
+        // Verify Admin Privileges First
+        boolean isAdmin = false;
+        User currentAdmin = null;
+        if(auth != null && auth.getPrincipal() instanceof CustomUserDetails) {
+            currentAdmin = ((CustomUserDetails)auth.getPrincipal()).getUser();
+            String roleName = currentAdmin.getRole().getRoleName();
+            if("ADMIN".equalsIgnoreCase(roleName) || "SUPERADMIN".equalsIgnoreCase(roleName)) {
+                isAdmin = true;
+            }
+        }
+
+        if(!isAdmin) {
+            return "I am sorry, but you do not have permission to execute system actions.";
+        }
+
+        // Parse Action
+        Pattern pattern = Pattern.compile("\\[ACTION:(APPROVE|REJECT)_LEAVE_(\\d+)\\]");
+        Matcher matcher = pattern.matcher(aiResponse);
+        
+        while(matcher.find()) {
+            String type = matcher.group(1);
+            Long leaveId = Long.parseLong(matcher.group(2));
+            String actionNote = "Agentic Action via Chat";
+
+            try {
+                LeaveRequest req = leaveRequestRepository.findById(leaveId).orElse(null);
+                if(req != null && "PENDING".equalsIgnoreCase(req.getStatus())) {
+                    req.setStatus("APPROVE".equals(type) ? "APPROVED" : "REJECTED");
+                    req.setApprovedBy(currentAdmin.getId());
+                    req.setApprovalNote(actionNote);
+                    leaveRequestRepository.save(req);
+                    
+                    // Note: If APPROVED, Attendance Auto-Sync is ideally done in service layer. 
+                    // For now, the chat changes the status successfully.
+                }
+            } catch (Exception e) {
+                System.err.println("Failed Agentic Action DB update: " + e.getMessage());
+            }
+        }
+
+        // Strip the internal tag so the user doesn't see it
+        return aiResponse.replaceAll("\\[ACTION:[^\\]]+\\]", "").trim();
     }
 
     private String extractName(String message) {
         String[] words = message.split("\\s+");
-        // Simple logic: take the last word if it's not "am" or "is"
         for (int i = words.length - 1; i >= 0; i--) {
             String w = words[i].toLowerCase();
             if (!w.equals("am") && !w.equals("is") && !w.equals("i") && !w.equals("my") && !w.equals("name")) {

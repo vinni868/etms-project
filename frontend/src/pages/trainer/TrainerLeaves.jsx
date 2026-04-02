@@ -185,9 +185,7 @@ export default function TrainerLeaves() {
     if (formData.file) fd.append('file', formData.file);
 
     try {
-      await api.post('/leave/request', fd, {
-        headers: { 'Content-Type': 'multipart/form-data' }
-      });
+      await api.post('/leave/request', fd);
       setMsg({ type: 'ok', text: 'Request submitted successfully!' });
       setShowModal(false);
       resetForm();

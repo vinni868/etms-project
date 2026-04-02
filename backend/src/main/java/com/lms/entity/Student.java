@@ -26,7 +26,23 @@ public class Student {
 
     private String qualification;
 
-    private String year;
+    @Column(name = "year_of_passing")
+    private String yearOfPassing;
+
+    @Column(name = "aggregate_percentage")
+    private String aggregatePercentage;
+
+    @Column(name = "marks_10th")
+    private String marks10th;
+
+    @Column(name = "marks_12th")
+    private String marks12th;
+
+    @Column(name = "parent_name")
+    private String parentName;
+
+    @Column(name = "parent_phone")
+    private String parentPhone;
 
     private String skills;
 
@@ -36,11 +52,23 @@ public class Student {
     @Column(name = "profile_pic", columnDefinition = "LONGTEXT")
     private String profilePic;
 
+    @Column(name = "aadhar_card_url", columnDefinition = "TEXT")
+    private String aadharCardUrl;
+
+    @Column(name = "resume_url", columnDefinition = "TEXT")
+    private String resumeUrl;
+
+    @Column(name = "marks_10th_url", columnDefinition = "TEXT")
+    private String marks10thUrl;
+
+    @Column(name = "marks_12th_url", columnDefinition = "TEXT")
+    private String marks12thUrl;
+
+    @Column(name = "graduation_doc_url", columnDefinition = "TEXT")
+    private String graduationDocUrl;
+
     private String address;
-
     private String city;
-
     private String state;
-
     private String pincode;
 }

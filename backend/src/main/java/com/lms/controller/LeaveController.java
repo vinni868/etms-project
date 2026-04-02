@@ -81,12 +81,19 @@ public class LeaveController {
         }
 
         leaveRepo.save(req);
-        notificationService.createNotification(
-            "New leave request from " + user.getName() + " for " + req.getFromDate() + " to " + req.getToDate(),
-            "LEAVE",
-            "ADMIN",
-            req.getId()
-        );
+        
+        // --- Targeted Notifications Logic ---
+        String petitionerRole = (user.getRole() != null ? user.getRole().getRoleName() : "").toUpperCase();
+        String notificationMsg = "New leave request from " + user.getName() + " for " + req.getFromDate() + " to " + req.getToDate();
+
+        if (petitionerRole.contains("STUDENT")) {
+            // Student leaves go to both Admin and SuperAdmin
+            notificationService.createNotification(notificationMsg, "LEAVE", "ADMIN", req.getId());
+            notificationService.createNotification(notificationMsg, "LEAVE", "SUPERADMIN", req.getId());
+        } else {
+            // Staff leaves (Admin, Trainer, etc.) go ONLY to SuperAdmin for approval
+            notificationService.createNotification(notificationMsg, "LEAVE", "SUPERADMIN", req.getId());
+        }
         return ResponseEntity.ok(Map.of("status", "success", "message", "Leave request submitted successfully."));
     }
 

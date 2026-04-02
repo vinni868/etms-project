@@ -54,7 +54,6 @@ public class SuperAdminCreateAdminService {
         user.setName(request.getName());
         user.setEmail(request.getEmail());
         user.setPassword(passwordEncoder.encode(request.getPassword())); // Bcrypt hash
-        user.setPlainPassword(request.getPassword()); // Visible for Superadmin
 
         user.setStatus(Status.valueOf(request.getStatus().toUpperCase()));
         user.setApprovalStatus(com.lms.enums.ApprovalStatus.APPROVED);
@@ -86,7 +85,6 @@ public class SuperAdminCreateAdminService {
 
         if (request.getPassword() != null && !request.getPassword().isEmpty()) {
             user.setPassword(passwordEncoder.encode(request.getPassword()));
-            user.setPlainPassword(request.getPassword());
         }
 
         List<PermissionMaster> permissionList =

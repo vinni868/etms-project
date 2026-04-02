@@ -83,7 +83,6 @@ const QUICK_ACTIONS = [
   { label: "My Profile",  icon: FaUser,           path: "/trainer/profile",     color: "#3b82f6", bg: "rgba(59,130,246,0.12)"  },
   { label: "Attendance",  icon: FaClipboardCheck, path: "/trainer/attendance",  color: "#10b981", bg: "rgba(16,185,129,0.12)"  },
   { label: "Leaves",      icon: FaBed,            path: "/trainer/leave",       color: "#f59e0b", bg: "rgba(245,158,11,0.12)"  },
-  { label: "Assignments", icon: FaFileAlt,        path: "/trainer/assignments", color: "#8b5cf6", bg: "rgba(139,92,246,0.12)"  },
   { label: "Courses",     icon: FaBook,           path: "/trainer/course",      color: "#ef4444", bg: "rgba(239,68,68,0.12)"   },
 ];
 
@@ -233,7 +232,7 @@ function TrainerDashboard() {
                 {nowTime.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" })}
               </div>
             </div>
-            <button className="td-refresh-btn" onClick={() => { fetchDashboard(); fetchSchedule(page, viewDate); }} title="Refresh">
+            <button className="td-refresh-btn" onClick={() => { fetchDashboard(); fetchSchedule(viewDate); }} title="Refresh">
               <FaSync />
             </button>
           </div>
@@ -258,12 +257,22 @@ function TrainerDashboard() {
       </header>
 
       {/* ══════════════ BODY ══════════════ */}
-      <div className="td-body">
+      <div className="td-body" style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
  
-        <div className="td-left-col">
-          <QuickPunch />
-          <AttendanceRules />
+        <div className="td-punch-container" style={{ width: '100%' }}>
+          <QuickPunch variant="horizontal" />
+          <div style={{ marginTop: '1rem' }}>
+            <AttendanceRules />
+          </div>
+        </div>
 
+        <div className="td-main-grid" style={{ 
+          display: 'grid', 
+          gridTemplateColumns: 'minmax(300px, 320px) 1fr', 
+          gap: '1.5rem',
+          alignItems: 'start',
+          width: '100%'
+        }}>
           {/* ── LEFT: Quick Actions ── */}
           <div className="td-card td-card--actions">
             <div className="td-card__head">
@@ -283,117 +292,115 @@ function TrainerDashboard() {
               ))}
             </div>
           </div>
-        </div>
 
-        {/* ── RIGHT: Schedule ── */}
-        <div className="td-card td-card--schedule">
+          {/* ── RIGHT: Schedule ── */}
+          <div className="td-card td-card--schedule" style={{ minWidth: 0 }}>
+            {/* Date navigation bar */}
+            <div className="td-date-nav">
+              <button className="td-date-nav__arrow" onClick={() => goDay(-1)}>
+                <FaChevronLeft />
+              </button>
 
-          {/* Date navigation bar */}
-          <div className="td-date-nav">
-            <button className="td-date-nav__arrow" onClick={() => goDay(-1)}>
-              <FaChevronLeft />
-            </button>
+              <div className="td-date-nav__center">
+                <span className="td-date-nav__label">{dayLabel(viewDate)}</span>
+                <span className="td-date-nav__full">{formatDisplayDate(viewDate)}</span>
+              </div>
 
-            <div className="td-date-nav__center">
-              <span className="td-date-nav__label">{dayLabel(viewDate)}</span>
-              <span className="td-date-nav__full">{formatDisplayDate(viewDate)}</span>
+              <button className="td-date-nav__arrow" onClick={() => goDay(1)}>
+                <FaChevronRight />
+              </button>
+
+              {!isToday(viewDate) && (
+                <button className="td-today-pill" onClick={goToday}>Today</button>
+              )}
             </div>
 
-            <button className="td-date-nav__arrow" onClick={() => goDay(1)}>
-              <FaChevronRight />
-            </button>
-
-            {!isToday(viewDate) && (
-              <button className="td-today-pill" onClick={goToday}>Today</button>
-            )}
-          </div>
-
-          {/* Schedule list */}
-          <div className="td-schedule-list">
-            {schedLoading ? (
-              <div className="td-sched-loader">
-                <div className="td-spinner" />
-                <span>Loading schedule…</span>
-              </div>
-            ) : schedule.length === 0 ? (
-              <div className="td-sched-empty">
-                <div className="td-sched-empty__icon">📅</div>
-                <p className="td-sched-empty__text">
-                  No classes scheduled for {dayLabel(viewDate)}.
-                </p>
-              </div>
-            ) : (
-              schedule.map((item, idx) => {
-                const status = classStatus(item, viewDate);
-                return (
-                  <div
-                    key={`${item.id}-${item.class_date}`}
-                    className={`td-class-card td-class-card--${status}`}
-                    style={{ animationDelay: `${idx * 0.07}s` }}
-                  >
-                    {/* Time column */}
-                    <div className="td-class-card__time">
-                      <span className="td-class-card__time-start">{formatTime(item.start_time)}</span>
-                      <div className="td-class-card__time-line" />
-                      <span className="td-class-card__time-end">{formatTime(item.end_time)}</span>
-                    </div>
-
-                    {/* Content */}
-                    <div className="td-class-card__content">
-                      <div className="td-class-card__top">
-                        <h4 className="td-class-card__batch">{item.batch_name}</h4>
-                        <span className={`td-status-chip td-status-chip--${status}`}>
-                          {status === "live"      ? "🔴 Live Now"  :
-                           status === "upcoming"  ? "⏳ Upcoming"  :
-                           status === "done"      ? "✓ Ended"      :
-                                                    "📅 Scheduled" }
-                        </span>
+            {/* Schedule list */}
+            <div className="td-schedule-list">
+              {schedLoading ? (
+                <div className="td-sched-loader">
+                  <div className="td-spinner" />
+                  <span>Loading schedule…</span>
+                </div>
+              ) : schedule.length === 0 ? (
+                <div className="td-sched-empty">
+                  <div className="td-sched-empty__icon">📅</div>
+                  <p className="td-sched-empty__text">
+                    No classes scheduled for {dayLabel(viewDate)}.
+                  </p>
+                </div>
+              ) : (
+                schedule.map((item, idx) => {
+                  const status = classStatus(item, viewDate);
+                  return (
+                    <div
+                      key={`${item.id}-${item.class_date}`}
+                      className={`td-class-card td-class-card--${status}`}
+                      style={{ animationDelay: `${idx * 0.07}s` }}
+                    >
+                      {/* Time column */}
+                      <div className="td-class-card__time">
+                        <span className="td-class-card__time-start">{formatTime(item.start_time)}</span>
+                        <div className="td-class-card__time-line" />
+                        <span className="td-class-card__time-end">{formatTime(item.end_time)}</span>
                       </div>
 
-                      <div className="td-class-card__meta">
-                        <span><FaClock className="td-meta-icon" /> {formatTime(item.start_time)} – {formatTime(item.end_time)}</span>
+                      {/* Content */}
+                      <div className="td-class-card__content">
+                        <div className="td-class-card__top">
+                          <h4 className="td-class-card__batch">{item.batch_name}</h4>
+                          <span className={`td-status-chip td-status-chip--${status}`}>
+                            {status === "live"      ? "🔴 Live Now"  :
+                             status === "upcoming"  ? "⏳ Upcoming"  :
+                             status === "done"      ? "✓ Ended"      :
+                                                      "📅 Scheduled" }
+                          </span>
+                        </div>
+
+                        <div className="td-class-card__meta">
+                          <span><FaClock className="td-meta-icon" /> {formatTime(item.start_time)} – {formatTime(item.end_time)}</span>
+                        </div>
+
+                        {/* Join button — always visible so trainer can join even if late */}
+                        {item.meeting_link && (
+                          <a
+                            className={`td-join-btn ${status === "live" ? "td-join-btn--live" : ""}`}
+                            href={item.meeting_link}
+                            target="_blank"
+                            rel="noreferrer"
+                          >
+                            <FaVideo /> {status === "live" ? "Join Live" : "Join Session"}
+                          </a>
+                        )}
                       </div>
-
-                      {/* Join button — always visible so trainer can join even if late */}
-                      {item.meeting_link && (
-                        <a
-                          className={`td-join-btn ${status === "live" ? "td-join-btn--live" : ""}`}
-                          href={item.meeting_link}
-                          target="_blank"
-                          rel="noreferrer"
-                        >
-                          <FaVideo /> {status === "live" ? "Join Live" : "Join Session"}
-                        </a>
-                      )}
                     </div>
-                  </div>
-                );
-              })
-            )}
-          </div>
-
-          {/* Pagination */}
-          {allDayItems.length > PAGE_SIZE && (
-            <div className="td-sched-pagination">
-              <button
-                className="td-pag-btn td-pag-btn--nav"
-                disabled={page === 0}
-                onClick={() => setPage(p => p - 1)}
-              >‹ Prev</button>
-
-              <span className="td-pag-info">
-                {page * PAGE_SIZE + 1}–{Math.min((page + 1) * PAGE_SIZE, allDayItems.length)} of {allDayItems.length}
-              </span>
-
-              <button
-                className="td-pag-btn td-pag-btn--nav"
-                disabled={(page + 1) * PAGE_SIZE >= allDayItems.length}
-                onClick={() => setPage(p => p + 1)}
-              >Next ›</button>
+                  );
+                })
+              )}
             </div>
-          )}
-        </div>
 
+            {/* Pagination */}
+            {allDayItems.length > PAGE_SIZE && (
+              <div className="td-sched-pagination">
+                <button
+                  className="td-pag-btn td-pag-btn--nav"
+                  disabled={page === 0}
+                  onClick={() => setPage(p => p - 1)}
+                >‹ Prev</button>
+
+                <span className="td-pag-info">
+                  {page * PAGE_SIZE + 1}–{Math.min((page + 1) * PAGE_SIZE, allDayItems.length)} of {allDayItems.length}
+                </span>
+
+                <button
+                  className="td-pag-btn td-pag-btn--nav"
+                  disabled={(page + 1) * PAGE_SIZE >= allDayItems.length}
+                  onClick={() => setPage(p => p + 1)}
+                >Next ›</button>
+              </div>
+            )}
+          </div>
+        </div>
       </div>
     </div>
   );

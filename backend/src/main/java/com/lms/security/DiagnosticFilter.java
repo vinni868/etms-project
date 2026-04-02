@@ -15,7 +15,8 @@ public class DiagnosticFilter implements Filter {
         HttpServletRequest req = (HttpServletRequest) request;
         String uri = req.getRequestURI();
         if (uri.contains("/public/")) {
-            System.out.println("DIAGNOSTIC [v5]: Hit path -> " + uri + " [Method: " + req.getMethod() + "]");
+            String authHeader = req.getHeader("Authorization");
+            System.out.println("DIAGNOSTIC [v5]: Hit path -> " + uri + " [Method: " + req.getMethod() + "] [Auth: " + (authHeader != null ? "PRESENT" : "MISSING") + "]");
         }
         chain.doFilter(request, response);
     }

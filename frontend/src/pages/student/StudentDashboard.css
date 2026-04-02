@@ -241,6 +241,7 @@
 .sd-stat--green  .sd-stat__icon { background:var(--green-lt); }
 .sd-stat--amber  .sd-stat__icon { background:var(--amber-lt); }
 .sd-stat--indigo .sd-stat__icon { background:var(--indigo-lt); }
+.sd-stat--purple .sd-stat__icon { background:var(--purple-lt); }
 
 .sd-stat__val {
   font-size:26px; font-weight:800; line-height:1;
@@ -250,6 +251,7 @@
 .sd-stat--green  .sd-stat__val { color:var(--green); }
 .sd-stat--amber  .sd-stat__val { color:var(--amber); }
 .sd-stat--indigo .sd-stat__val { color:var(--indigo); }
+.sd-stat--purple .sd-stat__val { color:var(--purple); }
 
 .sd-stat__label {
   font-size:12px; font-weight:500; color:var(--muted);
@@ -262,6 +264,7 @@
 .sd-stat--green  .sd-ring-fill { stroke:var(--green); }
 .sd-stat--amber  .sd-ring-fill { stroke:var(--amber); }
 .sd-stat--indigo .sd-ring-fill { stroke:var(--indigo); }
+.sd-stat--purple .sd-ring-fill { stroke:var(--purple); }
 
 /* ============================================================
    TABS

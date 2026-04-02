@@ -1,5 +1,6 @@
 package com.lms.entity;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.*;
 import com.lms.enums.Status;
 import com.lms.enums.ApprovalStatus;
@@ -24,11 +25,9 @@ public class User {
     @Column(unique = true, nullable = false, length = 150)
     private String email;
 
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     @Column(nullable = false)
     private String password;
-
-    @Column(name = "plain_password", length = 150)
-    private String plainPassword;
 
     @Column(length = 20)
     private String phone;
@@ -170,9 +169,6 @@ public class User {
     public void setPassword(String password) {
         this.password = password;
     }
-
-    public String getPlainPassword() { return plainPassword; }
-    public void setPlainPassword(String plainPassword) { this.plainPassword = plainPassword; }
  
     public void setPhone(String phone) {
         this.phone = phone;

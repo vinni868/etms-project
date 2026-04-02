@@ -6,8 +6,8 @@ function MarketerDashboard() {
     <div style={{ padding: '20px' }}>
       <h2>Marketer Dashboard</h2>
 
-      <div style={{ margin: '20px 0', maxWidth: '400px' }}>
-        <QuickPunch />
+      <div style={{ marginBottom: '2rem' }}>
+        <QuickPunch variant="horizontal" />
         <div style={{ marginTop: '1rem' }}>
            <AttendanceRules />
         </div>

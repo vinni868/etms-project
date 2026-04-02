@@ -647,7 +647,6 @@ public ResponseEntity<?> createTrainer(@RequestBody Map<String, String> payload)
         }
         trainer.setPhone(phone);
         trainer.setPassword(passwordEncoder.encode(plainPass)); // hashed
-        trainer.setPlainPassword(plainPass);
         trainer.setStatus(Status.ACTIVE); // Auto-approved if created by Admin
         trainer.setApprovalStatus(com.lms.enums.ApprovalStatus.APPROVED);
         
@@ -670,7 +669,8 @@ public ResponseEntity<?> createTrainer(@RequestBody Map<String, String> payload)
         trainer.setRole(role);
 
         userRepository.save(trainer);
-        notificationService.createNotification("New trainer profile created: " + trainer.getName(), "USER_CREATION", "ADMIN");
+        // Trainer creation goes to Super Admin for oversight
+        notificationService.createNotification("New trainer profile created: " + trainer.getName(), "USER_CREATION", "SUPERADMIN");
 
         return ResponseEntity.ok(Map.of("message", "Trainer created and approved successfully!"));
 
@@ -692,7 +692,6 @@ public ResponseEntity<?> resetTrainerPassword(
                 .orElseThrow(() -> new RuntimeException("Trainer not found"));
         String plainPass = payload.get("password");
         trainer.setPassword(passwordEncoder.encode(plainPass));
-        trainer.setPlainPassword(plainPass);
         userRepository.save(trainer);
 
         // Simulated SMS trigger
@@ -727,7 +726,6 @@ public ResponseEntity<?> updateTrainer(@PathVariable Long id,
     
     if (updatedTrainer.getPassword() != null && !updatedTrainer.getPassword().isEmpty()) {
          trainer.setPassword(passwordEncoder.encode(updatedTrainer.getPassword()));
-         trainer.setPlainPassword(updatedTrainer.getPassword());
     }
 
     userRepository.save(trainer);
@@ -770,7 +768,6 @@ public ResponseEntity<?> updateTrainer(@PathVariable Long id,
         
         String plainPass = payload.get("password");
         user.setPassword(passwordEncoder.encode(plainPass));
-        user.setPlainPassword(plainPass);
         
         // Auto-approved if created by Admin
         user.setStatus(Status.ACTIVE);
@@ -805,7 +802,9 @@ public ResponseEntity<?> updateTrainer(@PathVariable Long id,
         }
 
         userRepository.save(user);
+        // Student creation goes to both Admin and SuperAdmin
         notificationService.createNotification("New student profile created: " + user.getName(), "USER_CREATION", "ADMIN");
+        notificationService.createNotification("New student profile created: " + user.getName(), "USER_CREATION", "SUPERADMIN");
 
         return ResponseEntity.ok(Map.of(
             "message", "User " + user.getName() + " created and approved successfully!"

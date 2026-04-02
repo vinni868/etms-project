@@ -153,7 +153,7 @@ function StudentDashboard() {
 
   /* ── Stats ── */
   const [stats, setStats] = useState({
-    totalCourses: 0, attendance: 0, progress: 0,
+    totalCourses: 0, attendance: 0, progress: 0, profileCompletion: 0, docsUploaded: 0
   });
 
   /* ── Batches: ALL batches student belongs to ── */
@@ -220,6 +220,8 @@ function StudentDashboard() {
           totalCourses:       res.data.totalCourses       ?? 0,
           attendance:         res.data.attendance         ?? 0,
           progress:           res.data.progress           ?? 0,
+          profileCompletion:  res.data.profileCompletion  ?? 0,
+          docsUploaded:       res.data.docsUploaded       ?? 0,
         });
       })
       .catch(err => console.error("Dashboard stats error:", err));
@@ -496,47 +498,7 @@ function StudentDashboard() {
             <div className="sd-clock__date">{dateStr}</div>
           </div>
 
-          {/* ── Notifications ── */}
-          <div className="sd-icon-wrap" ref={notifRef}>
-            <button className="sd-icon-btn"
-              onClick={() => {
-                setShowNotif(v => !v);
-                setShowProfile(false);
-                pushActivity("🔔", "Opened notifications", "amber");
-              }}>
-              🔔
-              {unreadCount > 0 && <span className="sd-badge">{unreadCount}</span>}
-            </button>
 
-            {showNotif && (
-              <div className="sd-dropdown sd-notif-drop">
-                <div className="sd-drop-head">
-                  <span>Notifications</span>
-                  {unreadCount > 0 && (
-                    <button className="sd-mark-read" onClick={markAllRead}>
-                      Mark all read
-                    </button>
-                  )}
-                </div>
-                {notifs.length === 0 ? (
-                  <div className="sd-notif-empty">
-                    {notifsReady ? "No notifications" : "Loading…"}
-                  </div>
-                ) : (
-                  <div className="sd-notif-scroll">
-                    {notifs.map(n => (
-                      <div key={n.id}
-                        className={`sd-notif-item ${n.unread ? "sd-notif-item--unread" : ""}`}>
-                        <span className="sd-notif-icon">{n.icon}</span>
-                        <span className="sd-notif-text">{n.text}</span>
-                        {n.unread && <span className="sd-dot" />}
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
 
           {/* ── Profile ── */}
           <div className="sd-profile-wrap" ref={profileRef}>
@@ -585,6 +547,7 @@ function StudentDashboard() {
       <div className="sd-stats">
         <StatCard value={stats.totalCourses}       label="Enrolled Courses" icon="📚" color="blue" />
         <StatCard value={stats.attendance}         label="Attendance Rate"  icon="✅" color="green"  suffix="%" />
+        <StatCard value={stats.profileCompletion}  label="Profile Hub"      icon="🛡️" color="purple" suffix="%" />
         <StatCard value={stats.progress}           label="Overall Progress" icon="🚀" color="indigo" suffix="%" />
       </div>
 
@@ -604,14 +567,16 @@ function StudentDashboard() {
 
       {/* ══════════ OVERVIEW TAB ══════════ */}
       {activeTab === "overview" && (
-        <div className="sd-grid-3">
-
-          <div className="sd-card sd-punch-card-wrapper">
-             <QuickPunch />
-             <div style={{ marginTop: '1rem' }}>
-                <AttendanceRules />
-             </div>
+        <div className="sd-overview-content" style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+          
+          <div className="sd-punch-full-width" style={{ width: '100%' }}>
+            <QuickPunch variant="horizontal" />
+            <div style={{ marginTop: '1rem' }}>
+              <AttendanceRules />
+            </div>
           </div>
+
+          <div className="sd-grid-3">
 
           <div className="sd-card">
             <div className="sd-card-head"><h2>⚡ Quick Actions</h2></div>
@@ -686,6 +651,7 @@ function StudentDashboard() {
             )}
           </div>
 
+          </div>
         </div>
       )}
 
@@ -739,7 +705,7 @@ function StudentDashboard() {
             <>
               {/* Today section */}
               {scheduleItems.some(u => u.isToday) && (
-                <div className="sd-sched-section-label">📍 Today's Classes</div>
+                <div className="sd-sched-section-label">Today's Classes</div>
               )}
               {scheduleItems.filter(u => u.isToday).map(u => (
                 <div key={u.id} className="sd-sched-card sd-sched-card--today">

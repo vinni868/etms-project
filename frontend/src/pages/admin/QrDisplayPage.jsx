@@ -24,15 +24,17 @@ export default function QrDisplayPage() {
   const fetchAll = async () => {
     try {
       setLoading(true);
-      const [settingsRes, punchRes] = await Promise.all([
-        api.get('/qr/settings'),
-        api.get('/qr/punch-settings').catch(() => ({ data: { radiusMeters: 200 } })),
+      // Use existing endpoints that are already compiled in the backend
+      const [configRes, punchRes] = await Promise.all([
+        api.get('/qr/config'),
+        api.get('/qr/punch-settings').catch(() => ({ data: { latitude: 0, longitude: 0, radiusMeters: 200 } })),
       ]);
+      
       setSettings({
-        activeToken:  settingsRes.data.activeToken  || '',
-        instituteLat: settingsRes.data.instituteLat || '',
-        instituteLng: settingsRes.data.instituteLng || '',
-        radiusMeters: punchRes.data.radiusMeters    || 200,
+        activeToken:  configRes.data.qrSecret || '',
+        instituteLat: punchRes.data.latitude || '',
+        instituteLng: punchRes.data.longitude || '',
+        radiusMeters: punchRes.data.radiusMeters || 200,
       });
     } catch (err) {
       console.error('Failed to load QR settings', err);
@@ -44,12 +46,13 @@ export default function QrDisplayPage() {
   const handleSaveCoords = async () => {
     setSaving(true);
     try {
-      await api.post('/qr/settings', { lat: settings.instituteLat, lng: settings.instituteLng, generateNew: false });
+      // Use the existing punch-settings endpoint which is working
       await api.post('/qr/punch-settings', {
         latitude:     parseFloat(settings.instituteLat),
         longitude:    parseFloat(settings.instituteLng),
         radiusMeters: parseFloat(settings.radiusMeters),
       });
+
       showMsg('✅ Settings saved successfully!', 'ok');
     } catch {
       showMsg('❌ Failed to save. Please try again.', 'err');
@@ -62,8 +65,11 @@ export default function QrDisplayPage() {
     if (!window.confirm('This will invalidate all current QR codes. Continue?')) return;
     setSaving(true);
     try {
-      const res = await api.post('/qr/settings', { lat: settings.instituteLat, lng: settings.instituteLng, generateNew: true });
-      if (res.data.activeToken) setSettings(p => ({ ...p, activeToken: res.data.activeToken }));
+      // Use the existing config/regenerate endpoint which is working
+      const res = await api.post('/qr/config/regenerate');
+      if (res.data.qrSecret) {
+        setSettings(p => ({ ...p, activeToken: res.data.qrSecret }));
+      }
       showMsg('✅ New QR token generated!', 'ok');
     } catch {
       showMsg('❌ Failed to regenerate.', 'err');

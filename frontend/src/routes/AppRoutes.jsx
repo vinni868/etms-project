@@ -54,8 +54,6 @@ import TrainerProfile from "../pages/trainer/TrainerProfile";
 import TrainerCourses from "../pages/trainer/TrainerCourses";
 
 import TrainerAttendance from "../pages/trainer/TrainerAttendance";
-import TrainerAssignments from "../pages/trainer/TrainerAssignments";
-import TrainerMaterials from "../pages/trainer/TrainerMaterials";
 import TrainerTimetable from "../pages/trainer/TrainerTimetable";
 import TrainerPerformance from "../pages/trainer/TrainerPerformance";
 import TrainerAnnouncements from "../pages/trainer/TrainerAnnouncements";
@@ -152,8 +150,6 @@ export default function AppRoutes() {
 
         <Route path="attendance"      element={<TrainerAttendance />} />
         <Route path="time-tracking"   element={<UserTimeTracking />} />
-        <Route path="assignments"     element={<TrainerAssignments />} />
-        <Route path="materials"       element={<TrainerMaterials />} />
         <Route path="timetable"       element={<TrainerTimetable />} />
         <Route path="performance"     element={<TrainerPerformance />} />
         <Route path="announcements"   element={<TrainerAnnouncements />} />

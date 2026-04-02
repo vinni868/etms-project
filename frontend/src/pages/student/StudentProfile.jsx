@@ -1,84 +1,108 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
+import { FaUser, FaGraduationCap, FaFileUpload, FaCheckCircle, FaExternalLinkAlt, FaLock, FaWhatsapp, FaHome, FaUsers } from "react-icons/fa";
 import api from "../../api/axiosConfig";
 import "./StudentProfile.css";
 
 function StudentProfile() {
-  const [isEditing,  setIsEditing]  = useState(false);
-  const [loading,    setLoading]    = useState(true);
-  const [saving,     setSaving]     = useState(false);
-  const [toast,      setToast]      = useState({ type: "", text: "" });
-  const fileInputRef = useRef(null);
+  const [step, setStep] = useState(1);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [uploading, setUploading] = useState({
+    aadhar: false, resume: false, marks10: false, marks12: false, grad: false, profile: false
+  });
+  const [toast, setToast] = useState({ type: "", text: "" });
 
   const storedUser = JSON.parse(localStorage.getItem("user") || "{}");
-  const userEmail  = storedUser?.email || "";
-
-  const MALE_AVATAR   = "https://cdn-icons-png.flaticon.com/512/3135/3135715.png";
-  const FEMALE_AVATAR = "https://cdn-icons-png.flaticon.com/512/3135/3135789.png";
+  const userEmail = storedUser?.email || "";
 
   const [student, setStudent] = useState({
     name: "", email: userEmail, phone: "", gender: "",
-    qualification: "", year: "", skills: "", bio: "",
-    profilePic: "", address: "", city: "", state: "", pincode: ""
+    qualification: "", yearOfPassing: "", aggregatePercentage: "",
+    marks10th: "", marks12th: "", 
+    parentName: "", parentPhone: "",
+    skills: "", bio: "", profilePic: "", 
+    aadharCardUrl: "", resumeUrl: "", marks10thUrl: "", marks12thUrl: "", graduationDocUrl: "",
+    address: "", city: "", state: "", pincode: "", studentId: ""
   });
-
-  /* Snapshot for cancel */
-  const [snapshot, setSnapshot] = useState(null);
 
   useEffect(() => {
     if (!userEmail) { setLoading(false); return; }
-    api.get(`/student/profile/${userEmail}`)
-      .then(res => { if (res.data) setStudent(res.data); })
-      .catch(err => console.error("Error fetching profile:", err))
-      .finally(() => setLoading(false));
+    fetchProfile();
   }, [userEmail]);
+
+  const fetchProfile = async () => {
+    try {
+      const res = await api.get(`/student/profile/${userEmail}`);
+      if (res.data) setStudent(res.data);
+    } catch (err) {
+      console.error("Error fetching profile:", err);
+      showToast("error", "Failed to load profile data.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const showToast = (type, text) => {
     setToast({ type, text });
     setTimeout(() => setToast({ type: "", text: "" }), 3500);
   };
 
-  const progress = (() => {
-    const fields = [student.name, student.phone, student.gender,
-                    student.qualification, student.year, student.address];
-    return Math.round(fields.filter(f => f?.toString().trim()).length / fields.length * 100);
-  })();
-
   const handleChange = (e) => {
     const { name, value } = e.target;
-    if (name === "phone") {
+    // Phone validation for both student and parent
+    if (name === "phone" || name === "parentPhone") {
       const numericValue = value.replace(/\D/g, "").slice(0, 10);
-      setStudent({ ...student, phone: numericValue });
+      setStudent({ ...student, [name]: numericValue });
     } else {
       setStudent({ ...student, [name]: value });
     }
   };
 
-  const handleImageChange = e => {
+  const handleFileUpload = async (e, type) => {
     const file = e.target.files[0];
     if (!file) return;
-    if (file.size > 2 * 1024 * 1024) { showToast("error", "Image must be under 2 MB."); return; }
-    const reader = new FileReader();
-    reader.onloadend = () => setStudent(s => ({ ...s, profilePic: reader.result }));
-    reader.readAsDataURL(file);
-  };
 
-  const handleEdit = () => {
-    setSnapshot({ ...student });
-    setIsEditing(true);
-  };
+    if (file.size > 5 * 1024 * 1024) {
+      showToast("error", "File must be under 5 MB.");
+      return;
+    }
 
-  const handleCancel = () => {
-    if (snapshot) setStudent(snapshot);
-    setIsEditing(false);
+    setUploading(prev => ({ ...prev, [type]: true }));
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append("type", type);
+    formData.append("email", userEmail);
+
+    try {
+      const res = await api.post("/student/upload-document", formData, {
+        headers: { "Content-Type": "multipart/form-data" }
+      });
+      
+      const { url } = res.data;
+      const fieldMap = {
+        aadhar: "aadharCardUrl",
+        resume: "resumeUrl",
+        marks10: "marks10thUrl",
+        marks12: "marks12thUrl",
+        grad: "graduationDocUrl",
+        profile: "profilePic"
+      };
+
+      setStudent(prev => ({ ...prev, [fieldMap[type]]: url }));
+      showToast("success", `${type.charAt(0).toUpperCase() + type.slice(1)} uploaded successfully! ☁️`);
+    } catch (err) {
+      console.error("Upload error:", err);
+      showToast("error", "Upload failed. Check Cloudinary settings.");
+    } finally {
+      setUploading(prev => ({ ...prev, [type]: false }));
+    }
   };
 
   const handleSave = async () => {
     setSaving(true);
     try {
       await api.put("/student/update-profile", student);
-      setIsEditing(false);
-      setSnapshot(null);
-      showToast("success", "Profile updated successfully ✅");
+      showToast("success", "Profile Hub updated! ✅");
     } catch (err) {
       showToast("error", "Update failed — please try again ❌");
     } finally {
@@ -86,243 +110,208 @@ function StudentProfile() {
     }
   };
 
-  const avatarSrc = student.profilePic ||
-    (student.gender === "Female" ? FEMALE_AVATAR : MALE_AVATAR);
-
   if (loading) return (
     <div className="sp-loader">
       <div className="sp-spinner" />
-      <p>Loading profile…</p>
+      <p>Building your profile hub…</p>
     </div>
   );
 
   return (
     <div className="sp-page">
+      {toast.text && <div className={`sp-toast sp-toast--${toast.type}`}>{toast.text}</div>}
 
-      {/* Toast */}
-      {toast.text && (
-        <div className={`sp-toast sp-toast--${toast.type}`}>{toast.text}</div>
-      )}
-
-      {/* Hero header */}
-      <div className="sp-hero">
-        <div className="sp-hero__orb sp-hero__orb--1" />
-        <div className="sp-hero__orb sp-hero__orb--2" />
-        <div className="sp-hero__inner">
-          <div className="sp-hero__avatar-wrap">
-            <div
-              className={`sp-hero__avatar-frame ${isEditing ? "sp-hero__avatar-frame--edit" : ""}`}
-              onClick={() => isEditing && fileInputRef.current.click()}
-              title={isEditing ? "Click to change photo" : ""}
-            >
-              <img src={avatarSrc} alt={student.name} className="sp-hero__avatar-img" />
-              {isEditing && (
-                <div className="sp-hero__avatar-overlay">
-                  <span>📷 Change</span>
-                </div>
-              )}
-            </div>
-            <input type="file" accept="image/*" ref={fileInputRef} onChange={handleImageChange} hidden />
-          </div>
-
-          <div className="sp-hero__info">
-            <div className="sp-hero__role-chip">🎓 Student</div>
-            <h1 className="sp-hero__name">{student.name || "Your Name"}</h1>
-            <div className="sp-hero__ids">
-              <p className="sp-hero__email">{student.email}</p>
-              {(student.portalId || student.studentId) && (
-                <p className="sp-hero__student-id">ID: {student.portalId || student.studentId}</p>
-              )}
-            </div>
-            <div className="sp-hero__meta">
-              {student.qualification && <span className="sp-chip sp-chip--blue">{student.qualification}</span>}
-              {student.year && <span className="sp-chip sp-chip--purple">Year {student.year}</span>}
-              {student.city && <span className="sp-chip sp-chip--green">📍 {student.city}</span>}
-            </div>
-          </div>
-
-          {/* Profile strength */}
-          <div className="sp-hero__strength">
-            <div className="sp-strength__header">
-              <span>Profile Strength</span>
-              <span className="sp-strength__pct">{progress}%</span>
-            </div>
-            <div className="sp-strength__bar">
-              <div
-                className="sp-strength__fill"
-                style={{ width: `${progress}%`,
-                  background: progress >= 80 ? "linear-gradient(90deg,#16a34a,#4ade80)"
-                            : progress >= 50 ? "linear-gradient(90deg,#2563eb,#60a5fa)"
-                            : "linear-gradient(90deg,#d97706,#fbbf24)"
-                }}
-              />
-            </div>
-            <p className="sp-strength__hint">
-              {progress < 50 ? "Add more details to complete your profile"
-               : progress < 100 ? "Almost there — fill remaining fields"
-               : "Your profile is complete 🎉"}
-            </p>
-          </div>
-        </div>
-      </div>
-
-      {/* Main content */}
-      <div className="sp-body">
-
-        {/* Action bar */}
-        <div className="sp-action-bar">
-          <div className="sp-action-bar__left">
-            <h2 className="sp-action-bar__title">
-              {isEditing ? "Editing Profile" : "Profile Details"}
-            </h2>
-            <p className="sp-action-bar__sub">
-              {isEditing ? "Make your changes and save" : "View your personal and academic information"}
-            </p>
-          </div>
-          <div className="sp-action-bar__right">
-            {!isEditing ? (
-              <button className="sp-btn sp-btn--edit" onClick={handleEdit}>
-                ✏️ Edit Profile
-              </button>
-            ) : (
-              <>
-                <button className="sp-btn sp-btn--cancel" onClick={handleCancel} disabled={saving}>
-                  Cancel
-                </button>
-                <button className="sp-btn sp-btn--save" onClick={handleSave} disabled={saving}>
-                  {saving ? <><span className="sp-btn-spinner" /> Saving…</> : "💾 Save Changes"}
-                </button>
-              </>
-            )}
-          </div>
-        </div>
-
-        {/* Cards grid */}
-        <div className="sp-cards">
-
-          {/* Basic Information */}
-          <div className="sp-card sp-card--full">
-            <div className="sp-card__header">
-              <div className="sp-card__icon sp-card__icon--blue">👤</div>
-              <h3 className="sp-card__title">Basic Information</h3>
-            </div>
-            <div className="sp-card__body">
-              <div className="sp-grid sp-grid--3">
-                <div className="sp-field">
-                  <label className="sp-label">Full Name</label>
-                  <input className="sp-input" name="name" type="text"
-                    value={student.name} onChange={handleChange}
-                    disabled={!isEditing} placeholder="Your full name" />
-                </div>
-                <div className="sp-field">
-                  <label className="sp-label">Email Address</label>
-                  <input className="sp-input sp-input--readonly" type="email"
-                    value={student.email} disabled
-                    title="Email cannot be changed" />
-                </div>
-                {(student.portalId || student.studentId) && (
-                  <div className="sp-field">
-                    <label className="sp-label">System / Portal ID</label>
-                    <input className="sp-input sp-input--readonly" type="text"
-                      value={student.portalId || student.studentId} disabled
-                      title="ID is permanent" />
-                  </div>
+      <div className="sp-container">
+        {/* Header Summary */}
+        <div className="sp-header-card">
+          <div className="sp-profile-summary">
+            <div className="sp-avatar-section">
+              <div className="sp-avatar-main">
+                {uploading.profile ? (
+                   <div className="sp-avatar-loading"><div className="sp-inner-spinner" /></div>
+                ) : (
+                   <img src={student.profilePic || "https://cdn-icons-png.flaticon.com/512/3135/3135715.png"} alt="Profile" />
                 )}
-                <div className="sp-field">
-                  <label className="sp-label">Phone Number</label>
-                  <input className="sp-input" name="phone" type="text"
-                    value={student.phone} onChange={handleChange}
-                    disabled={!isEditing} placeholder="+91 00000 00000" />
-                </div>
-                <div className="sp-field">
-                  <label className="sp-label">Gender</label>
-                  <select className="sp-input sp-select" name="gender"
-                    value={student.gender} onChange={handleChange} disabled={!isEditing}>
-                    <option value="">Select gender</option>
-                    <option value="Male">Male</option>
-                    <option value="Female">Female</option>
-                    <option value="Other">Other</option>
-                  </select>
-                </div>
+                <label className="sp-avatar-edit">
+                  <input type="file" onChange={(e) => handleFileUpload(e, "profile")} hidden />
+                  📷
+                </label>
               </div>
+            </div>
+            <div className="sp-user-meta">
+              <h2 className="premium-text-gradient">{student.name || "Student Name"}</h2>
+              <div className="sp-id-badge"><span className="id-tag">ID</span> {student.studentId || "---"}</div>
+              <p className="sp-email-tag">{student.email} <FaCheckCircle size={12} color="#10b981" /></p>
             </div>
           </div>
 
-          {/* Academic Details */}
-          <div className="sp-card">
-            <div className="sp-card__header">
-              <div className="sp-card__icon sp-card__icon--purple">🎓</div>
-              <h3 className="sp-card__title">Academic Details</h3>
+          <div className="sp-stepper">
+            <div className={`sp-step ${step === 1 ? "active" : "completed"}`} onClick={() => setStep(1)}>
+              <span className="step-num">{step > 1 ? <FaCheckCircle /> : "1"}</span>
+              <span className="step-label">Personal & Academic</span>
             </div>
-            <div className="sp-card__body">
-              <div className="sp-grid sp-grid--2">
-                <div className="sp-field">
-                  <label className="sp-label">Qualification</label>
-                  <input className="sp-input" name="qualification" type="text"
-                    value={student.qualification} onChange={handleChange}
-                    disabled={!isEditing} placeholder="e.g. B.Tech, MCA" />
-                </div>
-                <div className="sp-field">
-                  <label className="sp-label">Year / Semester</label>
-                  <input className="sp-input" name="year" type="text"
-                    value={student.year} onChange={handleChange}
-                    disabled={!isEditing} placeholder="e.g. 3rd Year" />
-                </div>
-                <div className="sp-field sp-field--full">
-                  <label className="sp-label">Skills</label>
-                  <input className="sp-input" name="skills" type="text"
-                    value={student.skills} onChange={handleChange}
-                    disabled={!isEditing} placeholder="e.g. Java, React, MySQL" />
-                  <p className="sp-hint">Separate skills with commas</p>
-                </div>
-                <div className="sp-field sp-field--full">
-                  <label className="sp-label">Bio</label>
-                  <textarea className="sp-textarea" name="bio"
-                    value={student.bio} onChange={handleChange}
-                    disabled={!isEditing}
-                    placeholder="Tell us about yourself — your goals, interests and aspirations…" />
-                </div>
-              </div>
+            <div className="step-line" />
+            <div className={`sp-step ${step === 2 ? "active" : ""}`} onClick={() => setStep(2)}>
+              <span className="step-num">2</span>
+              <span className="step-label">Document Vault</span>
             </div>
           </div>
-
-          {/* Address */}
-          <div className="sp-card">
-            <div className="sp-card__header">
-              <div className="sp-card__icon sp-card__icon--green">📍</div>
-              <h3 className="sp-card__title">Address & Location</h3>
-            </div>
-            <div className="sp-card__body">
-              <div className="sp-grid sp-grid--2">
-                <div className="sp-field sp-field--full">
-                  <label className="sp-label">Street Address</label>
-                  <input className="sp-input" name="address" type="text"
-                    value={student.address} onChange={handleChange}
-                    disabled={!isEditing} placeholder="House no., street, area" />
-                </div>
-                <div className="sp-field">
-                  <label className="sp-label">City</label>
-                  <input className="sp-input" name="city" type="text"
-                    value={student.city} onChange={handleChange}
-                    disabled={!isEditing} placeholder="City" />
-                </div>
-                <div className="sp-field">
-                  <label className="sp-label">State</label>
-                  <input className="sp-input" name="state" type="text"
-                    value={student.state} onChange={handleChange}
-                    disabled={!isEditing} placeholder="State" />
-                </div>
-                <div className="sp-field">
-                  <label className="sp-label">Pincode</label>
-                  <input className="sp-input" name="pincode" type="text"
-                    value={student.pincode} onChange={handleChange}
-                    disabled={!isEditing} placeholder="560001" />
-                </div>
-              </div>
-            </div>
-          </div>
-
         </div>
+
+        {/* Step 1: Identity & Academic Hub */}
+        {step === 1 && (
+          <div className="sp-form-layout anim-slide-up">
+            
+            {/* 1.1 Personal & Family */}
+            <div className="sp-card section-card">
+              <div className="card-header">
+                <div className="header-icon-box blue-bg"><FaUsers /></div>
+                <h3>Personal & Family Details</h3>
+              </div>
+              <div className="card-body">
+                <div className="sp-grid">
+                  <div className="sp-input-group">
+                    <label>Full Name</label>
+                    <input type="text" name="name" value={student.name} onChange={handleChange} placeholder="Enter full name" />
+                  </div>
+                  <div className="sp-input-group readonly">
+                    <label>Official Email <FaLock size={10} /></label>
+                    <input type="text" value={student.email} readOnly />
+                  </div>
+                  <div className="sp-input-group">
+                    <label><FaWhatsapp /> WhatsApp Number</label>
+                    <input type="text" name="phone" value={student.phone} onChange={handleChange} placeholder="10-digit number" />
+                  </div>
+                  <div className="sp-input-group">
+                    <label>Parent / Guardian Name</label>
+                    <input type="text" name="parentName" value={student.parentName} onChange={handleChange} placeholder="Enter parent name" />
+                  </div>
+                  <div className="sp-input-group">
+                    <label>Parent Contact Number</label>
+                    <input type="text" name="parentPhone" value={student.parentPhone} onChange={handleChange} placeholder="10-digit parent number" />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* 1.2 Residential Address */}
+            <div className="sp-card section-card">
+              <div className="card-header">
+                <div className="header-icon-box amber-bg"><FaHome /></div>
+                <h3>Residential Address</h3>
+              </div>
+              <div className="card-body">
+                <div className="sp-grid">
+                  <div className="sp-input-group full-width">
+                    <label>Street Address / Area</label>
+                    <input type="text" name="address" value={student.address} onChange={handleChange} placeholder="House no, Building, Street..." />
+                  </div>
+                  <div className="sp-input-group">
+                    <label>City</label>
+                    <input type="text" name="city" value={student.city} onChange={handleChange} placeholder="e.g. Bangalore" />
+                  </div>
+                  <div className="sp-input-group">
+                    <label>State</label>
+                    <input type="text" name="state" value={student.state} onChange={handleChange} placeholder="e.g. Karnataka" />
+                  </div>
+                  <div className="sp-input-group">
+                    <label>Pincode</label>
+                    <input type="text" name="pincode" value={student.pincode} onChange={handleChange} placeholder="6-digit code" />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* 1.3 Academic Journey */}
+            <div className="sp-card section-card">
+              <div className="card-header">
+                <div className="header-icon-box green-bg"><FaGraduationCap /></div>
+                <h3>Academic Journey</h3>
+              </div>
+              <div className="card-body">
+                <div className="sp-grid">
+                  <div className="sp-input-group">
+                    <label>Highest Qualification</label>
+                    <input type="text" name="qualification" value={student.qualification} onChange={handleChange} placeholder="e.g. BE, B.Tech, MCA" />
+                  </div>
+                  <div className="sp-input-group">
+                    <label>Graduation Year & %</label>
+                    <div className="sp-inline-inputs">
+                      <input type="text" name="yearOfPassing" value={student.yearOfPassing} onChange={handleChange} placeholder="Year" />
+                      <input type="text" name="aggregatePercentage" value={student.aggregatePercentage} onChange={handleChange} placeholder="Perc%" />
+                    </div>
+                  </div>
+                  <div className="sp-input-group">
+                    <label>12th / PUC Marks (%)</label>
+                    <input type="text" name="marks12th" value={student.marks12th} onChange={handleChange} placeholder="e.g. 88%" />
+                  </div>
+                  <div className="sp-input-group">
+                    <label>10th / SSLC Marks (%)</label>
+                    <input type="text" name="marks10th" value={student.marks10th} onChange={handleChange} placeholder="e.g. 92%" />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="sp-footer-actions">
+              <button className="btn-next" onClick={() => setStep(2)}>Next: Documentation <span className="btn-icon">→</span></button>
+            </div>
+          </div>
+        )}
+
+        {/* Step 2: Documents */}
+        {step === 2 && (
+          <div className="sp-card anim-slide-up">
+            <div className="card-header">
+              <div className="header-icon-box purple-bg"><FaFileUpload /></div>
+              <h3>Cloudinary Document Vault</h3>
+            </div>
+            <div className="card-body">
+              <div className="doc-grid">
+                <DocItem label="Aadhar Card" url={student.aadharCardUrl} loading={uploading.aadhar} onUpload={(e) => handleFileUpload(e, "aadhar")} />
+                <DocItem label="Professional Resume" url={student.resumeUrl} loading={uploading.resume} onUpload={(e) => handleFileUpload(e, "resume")} />
+                <DocItem label="10th Marks Card" url={student.marks10thUrl} loading={uploading.marks10} onUpload={(e) => handleFileUpload(e, "marks10")} />
+                <DocItem label="12th Marks Card" url={student.marks12thUrl} loading={uploading.marks12} onUpload={(e) => handleFileUpload(e, "marks12")} />
+                <DocItem label="Graduation Cert." url={student.graduationDocUrl} loading={uploading.grad} onUpload={(e) => handleFileUpload(e, "grad")} />
+              </div>
+              <div className="sp-footer-actions">
+                <button className="btn-back" onClick={() => setStep(1)}>← Previous</button>
+                <button className="btn-save" onClick={handleSave} disabled={saving}>
+                  {saving ? <div className="sp-btn-spinner" /> : "💾 Update & Sync Profile Hub"}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+function DocItem({ label, url, loading, onUpload }) {
+  return (
+    <div className={`doc-item ${url ? "has-file" : ""}`}>
+      <div className="doc-info">
+        <span className="doc-label">{label}</span>
+        {url && <span className="doc-status"><FaCheckCircle /> Saved</span>}
+      </div>
+      <div className="doc-action-zone">
+        {loading ? (
+          <div className="doc-spinner" />
+        ) : url ? (
+          <div className="doc-actions-row">
+            <a href={url} target="_blank" rel="noreferrer" className="btn-view-doc"><FaExternalLinkAlt /> View</a>
+            <label className="btn-replace-doc">
+              <input type="file" onChange={onUpload} hidden />
+              Replace
+            </label>
+          </div>
+        ) : (
+          <label className="btn-upload-doc">
+            <input type="file" onChange={onUpload} hidden />
+            <FaFileUpload /> Upload to Cloud
+          </label>
+        )}
       </div>
     </div>
   );

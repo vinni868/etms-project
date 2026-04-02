@@ -23,14 +23,6 @@ public class DataSeeder implements CommandLineRunner {
     private void seedIdSequences() {
         if (idSequenceRepository.count() == 0) {
             int currentYear = Year.now().getValue();
-            // Assuming 'user' and 'passwordEncoder' would be defined elsewhere for superadmin creation.
-            // This part of the instruction seems to be for a different section of the DataSeeder
-            // or requires additional context (e.g., User entity, UserRepository, PasswordEncoder).
-            // For now, inserting the line as requested, but it will cause compilation errors
-            // if 'user' and 'passwordEncoder' are not defined.
-            // user.setEmail("superadmin@appteknow.com");
-            // user.setPassword(passwordEncoder.encode("password@123"));
-            // user.setPlainPassword("password@123");
             List<IdSequence> sequences = List.of(
                 new IdSequence("STUDENT",  "STU", 0, currentYear),
                 new IdSequence("TRAINER",  "TRN", 0, currentYear),

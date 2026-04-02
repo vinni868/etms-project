@@ -365,38 +365,7 @@
     border-top: 1px solid #f1f5f9;
 }
 
-/* In-Chat Input */
-.chat-input-area {
-    padding: 15px 20px;
-    background: white;
-    border-top: 1px solid #f1f5f9;
-    display: flex;
-    align-items: center;
-    gap: 12px;
-}
-
-.chat-input-area input {
-    flex: 1;
-    border: 1.5px solid #e2e8f0;
-    padding: 12px 18px;
-    border-radius: 25px;
-    outline: none;
-    font-size: 14px;
-}
-
-.chat-input-area button {
-    background: var(--navy-primary);
-    color: white;
-    width: 42px;
-    height: 42px;
-    min-width: 42px;
-    border-radius: 50%;
-    border: none;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-}
+/* In-Chat Input — See updated styles with voice controls below */
 
 .recent-chat-preview {
     background: white;
@@ -420,4 +389,258 @@
     margin: 2px 0 0;
     font-size: 12px;
     color: #64748b;
+}
+
+/* ── Typing dots animation ───────────────────────────────────────────────── */
+.typing-dots {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    padding: 4px 0;
+}
+
+.typing-dots span {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #94a3b8;
+    animation: typingBounce 1.2s infinite ease-in-out;
+}
+
+.typing-dots span:nth-child(1) { animation-delay: 0s; }
+.typing-dots span:nth-child(2) { animation-delay: 0.2s; }
+.typing-dots span:nth-child(3) { animation-delay: 0.4s; }
+
+@keyframes typingBounce {
+    0%, 80%, 100% { transform: scale(0.7); opacity: 0.5; }
+    40% { transform: scale(1); opacity: 1; }
+}
+
+/* ── Voice Status Bar (inside header) ───────────────────────────────────── */
+.voice-status-bar {
+    margin-top: 10px;
+    min-height: 28px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.voice-listening-indicator,
+.voice-speaking-indicator {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(255,255,255,0.15);
+    padding: 6px 14px;
+    border-radius: 20px;
+    backdrop-filter: blur(4px);
+}
+
+.voice-status-text {
+    font-size: 12px;
+    font-weight: 600;
+    color: rgba(255,255,255,0.95);
+    letter-spacing: 0.3px;
+}
+
+/* ── Listening Wave Bars ─────────────────────────────────────────────────── */
+.voice-wave {
+    display: flex;
+    align-items: center;
+    gap: 3px;
+    height: 18px;
+}
+
+.voice-wave span {
+    display: block;
+    width: 3px;
+    border-radius: 3px;
+    background: #ef4444;
+    animation: waveBar 0.9s ease-in-out infinite;
+}
+
+.voice-wave span:nth-child(1) { height: 6px;  animation-delay: 0.0s; }
+.voice-wave span:nth-child(2) { height: 14px; animation-delay: 0.1s; }
+.voice-wave span:nth-child(3) { height: 18px; animation-delay: 0.2s; }
+.voice-wave span:nth-child(4) { height: 10px; animation-delay: 0.3s; }
+.voice-wave span:nth-child(5) { height: 6px;  animation-delay: 0.4s; }
+
+@keyframes waveBar {
+    0%, 100% { transform: scaleY(0.4); opacity: 0.6; }
+    50%       { transform: scaleY(1);   opacity: 1; }
+}
+
+/* ── Speaking indicator ──────────────────────────────────────────────────── */
+.speaking-icon {
+    font-size: 14px;
+    color: #60f0b0;
+    animation: speakPulse 1.2s ease-in-out infinite;
+}
+
+@keyframes speakPulse {
+    0%, 100% { opacity: 0.5; transform: scale(1); }
+    50%       { opacity: 1;   transform: scale(1.2); }
+}
+
+.stop-speak-btn {
+    background: rgba(255,255,255,0.2);
+    border: none;
+    border-radius: 50%;
+    width: 22px;
+    height: 22px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 9px;
+    color: white;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+.stop-speak-btn:hover {
+    background: rgba(255,255,255,0.35);
+}
+
+/* ── Input Wrapper (contains error + form) ───────────────────────────────── */
+.chat-input-wrapper {
+    background: white;
+    border-top: 1px solid #f1f5f9;
+}
+
+.voice-error {
+    font-size: 12px;
+    color: #dc2626;
+    text-align: center;
+    padding: 6px 16px;
+    background: #fef2f2;
+    border-bottom: 1px solid #fecaca;
+    animation: fadeIn 0.3s ease;
+}
+
+/* ── Chat Input Area (updated to hold 3 btns) ────────────────────────────── */
+.chat-input-area {
+    padding: 12px 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.chat-input-area input {
+    flex: 1;
+    border: 1.5px solid #e2e8f0;
+    padding: 11px 16px;
+    border-radius: 25px;
+    outline: none;
+    font-size: 14px;
+    transition: border-color 0.2s;
+}
+
+.chat-input-area input:focus {
+    border-color: var(--navy-primary);
+}
+
+.chat-input-area input:disabled {
+    background: #f8fafc;
+    color: #ef4444;
+    font-weight: 600;
+}
+
+/* ── Mic Button ──────────────────────────────────────────────────────────── */
+.mic-btn {
+    background: #f1f5f9;
+    color: #475569;
+    width: 40px;
+    height: 40px;
+    min-width: 40px;
+    border-radius: 50%;
+    border: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 15px;
+    cursor: pointer;
+    transition: all 0.25s;
+}
+
+.mic-btn:hover {
+    background: var(--navy-primary);
+    color: white;
+    transform: scale(1.05);
+}
+
+.mic-btn.listening {
+    background: #ef4444;
+    color: white;
+    box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.6);
+    animation: micPulse 1.2s infinite;
+}
+
+@keyframes micPulse {
+    0%   { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.6); }
+    70%  { box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+}
+
+/* ── Send Button ─────────────────────────────────────────────────────────── */
+.send-btn {
+    background: var(--navy-primary);
+    color: white;
+    width: 40px;
+    height: 40px;
+    min-width: 40px;
+    border-radius: 50%;
+    border: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 14px;
+    transition: 0.2s;
+}
+
+.send-btn:hover { filter: brightness(1.15); }
+.send-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+
+/* ── Voice Toggle Button ─────────────────────────────────────────────────── */
+.voice-toggle-btn {
+    width: 36px;
+    height: 36px;
+    min-width: 36px;
+    border-radius: 50%;
+    border: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.voice-toggle-btn.enabled {
+    background: #eff6ff;
+    color: var(--navy-primary);
+}
+
+.voice-toggle-btn.disabled {
+    background: #f1f5f9;
+    color: #94a3b8;
+}
+
+.voice-toggle-btn:hover {
+    transform: scale(1.1);
+}
+
+/* ── Misc ────────────────────────────────────────────────────────────────── */
+.activity-label {
+    font-size: 11px;
+    font-weight: 700;
+    color: #94a3b8;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 10px;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-4px); }
+    to   { opacity: 1; transform: translateY(0); }
 }

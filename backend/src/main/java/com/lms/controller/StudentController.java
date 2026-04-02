@@ -29,6 +29,9 @@ public class StudentController {
     private StudentCourseRepository studentCourseRepository;
 
     @Autowired
+    private StudentRepository studentRepository;
+
+    @Autowired
     private JdbcTemplate jdbcTemplate;
     @Autowired
     private UserRepository userRepository;
@@ -153,6 +156,33 @@ public class StudentController {
                     .orElse(null);
             if (user != null) {
                 dashboard.put("studentId", user.getStudentId());
+                
+                // --- PROFILE COMPLETION ANALYSIS ---
+                Optional<Student> studentOpt = studentRepository.findByEmail(user.getEmail());
+                if (studentOpt.isPresent()) {
+                    Student s = studentOpt.get();
+                    int docsCount = 0;
+                    if (s.getAadharCardUrl() != null) docsCount++;
+                    if (s.getResumeUrl() != null) docsCount++;
+                    if (s.getMarks10thUrl() != null) docsCount++;
+                    if (s.getMarks12thUrl() != null) docsCount++;
+                    if (s.getGraduationDocUrl() != null) docsCount++;
+                    
+                    dashboard.put("docsUploaded", docsCount);
+                    dashboard.put("totalDocsRequired", 5);
+                    
+                    int profileScore = 0;
+                    if (s.getYearOfPassing() != null && !s.getYearOfPassing().isBlank()) profileScore += 10;
+                    if (s.getAggregatePercentage() != null && !s.getAggregatePercentage().isBlank()) profileScore += 10;
+                    if (s.getMarks10th() != null && !s.getMarks10th().isBlank()) profileScore += 10;
+                    if (s.getMarks12th() != null && !s.getMarks12th().isBlank()) profileScore += 10;
+                    if (s.getParentName() != null && !s.getParentName().isBlank()) profileScore += 10;
+                    
+                    // Documents are 50% of the total score (10% per doc)
+                    profileScore += (docsCount * 10);
+                    
+                    dashboard.put("profileCompletion", Math.min(profileScore, 100));
+                }
             }
 
             return ResponseEntity.ok(dashboard);

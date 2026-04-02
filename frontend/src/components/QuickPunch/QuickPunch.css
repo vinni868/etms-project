@@ -6,7 +6,7 @@
     box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
     transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
     position: relative;
-    overflow: hidden;
+    /* overflow: hidden; Removed to allow floating messages */
     min-width: 280px;
     margin-bottom: 20px;
 }
@@ -203,51 +203,91 @@
 .sa-hr-dot.gold { background: #f59e0b; box-shadow: 0 0 8px #f59e0b; }
 .sa-hr-dot.red { background: #ef4444; box-shadow: 0 0 8px #ef4444; }
 
-/* ─── HORIZONTAL VARIANT ─── */
+/* ─── HORIZONTAL VARIANT (PREMIUM) ─── */
 .qp-horizontal {
     display: flex;
     flex-direction: row;
     align-items: center;
     justify-content: space-between;
-    padding: 12px 24px;
-    gap: 30px;
-    min-height: 80px;
+    padding: 18px 32px;
+    gap: 40px;
+    min-height: 90px;
+    background: linear-gradient(to right, #ffffff, #f8faff);
+    border: 1.5px solid #e2e8f0;
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05);
+    border-left: 8px solid #10b981; /* Default/Active state */
+    margin-bottom: 24px;
+    width: 100%;
+}
+
+.qp-horizontal.status-out {
+    border-left-color: #f59e0b;
 }
 
 .qp-horizontal .qp-header {
     margin-bottom: 0;
-    flex: 0 0 auto;
-}
-
-.qp-horizontal .qp-body {
     flex: 1;
-    flex-direction: row;
-    align-items: center;
-    justify-content: flex-end;
     gap: 20px;
 }
 
-.qp-horizontal .qp-body-left {
-    flex: 1;
-    display: flex;
+.qp-horizontal .qp-icon-box {
+    width: 52px;
+    height: 52px;
+    border-radius: 14px;
+}
+
+.qp-horizontal .qp-title-box h3 {
+    font-size: 1.25rem;
+}
+
+.qp-horizontal .qp-body {
+    flex: 2;
+    flex-direction: row;
+    align-items: center;
     justify-content: flex-end;
+    gap: 32px;
+}
+
+.qp-horizontal .qp-body-left {
+    flex: 0 0 auto;
+    display: flex;
+    align-items: center;
+}
+
+.qp-horizontal .qp-info-text {
+    padding: 10px 16px;
+    font-size: 0.9rem;
+    background: #f1f5f9;
 }
 
 .qp-horizontal .qp-body-right {
-    min-width: 160px;
+    flex: 0 0 auto;
+    min-width: 200px;
 }
 
 .qp-horizontal .qp-action-btn {
-    width: auto;
-    padding: 10px 24px;
+    width: 100%;
+    padding: 14px 32px;
+    font-size: 1rem;
+    letter-spacing: 0.5px;
 }
 
 .qp-horizontal .qp-msg {
     position: absolute;
-    bottom: -40px;
-    right: 24px;
-    z-index: 10;
-    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    top: -15px; /* Float slightly above the card to avoid overlap */
+    right: 32px;
+    transform: translateY(0);
+    margin: 0;
+    box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+    z-index: 50;
+    max-width: 320px;
+    border-width: 1.5px;
+}
+
+.qp-horizontal .qp-msg.warning, 
+.qp-horizontal .qp-msg.error {
+    /* Keep them at the same top-right position, floating above */
+    right: 32px; 
 }
 
 @media (max-width: 768px) {

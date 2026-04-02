@@ -200,11 +200,10 @@
 }
 
 /* Explicit Widths for Consistency */
-.um-table th:nth-child(1), .um-table td:nth-child(1) { width: 35%; }  /* Member Cluster */
-.um-table th:nth-child(2), .um-table td:nth-child(2) { width: 15%; }  /* Role */
-.um-table th:nth-child(3), .um-table td:nth-child(3) { width: 15%; }  /* Password */
-.um-table th:nth-child(4), .um-table td:nth-child(4) { width: 12%; }  /* Status */
-.um-table th:nth-child(5), .um-table td:nth-child(5) { width: 23%; }  /* Actions */
+.um-table th:nth-child(1), .um-table td:nth-child(1) { width: 15%; }  /* Role */
+.um-table th:nth-child(2), .um-table td:nth-child(2) { width: 42%; }  /* Member Cluster */
+.um-table th:nth-child(3), .um-table td:nth-child(3) { width: 15%; }  /* Status */
+.um-table th:nth-child(4), .um-table td:nth-child(4) { width: 28%; }  /* Actions */
 
 .um-table td {
   padding: 1.15rem 1.5rem;

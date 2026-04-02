@@ -2,22 +2,37 @@ import api from '../../api/axiosConfig';
 import QrScannerModal from '../../components/QrScannerModal';
 import useGeofenceWatcher from '../../hooks/useGeofenceWatcher';
 import AttendanceRules from '../../components/AttendanceRules/AttendanceRules';
+import { 
+  FaClock, 
+  FaHistory, 
+  FaCheckCircle, 
+  FaFingerprint, 
+  FaQrcode, 
+  FaBolt, 
+  FaExclamationTriangle,
+  FaShieldAlt,
+  FaCalendarAlt,
+  FaHourglassHalf,
+  FaRunning,
+  FaLock
+} from "react-icons/fa";
 import './StudentTimeTracking.css';
 
 /**
- * Student Time Tracking Page — Enhanced
- * Both QR Scan AND Quick Punch In (No QR) are available for students.
- * Route: /student/time-tracking
+ * Student Time Tracking Page — Premium Evolution
+ * High-definition glassmorphic UI + Strict Account Status Enforcement
  */
 export default function StudentTimeTracking() {
-  const user    = JSON.parse(localStorage.getItem('user') || '{}');
-  const userId  = user?.id;
+  const userFromStorage = JSON.parse(localStorage.getItem('user') || '{}');
+  const userId  = userFromStorage?.id;
   const token   = localStorage.getItem('token');
 
   const [timeLogs,      setTimeLogs]      = useState([]);
   const [stats,         setStats]         = useState({ avgHours: '0h', totalDays: 0 });
   const [todaySessions, setTodaySessions] = useState([]);
   const [isPunchedIn,   setIsPunchedIn]   = useState(false);
+  const [accStatus,     setAccStatus]     = useState(userFromStorage?.status || 'ACTIVE');
+  
   const [loading,       setLoading]       = useState(true);
   const [actionLoading, setActionLoading] = useState(false);
   const [scannerOpen,   setScannerOpen]   = useState(false);
@@ -33,77 +48,74 @@ export default function StudentTimeTracking() {
 
   useEffect(() => { loadData(); }, []);
 
-  /* ─── Load time logs ─── */
   const loadData = async () => {
     try {
       setLoading(true);
-      const res  = await api.get('/qr/time-logs', {
-        headers: { Authorization: `Bearer ${token}` }, withCredentials: true
-      });
-      const logs  = res.data.logs  || [];
-      const stats = res.data.stats || {};
+      const res = await api.get('/qr/time-logs');
+      const logs = res.data.logs || [];
+      const st = res.data.stats || {};
+      const actualStatus = res.data.userStatus || 'ACTIVE';
+      
       setTimeLogs(logs);
-      setStats(stats);
+      setStats(st);
+      setAccStatus(actualStatus);
 
-      const today     = new Date().toDateString();
+      const today = new Date().toDateString();
       const todayList = logs.filter(l => new Date(l.date).toDateString() === today);
       setTodaySessions(todayList);
 
-      const active    = todayList.find(l => l.loginTime && !l.logoutTime);
+      const active = todayList.find(l => l.loginTime && !l.logoutTime);
       setIsPunchedIn(!!active);
     } catch (err) {
-      console.error('Failed to load time logs:', err);
-      showToast('error', 'Failed to load punch data. Please refresh.');
+      showToast('error', 'Critical: Could not sync with Attendance Server.');
     } finally {
       setLoading(false);
     }
   };
 
-  /* ─── Auto-checkout geofence ─── */
   const handleAutoCheckout = (data) => {
-    showToast('warning', `📍 Auto checked-out — you left the institute. Duration: ${data.duration}`);
+    showToast('warning', `System: Auto Checked-Out (Left Geofence). Duration: ${data.duration}`);
     loadData();
   };
   
   const handleGpsError = (err) => {
     setGpsError(err === "PERMISSION_DENIED" 
-      ? "Location access is blocked. Please enable GPS in your browser settings to use Punch features." 
-      : `Location error: ${err}`
+      ? "GPS access restricted. Enable location services in browser settings to punch in/out." 
+      : `GPS Integrity Error: ${err}`
     );
   };
 
   useGeofenceWatcher(isPunchedIn, handleAutoCheckout, handleGpsError);
 
-  /* ─── Quick Direct Punch (No QR) ─── */
   const handleDirectPunch = async () => {
+    if (accStatus !== 'ACTIVE') {
+      showToast('error', 'System Lock: Inactive accounts cannot perform punch actions.');
+      return;
+    }
+
     setActionLoading(true);
     try {
       if (isPunchedIn) {
-        await api.post('/qr/punch-out', { userId }, {
-          headers: { Authorization: `Bearer ${token}` }, withCredentials: true
-        });
-        showToast('success', '✅ Punched Out successfully!');
+        await api.post('/qr/punch-out', { userId });
+        showToast('success', 'Session Synced! Punched out successfully.');
       } else {
-        await api.post('/qr/punch-in', { userId }, {
-          headers: { Authorization: `Bearer ${token}` }, withCredentials: true
-        });
-        showToast('success', '✅ Punched In successfully!');
+        await api.post('/qr/punch-in', { userId });
+        showToast('success', 'Tracker Active! Attendance record started.');
       }
       await loadData();
     } catch (err) {
-      showToast('error', err?.response?.data?.message || 'Action failed. Please try again.');
+      showToast('error', err?.response?.data?.message || 'Server Exception. Try again later.');
     } finally {
       setActionLoading(false);
     }
   };
 
-  /* ─── Toast helper ─── */
   const showToast = (type, msg) => {
     setToast({ type, msg });
-    setTimeout(() => setToast(null), 4000);
+    setTimeout(() => setToast(null), 3500);
   };
 
-  /* ─── Formatters ─── */
+  /* Formatters */
   const fmtTime = (d) =>
     d ? new Date(d).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true }) : '—';
   const fmtDate = (d) =>
@@ -119,47 +131,33 @@ export default function StudentTimeTracking() {
   const clockStr = now.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true });
   const dateStr  = now.toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
 
-  const toastColors = {
-    success: { bg: '#dcfce7', color: '#16a34a', border: '#bbf7d0' },
-    error:   { bg: '#fee2e2', color: '#dc2626', border: '#fca5a5' },
-    warning: { bg: '#fff7ed', color: '#ea580c', border: '#fed7aa' },
-  };
+  // Access Control
+  const isRestricted = accStatus !== 'ACTIVE';
 
   return (
     <div className="stt-page">
 
-      {/* ── Toast ── */}
+      {/* --- PREMIUM TOAST --- */}
       {toast && (
-        <div style={{
-          position: 'fixed', top: '1.25rem', right: '1.5rem', zIndex: 99999,
-          display: 'flex', alignItems: 'center', gap: '0.6rem',
-          padding: '0.75rem 1.25rem', borderRadius: '12px',
-          fontSize: '0.875rem', fontWeight: 700,
-          boxShadow: '0 8px 30px rgba(15,23,42,0.15)',
-          backgroundColor: toastColors[toast.type]?.bg,
-          color: toastColors[toast.type]?.color,
-          border: `1.5px solid ${toastColors[toast.type]?.border}`,
-          animation: 'stt-toast-in 0.3s cubic-bezier(0.22,0.68,0,1.2)',
-          maxWidth: '380px',
-        }}>
-          {toast.msg}
+        <div className={`stt-adm-toast stt-adm-toast--${toast.type}`}>
+           {toast.type === 'success' ? <FaCheckCircle /> : <FaExclamationTriangle />}
+           <span>{toast.msg}</span>
         </div>
       )}
 
-      {/* ── QR Scanner Modal ── */}
       <QrScannerModal
         isOpen={scannerOpen}
         onClose={() => setScannerOpen(false)}
         onSuccess={() => { setScannerOpen(false); loadData(); }}
       />
 
-      {/* ── Page Header ── */}
+      {/* --- HEADER --- */}
       <div className="stt-page-header">
         <div className="stt-header-left">
-          <div className="stt-header-icon">⏱️</div>
+          <div className="stt-header-icon"><FaClock /></div>
           <div>
-            <h1 className="stt-page-title">My Work Hours</h1>
-            <p className="stt-page-sub">Track your daily attendance and work sessions</p>
+            <h1 className="stt-page-title">Personal Attendance Hub</h1>
+            <p className="stt-page-sub">Monitor your working footprint and location-aware sessions</p>
           </div>
         </div>
         <div className="stt-live-clock">
@@ -170,138 +168,127 @@ export default function StudentTimeTracking() {
 
       <AttendanceRules />
 
-      {/* ── GPS Warning ── */}
+      {/* --- GPS ALERTS --- */}
       {gpsError && (
-        <div style={{
-          backgroundColor: '#fff7ed', border: '1.5px solid #fed7aa', color: '#ea580c',
-          padding: '1rem', borderRadius: '12px', marginBottom: '1.5rem',
-          display: 'flex', alignItems: 'center', gap: '0.75rem', fontWeight: 600
-        }}>
-          ⚠️ {gpsError}
+        <div className="stt-gps-alert">
+          <FaShieldAlt className="glow-icon" />
+          <div className="gps-content">
+             <strong>Security Check:</strong> {gpsError}
+          </div>
         </div>
       )}
 
-      {/* ── Status Row ── */}
+      {/* --- STATS CLUSTER --- */}
       <div className="stt-stats-row">
         <div className={`stt-status-pill ${isPunchedIn ? 'stt-status-in' : 'stt-status-out'}`}>
           <span className={`stt-dot ${isPunchedIn ? 'dot-green' : 'dot-red'}`} />
-          {isPunchedIn ? 'Currently Punched IN' : 'Currently Punched OUT'}
+          {isPunchedIn ? 'Tracking Session [ACTIVE]' : 'System Idle [READY]'}
         </div>
+        
         <div className="stt-stat-mini">
-          <span className="stt-stat-label">Today's Time</span>
+          <span className="stt-stat-label">TODAY'S LOG</span>
           <span className="stt-stat-val stt-val-blue">
-            {isPunchedIn ? <span className="stt-pulse">Tracking…</span> : fmtDuration(todayMinutes) || '—'}
+            {isPunchedIn ? <span className="stt-live-pulse"><FaRunning /> Running</span> : fmtDuration(todayMinutes)}
           </span>
         </div>
         <div className="stt-stat-mini">
-          <span className="stt-stat-label">Today's Sessions</span>
-          <span className="stt-stat-val">{todaySessions.length}</span>
+          <span className="stt-stat-label">SESSION RECAP</span>
+          <span className="stt-stat-val">{todaySessions.length} <FaFingerprint style={{fontSize: '14px', opacity: 0.5}} /></span>
         </div>
         <div className="stt-stat-mini">
-          <span className="stt-stat-label">Days Logged</span>
-          <span className="stt-stat-val">{stats.totalDays || 0}</span>
+          <span className="stt-stat-label">LIFETIME DAYS</span>
+          <span className="stt-stat-val">{stats.totalDays || 0} <FaCalendarAlt style={{fontSize: '14px', opacity: 0.5}} /></span>
         </div>
         <div className="stt-stat-mini">
-          <span className="stt-stat-label">Avg. Daily Hours</span>
-          <span className="stt-stat-val">{stats.avgHours || '—'}</span>
+          <span className="stt-stat-label">AVG WORK-RATE</span>
+          <span className="stt-stat-val">{stats.avgHours || '0.0h'} <FaHourglassHalf style={{fontSize: '14px', opacity: 0.5}} /></span>
         </div>
       </div>
 
-      {/* ── Main Punch Card ── */}
-      <div className={`stt-punch-card ${isPunchedIn ? 'stt-punch-card--in' : 'stt-punch-card--out'}`}>
-        <div className="stt-punch-card__circles">
-          <div className="stt-circle stt-circle--1" />
-          <div className="stt-circle stt-circle--2" />
+      {/* --- CORE PUNCH SYSTEM --- */}
+      {isRestricted ? (
+        <div className="stt-restricted-hub">
+           <div className="restricted-icon"><FaLock /></div>
+           <h2 className="restricted-title">Access Restricted</h2>
+           <p className="restricted-sub">
+             The Attendance System has been locked for your account as your current status is <strong>{accStatus}</strong>.
+             Please contact the Student Registry or Admin Hub to reactivate your portal privileges.
+           </p>
         </div>
-        <div className="stt-punch-card__content">
-          <div className="stt-punch-icon">{isPunchedIn ? '✅' : '🚀'}</div>
-          <h2 className="stt-punch-title">
-            {isPunchedIn ? "You're in! Time is being tracked." : 'Ready to mark attendance?'}
-          </h2>
-          <p className="stt-punch-sub">
-            {isPunchedIn
-              ? 'Use either method below to end your session. Auto-checkout is active — you\'ll be logged out when you leave the premises.'
-              : 'Choose your preferred punch-in method. Both options record your attendance.'}
-          </p>
+      ) : (
+        <div className={`stt-punch-card ${isPunchedIn ? 'stt-punch-card--in' : 'stt-punch-card--out'}`}>
+          <div className="stt-punch-card__content">
+            <div className="stt-punch-icon">{isPunchedIn ? '🌩️' : '🔭'}</div>
+            <h2 className="stt-punch-title">
+              {isPunchedIn ? "Operational Period in Progress" : 'Institute Entrance Detected'}
+            </h2>
+            <p className="stt-punch-sub">
+              {isPunchedIn
+                ? 'Your location is being monitored for platform compliance. You will be automatically checked-out if you leave the radial boundary.'
+                : 'Welcome to the institute. Please synchronize your session using one of the high-fidelity methods below.'}
+            </p>
 
-          {/* ── Two Method Buttons ── */}
-          <div className="stt-method-row">
-            {/* Method 1: QR Scan */}
-            <button
-              className={`stt-method-card stt-method-card--primary ${isPunchedIn ? 'stt-method-card--out' : ''}`}
-              onClick={() => setScannerOpen(true)}
-            >
-              <div className="stt-method-icon">📷</div>
-              <div className="stt-method-body">
-                <div className="stt-method-title">
-                  {isPunchedIn ? 'Scan QR to Punch Out' : 'Scan QR to Punch In'}
+            <div className="stt-method-row">
+              <button
+                className={`stt-method-card stt-method-card--primary ${isPunchedIn ? 'btn-danger' : ''}`}
+                onClick={() => setScannerOpen(true)}
+              >
+                <div className="stt-method-icon"><FaQrcode /></div>
+                <div className="stt-method-body">
+                  <div className="stt-method-title">
+                    {isPunchedIn ? 'Finalize via QR' : 'Initialize via QR'}
+                  </div>
+                  <div className="stt-method-desc">Visual Cryptography Scan</div>
                 </div>
-                <div className="stt-method-desc">Camera scan — recommended</div>
-              </div>
-              <div className="stt-method-arrow">→</div>
-            </button>
+              </button>
 
-            {/* Divider */}
-            <div className="stt-method-divider">
-              <span>or</span>
+              <button
+                className="stt-method-card stt-method-card--secondary"
+                onClick={handleDirectPunch}
+                disabled={actionLoading}
+              >
+                <div className="stt-method-icon"><FaBolt /></div>
+                <div className="stt-method-body">
+                  <div className="stt-method-title">
+                    {actionLoading ? 'Syncing...' : isPunchedIn ? 'Manual Logout' : 'Instant Login'}
+                  </div>
+                  <div className="stt-method-desc">Direct Digital Sync</div>
+                </div>
+              </button>
             </div>
-
-            {/* Method 2: Quick Punch (No QR) */}
-            <button
-              className="stt-method-card stt-method-card--secondary"
-              onClick={handleDirectPunch}
-              disabled={actionLoading}
-            >
-              <div className="stt-method-icon">⚡</div>
-              <div className="stt-method-body">
-                <div className="stt-method-title">
-                  {actionLoading
-                    ? '⏳ Processing...'
-                    : isPunchedIn
-                      ? 'Quick Punch Out (No QR)'
-                      : 'Quick Punch In (No QR)'}
-                </div>
-                <div className="stt-method-desc">Instant check-in, no camera needed</div>
-              </div>
-              <div className="stt-method-arrow">→</div>
-            </button>
           </div>
-
-          <p className="stt-geofence-note">
-            🛡️ Auto-checkout active — location-based exit detection is running.
-          </p>
         </div>
-      </div>
+      )}
 
-      {/* ── Today's Sessions ── */}
+      {/* --- TODAY'S TRACKS --- */}
       {todaySessions.length > 0 && (
         <div className="stt-card">
-          <div className="stt-card-header">
-            <h3>Today's Sessions</h3>
-            <span className="stt-badge">{todaySessions.length} session{todaySessions.length !== 1 ? 's' : ''}</span>
+          <div className="stt-card-header" style={{marginBottom: '25px', display: 'flex', justifyContent: 'space-between', alignItems: 'center'}}>
+            <h3>Current Day Footprints</h3>
+            <span className="stt-badge-modern">{todaySessions.length} TRACKS</span>
           </div>
           <div className="stt-table-wrap">
             <table className="stt-table">
               <thead>
                 <tr>
-                  <th>#</th>
-                  <th>Punch In</th>
-                  <th>Punch Out</th>
-                  <th>Duration</th>
+                  <th>Index</th>
+                  <th>Entry Vector</th>
+                  <th>Exit Vector</th>
+                  <th>Retention</th>
                   <th>Status</th>
                 </tr>
               </thead>
               <tbody>
                 {todaySessions.map((s, i) => (
                   <tr key={s.id}>
-                    <td>{i + 1}</td>
+                    <td>{String(i + 1).padStart(2, '0')}</td>
                     <td className="time-in">{fmtTime(s.loginTime)}</td>
                     <td className="time-out">{fmtTime(s.logoutTime)}</td>
                     <td className="duration">{fmtDuration(s.totalMinutes)}</td>
                     <td>
                       {!s.logoutTime
-                        ? <span className="stt-badge-active"><span className="dot-green" /> Active</span>
-                        : <span className="stt-badge-done">Done</span>}
+                        ? <span className="stt-pulse-chip">TRACKING</span>
+                        : <span className="stt-done-chip">LOCKED</span>}
                     </td>
                   </tr>
                 ))}
@@ -311,37 +298,30 @@ export default function StudentTimeTracking() {
         </div>
       )}
 
-      {/* ── History ── */}
+      {/* --- ARCHIVE --- */}
       <div className="stt-card">
-        <div className="stt-card-header">
-          <h3>Punch History</h3>
-          <span className="stt-badge-outline">Latest First</span>
+        <div className="stt-card-header" style={{marginBottom: '25px', display: 'flex', justifyContent: 'space-between', alignItems: 'center'}}>
+          <h3><FaHistory /> Session Archive</h3>
+          <span className="stt-badge-outline">Historical Data Only</span>
         </div>
         {loading ? (
-          <p className="stt-empty">Loading punch data...</p>
-        ) : pastLogs.length === 0 && todaySessions.length === 0 ? (
-          <div className="stt-empty-state">
-            <div className="stt-empty-icon">📂</div>
-            <h4>No punch records yet</h4>
-            <p>Use one of the punch methods above to start recording your attendance.</p>
-          </div>
+          <div style={{padding: '40px', textAlign: 'center', opacity: 0.5}}>Initializing Archive Engine...</div>
         ) : pastLogs.length === 0 ? (
           <div className="stt-empty-state">
-            <div className="stt-empty-icon">📅</div>
-            <h4>Only today's records available</h4>
-            <p>Your previous sessions will appear here as you build history.</p>
+             <h4 style={{margin: 0, opacity: 0.6}}>Empty Archive</h4>
+             <p style={{marginTop: '10px'}}>Historical records will append here as sessions are finalized.</p>
           </div>
         ) : (
           <div className="stt-table-wrap">
             <table className="stt-table">
               <thead>
                 <tr>
-                  <th>Date</th>
-                  <th>First In</th>
-                  <th>Last Out</th>
-                  <th>Total Hours</th>
-                  <th>Method</th>
-                  <th>Status/Reason</th>
+                   <th>Date</th>
+                   <th>Inhabited</th>
+                   <th>Abandoned</th>
+                   <th>Net Total</th>
+                   <th>Mechanism</th>
+                   <th>Security Reason</th>
                 </tr>
               </thead>
               <tbody>
@@ -351,14 +331,12 @@ export default function StudentTimeTracking() {
                     <td className="time-in">{fmtTime(log.loginTime)}</td>
                     <td className="time-out">{fmtTime(log.logoutTime)}</td>
                     <td className="duration">{fmtDuration(log.totalMinutes)}</td>
-                    <td className="method">
-                      {log.punchMethod === 'QR_SCAN' ? '📷 QR' : '⚡ Quick'}
+                    <td style={{fontSize: '12px', fontWeight: 800, color: '#64748b'}}>
+                      {log.punchMethod || 'DIGITAL'}
                     </td>
                     <td>
-                      <span className={`stt-badge-reason ${log.checkoutReason?.toLowerCase()}`}>
-                        {log.checkoutReason === 'MIDNIGHT_AUTO_CLOSE' ? 'System Auto-Closed' : 
-                         log.checkoutReason === 'GEOFENCE_EXIT' ? 'Location Violation' : 
-                         log.checkoutReason || 'Manual'}
+                      <span className={`stt-status-text ${log.checkoutReason?.toLowerCase()}`}>
+                        {log.checkoutReason || 'MANUAL'}
                       </span>
                     </td>
                   </tr>

@@ -17,10 +17,13 @@ import java.util.Optional;
 public class StudentProfileController {
 
     @Autowired
-    private StudentRepository studentRepository;
+    private com.lms.repository.StudentRepository studentRepository;
 
     @Autowired
-    private UserRepository userRepository;
+    private com.lms.repository.UserRepository userRepository;
+
+    @Autowired
+    private com.lms.service.CloudinaryService cloudinaryService;
 
     // =====================================================================
     // GET PROFILE
@@ -126,10 +129,22 @@ public class StudentProfileController {
             profile.setPhone(updatedData.getPhone());
             profile.setGender(updatedData.getGender());
             profile.setQualification(updatedData.getQualification());
-            profile.setYear(updatedData.getYear());
+            profile.setYearOfPassing(updatedData.getYearOfPassing());
+            profile.setAggregatePercentage(updatedData.getAggregatePercentage());
+            profile.setMarks10th(updatedData.getMarks10th());
+            profile.setMarks12th(updatedData.getMarks12th());
+            profile.setParentName(updatedData.getParentName());
+            profile.setParentPhone(updatedData.getParentPhone());
             profile.setSkills(updatedData.getSkills());
             profile.setBio(updatedData.getBio());
             profile.setProfilePic(updatedData.getProfilePic());
+
+            // Document URLs (already uploaded to Cloudinary from frontend)
+            profile.setAadharCardUrl(updatedData.getAadharCardUrl());
+            profile.setResumeUrl(updatedData.getResumeUrl());
+            profile.setMarks10thUrl(updatedData.getMarks10thUrl());
+            profile.setMarks12thUrl(updatedData.getMarks12thUrl());
+            profile.setGraduationDocUrl(updatedData.getGraduationDocUrl());
             profile.setAddress(updatedData.getAddress());
             profile.setCity(updatedData.getCity());
             profile.setState(updatedData.getState());
@@ -149,6 +164,40 @@ public class StudentProfileController {
         } catch (Exception e) {
             log.error("Error updating student profile", e);
             return ResponseEntity.internalServerError().body("Profile update failed ❌");
+        }
+    }
+
+    // =====================================================================
+    // UPLOAD DOCUMENT TO CLOUDINARY
+    // =====================================================================
+    @PostMapping("/upload-document")
+    public ResponseEntity<?> uploadDocument(
+            @RequestParam("file") org.springframework.web.multipart.MultipartFile file,
+            @RequestParam("type") String type,
+            @RequestParam("email") String email) {
+
+        log.info("Request to upload {} for student {}", type, email);
+
+        try {
+            // Validate the parent student exists
+            Optional<com.lms.entity.Student> studentOpt = studentRepository.findByEmail(email);
+            if (studentOpt.isEmpty()) {
+                return ResponseEntity.badRequest().body("Student profile not found for email: " + email);
+            }
+
+            // Path pattern in Cloudinary: students/{studentId}/{type}
+            String folder = "students/" + studentOpt.get().getStudentId();
+            String url = cloudinaryService.uploadDocument(file, folder);
+
+            return ResponseEntity.ok(java.util.Map.of(
+                "url", url,
+                "type", type,
+                "message", type + " uploaded successfully ✅"
+            ));
+
+        } catch (Exception e) {
+            log.error("Failed to upload document to Cloudinary", e);
+            return ResponseEntity.internalServerError().body("Upload failed: " + e.getMessage());
         }
     }
 }

@@ -11,11 +11,36 @@ import {
   FaMoneyBillWave,
   FaHeartbeat,
   FaComments,
-  FaBriefcase
+  FaBriefcase,
+  FaSatellite,
+  FaUserShield,
+  FaUsersCog,
+  FaChartLine,
+  FaClipboardList,
+  FaChalkboardTeacher,
+  FaLaptopCode,
+  FaAward,
+  FaHistory,
+  FaCalendarAlt,
+  FaBuilding,
+  FaUserGraduate
 } from 'react-icons/fa';
 import GlobalAnnouncementPopup from "../components/GlobalAnnouncementPopup";
 import NotificationDropdown from "../components/NotificationDropdown";
 import "./DashboardLayout.css";
+
+/* ============================================================
+   PREMIUM MEGA LINK COMPONENT
+   ============================================================ */
+const MegaLink = ({ to, icon, name, desc, onClick }) => (
+  <NavLink to={to} className="mega-link" onClick={onClick}>
+    <div className="mega-icon-box">{icon}</div>
+    <div className="mega-link-text">
+      <span className="mega-link-name">{name}</span>
+      {desc && <span className="mega-link-desc">{desc}</span>}
+    </div>
+  </NavLink>
+);
 
 function DashboardLayout() {
   const navigate = useNavigate();
@@ -35,11 +60,9 @@ function DashboardLayout() {
 
   useEffect(() => {
     const handleClickOutside = (event) => {
-      // Close dropdowns on outside click
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
         setActiveDropdown(null);
       }
-      // Close mobile menu on outside click
       if (isMobileMenuOpen && !event.target.closest('.main-dashboard-header')) {
         closeMobileMenu();
       }
@@ -49,7 +72,7 @@ function DashboardLayout() {
   }, [isMobileMenuOpen]);
 
   const handleLogout = () => {
-    localStorage.removeItem("user");
+    localStorage.clear();
     navigate("/login");
   };
 
@@ -58,7 +81,7 @@ function DashboardLayout() {
 
   return (
     <div className="dashboard-page-wrapper">
-      {/* ===== TOP BAR ===== */}
+      {/* 🔹 TOP BAR */}
       <div className="top-contact-bar">
         <div className="nav-container-inner">
           <div className="contact-left">
@@ -72,7 +95,7 @@ function DashboardLayout() {
         </div>
       </div>
 
-      {/* ===== MAIN HEADER ===== */}
+      {/* 🏛️ MAIN HEADER */}
       <header className="main-dashboard-header">
         <div className="nav-container-inner" ref={dropdownRef}>
           
@@ -90,261 +113,220 @@ function DashboardLayout() {
 
           <div className={`nav-right-collapse ${isMobileMenuOpen ? 'open' : ''}`}>
             <nav className="header-nav-menu">
-            <NavLink to={`/${rolePath}/dashboard`} className="nav-menu-link" onClick={closeMobileMenu}>📊 Dashboard</NavLink>
+              <NavLink to={`/${rolePath}/dashboard`} className="nav-menu-link" onClick={closeMobileMenu}>📊 Dashboard</NavLink>
 
-            {/* SUPER ADMIN */}
-            {user?.role === "SUPERADMIN" && (
-              <>
-                <div className="nav-dropdown">
-                  <button className={`nav-menu-link ${activeDropdown === 'governance' ? 'active-btn' : ''}`} onClick={() => toggleDropdown('governance')}>
-                    <FaShieldAlt /> Governance <FaChevronDown className={`drop-icon ${activeDropdown === 'governance' ? 'rotate' : ''}`} />
-                  </button>
-                  {activeDropdown === 'governance' && (
-                    <div className="dropdown-content">
-                      <NavLink to="/superadmin/create-admin" onClick={closeMobileMenu}>🛡️ Administration Desk</NavLink>
-                      <NavLink to="/superadmin/create-user" onClick={closeMobileMenu}>👤+ Provision Account</NavLink>
-                      <NavLink to="/superadmin/users" onClick={closeMobileMenu}>👥 Global Registry</NavLink>
-                      <NavLink to="/superadmin/attendance-report" onClick={closeMobileMenu}>⏱️ Attendance Audits</NavLink>
+              {/* 👑 SUPER ADMIN — STRATEGIC OVERHAUL */}
+              {user?.role === "SUPERADMIN" && (
+                <>
+                  <div className="nav-dropdown">
+                    <button className={`nav-menu-link ${activeDropdown === 'governance' ? 'active-btn' : ''}`} onClick={() => toggleDropdown('governance')}>
+                      🛡️ Governance Hub <FaChevronDown className={`drop-icon ${activeDropdown === 'governance' ? 'rotate' : ''}`} />
+                    </button>
+                    <div className={`mega-menu ${activeDropdown === 'governance' ? 'open' : ''}`}>
+                      <div className="mega-group">
+                        <div className="mega-group-title">Administration</div>
+                        <MegaLink to="/superadmin/create-admin" icon={<FaUserShield/>} name="Admin Desk" desc="Manage regional administrators" onClick={closeMobileMenu} />
+                        <MegaLink to="/superadmin/create-user" icon={<FaUsersCog/>} name="Provision" desc="Manage core user accounts" onClick={closeMobileMenu} />
+                      </div>
+                      <div className="mega-group">
+                        <div className="mega-group-title">Master Registry</div>
+                        <MegaLink to="/superadmin/users" icon="👥" name="Global Directory" desc="Cross-portal user database" onClick={closeMobileMenu} />
+                        <MegaLink to="/superadmin/leave" icon="📅" name="Leave Board" desc="Monitor staff/student absence" onClick={closeMobileMenu} />
+                      </div>
                     </div>
-                  )}
-                </div>
-
-                <div className="nav-dropdown">
-                  <button className={`nav-menu-link ${activeDropdown === 'analytics' ? 'active-btn' : ''}`} onClick={() => toggleDropdown('analytics')}>
-                    <FaCog /> Execution Hub <FaChevronDown className={`drop-icon ${activeDropdown === 'analytics' ? 'rotate' : ''}`} />
-                  </button>
-                  {activeDropdown === 'analytics' && (
-                    <div className="dropdown-content">
-                      <NavLink to="/superadmin/performance" onClick={closeMobileMenu}>🧠 Intelligence Hub</NavLink>
-                      <NavLink to="/superadmin/finance" onClick={closeMobileMenu}>💰 Finance Hub</NavLink>
-                      <NavLink to="/superadmin/meetings" onClick={closeMobileMenu}>🤝 Strategy Sessions</NavLink>
-                      <NavLink to="/superadmin/qr-station" onClick={closeMobileMenu}>📱 QR Station</NavLink>
-                      <NavLink to="/superadmin/attendance-report" onClick={closeMobileMenu}>📄 Daily Reports</NavLink>
-                      <NavLink to="/superadmin/announcements" onClick={closeMobileMenu}>📢 Announcements</NavLink>
-                      <NavLink to="/superadmin/messages" onClick={closeMobileMenu}>💬 Comms Hub</NavLink>
-                      <NavLink to="/superadmin/leave" onClick={closeMobileMenu}>📅 Staff & Student Leaves</NavLink>
-                    </div>
-                  )}
-                </div>
-
-                <div className="nav-dropdown">
-                  <button className={`nav-menu-link ${activeDropdown === 'config' ? 'active-btn' : ''}`} onClick={() => toggleDropdown('config')}>
-                    <FaCog /> System Config <FaChevronDown className={`drop-icon ${activeDropdown === 'config' ? 'rotate' : ''}`} />
-                  </button>
-                  {activeDropdown === 'config' && (
-                    <div className="dropdown-content">
-                      <NavLink to="/superadmin/profile" onClick={closeMobileMenu}>👤 Profile Identity</NavLink>
-                      <NavLink to="/superadmin/settings" onClick={closeMobileMenu}>⚙️ Global Settings</NavLink>
-                      <NavLink to="/superadmin/qr-station" onClick={closeMobileMenu}>📲 QR & GPS Setup</NavLink>
-                    </div>
-                  )}
-                </div>
-              </>
-            )}
-
-            {/* ADMIN */}
-            {user?.role === "ADMIN" && (
-              <>
-                {/* Academic & User Hub (Combined to save space) */}
-                <div className="nav-dropdown">
-                  <button className={`nav-menu-link ${activeDropdown === 'admin-academic' ? 'active-btn' : ''}`} onClick={() => toggleDropdown('admin-academic')}>
-                    <FaBook /> Academic & User Hub <FaChevronDown className={`drop-icon ${activeDropdown === 'admin-academic' ? 'rotate' : ''}`} />
-                  </button>
-                  {activeDropdown === 'admin-academic' && (
-                    <div className="dropdown-content">
-                      <div style={{ padding: '4px 20px', fontSize: '11px', fontWeight: '800', color: '#94a3b8', textTransform: 'uppercase', marginTop: '4px' }}>Users</div>
-                      <NavLink to="/admin/create-user" onClick={closeMobileMenu}>👤+ Create Student/User</NavLink>
-                      <NavLink to="/admin/students" onClick={closeMobileMenu}>🧩 Student Management Hub</NavLink>
-                      <NavLink to="/admin/trainers" onClick={closeMobileMenu}>👨‍🏫 Trainer Management Hub</NavLink>
-                      <NavLink to="/admin/id-management" onClick={closeMobileMenu}>🔢 ID Control Panel</NavLink>
-                      
-                      <div style={{ padding: '8px 20px 4px', fontSize: '11px', fontWeight: '800', color: '#94a3b8', textTransform: 'uppercase' }}>Academics</div>
-                      <NavLink to="/admin/create-course" onClick={closeMobileMenu}>➕ Define Course</NavLink>
-                      <NavLink to="/admin/courses" onClick={closeMobileMenu}>📚 Academic Registry</NavLink>
-                      <NavLink to="/admin/create-batch" onClick={closeMobileMenu}>🗂 Batch Manager</NavLink>
-                      
-                      <NavLink to="/admin/fees" onClick={closeMobileMenu}>💰 Fee Manager</NavLink>
-                    </div>
-                  )}
-                </div>
-
-                {/* Engagement Hub */}
-                <div className="nav-dropdown">
-                  <button className={`nav-menu-link ${activeDropdown === 'admin-engagement' ? 'active-btn' : ''}`} onClick={() => toggleDropdown('admin-engagement')}>
-                    <FaCog /> Engagement <FaChevronDown className={`drop-icon ${activeDropdown === 'admin-engagement' ? 'rotate' : ''}`} />
-                  </button>
-                  {activeDropdown === 'admin-engagement' && (
-                    <div className="dropdown-content">
-                      <NavLink to="/admin/student-allotment" onClick={closeMobileMenu}>🔗 Course & Batch Allotment</NavLink>
-                      <NavLink to="/admin/schedule-class" onClick={closeMobileMenu}>⏰ Class Scheduler</NavLink>
-                      <NavLink to="/admin/attendance" onClick={closeMobileMenu}>🗓 Attendance Panel</NavLink>
-                      <NavLink to="/admin/time-tracking" onClick={closeMobileMenu}>⏱️ Personal Punch-In</NavLink>
-                      <NavLink to="/admin/qr-station" onClick={closeMobileMenu}>📲 QR Scanner Station</NavLink>
-                      <NavLink to="/admin/leave" onClick={closeMobileMenu}>📅 Student Leaves</NavLink>
-                      <NavLink to="/admin/my-leave" onClick={closeMobileMenu}>🛌 My Personal Leave</NavLink>
-                      <NavLink to="/admin/announcements" onClick={closeMobileMenu}>📢 Announcements</NavLink>
-
-                    </div>
-                  )}
-                </div>
-
-                {/* Career Hub */}
-                <div className="nav-dropdown">
-                  <button className={`nav-menu-link ${activeDropdown === 'admin-career' ? 'active-btn' : ''}`} onClick={() => toggleDropdown('admin-career')}>
-                    <FaBriefcase /> Career Hub <FaChevronDown className={`drop-icon ${activeDropdown === 'admin-career' ? 'rotate' : ''}`} />
-                  </button>
-                  {activeDropdown === 'admin-career' && (
-                    <div className="dropdown-content">
-                      <NavLink to="/admin/post-job" onClick={closeMobileMenu}>💼 Placement Prep</NavLink>
-                      <NavLink to="/admin/manage-jobs" onClick={closeMobileMenu}>📝 Listing Manager</NavLink>
-                      <NavLink to="/admin/post-internship" onClick={closeMobileMenu}>🎓 Post Internship</NavLink>
-                      <NavLink to="/admin/job-applications" onClick={closeMobileMenu}>📥 Application Desk</NavLink>
-                      <NavLink to="/admin/company-partners" onClick={closeMobileMenu}>🏢 Industry Partners</NavLink>
-                      <NavLink to="/admin/placement-stats" onClick={closeMobileMenu}>📈 Placement CRM</NavLink>
-                    </div>
-                  )}
-                </div>
-              </>
-            )}
-
-            {/* TRAINER */}
-            {user?.role === "TRAINER" && (
-              <>
-                {/* Trainer Academic Hub */}
-                <div className="nav-dropdown">
-                  <button className={`nav-menu-link ${activeDropdown === 'trainer-academic' ? 'active-btn' : ''}`} onClick={() => toggleDropdown('trainer-academic')}>
-                    <FaBook /> Academic <FaChevronDown className={`drop-icon ${activeDropdown === 'trainer-academic' ? 'rotate' : ''}`} />
-                  </button>
-                  {activeDropdown === 'trainer-academic' && (
-                    <div className="dropdown-content">
-                      <NavLink to="/trainer/course" onClick={closeMobileMenu}>📚 My Batches</NavLink>
-
-                      <NavLink to="/trainer/attendance" onClick={closeMobileMenu}>🗓 Mark Attendance</NavLink>
-                      <NavLink to="/trainer/leave" onClick={closeMobileMenu}>🛌 Leave Requests</NavLink>
-                      <NavLink to="/trainer/assignments" onClick={closeMobileMenu}>📝 Assignments</NavLink>
-                      <NavLink to="/trainer/timetable" onClick={closeMobileMenu}>📅 Timetable</NavLink>
-                    </div>
-                  )}
-                </div>
-
-                {/* Trainer Engagement Hub */}
-                <div className="nav-dropdown">
-                  <button className={`nav-menu-link ${activeDropdown === 'trainer-engage' ? 'active-btn' : ''}`} onClick={() => toggleDropdown('trainer-engage')}>
-                    <FaCog /> Engagement <FaChevronDown className={`drop-icon ${activeDropdown === 'trainer-engage' ? 'rotate' : ''}`} />
-                  </button>
-                  {activeDropdown === 'trainer-engage' && (
-                    <div className="dropdown-content">
-                      <NavLink to="/trainer/assignments" onClick={closeMobileMenu}>📝 Assignments</NavLink>
-                      <NavLink to="/trainer/announcements" onClick={closeMobileMenu}>📢 Announcements</NavLink>
-                      <NavLink to="/trainer/time-tracking" onClick={closeMobileMenu}>⏱️ Punch In / Out</NavLink>
-                    </div>
-                  )}
-                </div>
-              </>
-            )}
-
-            {/* MARKETER */}
-            {user?.role === "MARKETER" && (
-              <div className="nav-dropdown">
-                <button className={`nav-menu-link ${activeDropdown === 'marketing' ? 'active-btn' : ''}`} onClick={() => toggleDropdown('marketing')}>
-                  <FaBullhorn /> Marketing <FaChevronDown className={`drop-icon ${activeDropdown === 'marketing' ? 'rotate' : ''}`} />
-                </button>
-                {activeDropdown === 'marketing' && (
-                  <div className="dropdown-content">
-                    <NavLink to="/marketer/leads" onClick={closeMobileMenu}>🎯 Lead Management</NavLink>
-                    <NavLink to="/marketer/campaigns" onClick={closeMobileMenu}>📣 Campaigns</NavLink>
-                    <NavLink to="/marketer/time-tracking" onClick={closeMobileMenu}>⏱️ Punch In / Out</NavLink>
-                    <NavLink to="/marketer/vouchers" onClick={closeMobileMenu}>🎟️ Vouchers</NavLink>
-                    <NavLink to="/marketer/leave" onClick={closeMobileMenu}>🛌 My Leaves</NavLink>
                   </div>
-                )}
-              </div>
-            )}
 
-            {/* COUNSELOR */}
-            {user?.role === "COUNSELOR" && (
-              <div className="nav-dropdown">
-                <button className={`nav-menu-link ${activeDropdown === 'counseling' ? 'active-btn' : ''}`} onClick={() => toggleDropdown('counseling')}>
-                  <FaHeartbeat /> Student Wellness <FaChevronDown className={`drop-icon ${activeDropdown === 'counseling' ? 'rotate' : ''}`} />
-                </button>
-                {activeDropdown === 'counseling' && (
-                  <div className="dropdown-content">
-                    <NavLink to="/counselor/sessions" onClick={closeMobileMenu}>📅 Manage Sessions</NavLink>
-                    <NavLink to="/counselor/time-tracking" onClick={closeMobileMenu}>⏱️ Punch In / Out</NavLink>
-                    <NavLink to="/counselor/messages" onClick={closeMobileMenu}>💬 Messages</NavLink>
-                    <NavLink to="/counselor/leave" onClick={closeMobileMenu}>🛌 My Leaves</NavLink>
+                  <div className="nav-dropdown">
+                    <button className={`nav-menu-link ${activeDropdown === 'analytics' ? 'active-btn' : ''}`} onClick={() => toggleDropdown('analytics')}>
+                      🚀 Intelligence Center <FaChevronDown className={`drop-icon ${activeDropdown === 'analytics' ? 'rotate' : ''}`} />
+                    </button>
+                    <div className={`mega-menu ${activeDropdown === 'analytics' ? 'open' : ''}`}>
+                      <div className="mega-group">
+                        <div className="mega-group-title">Analytics</div>
+                        <MegaLink to="/superadmin/performance" icon={<FaChartLine/>} name="Performance Metrics" desc="System-wide success tracking" onClick={closeMobileMenu} />
+                        <MegaLink to="/superadmin/finance" icon="💰" name="Finance Ledger" desc="Revenue and fee collection audits" onClick={closeMobileMenu} />
+                      </div>
+                      <div className="mega-group">
+                        <div className="mega-group-title">Operations</div>
+                        <MegaLink to="/superadmin/attendance-report" icon={<FaClipboardList/>} name="Audit Log" desc="Daily attendance consolidation" onClick={closeMobileMenu} />
+                        <MegaLink to="/superadmin/meetings" icon="🤝" name="Strategy Room" desc="Executive session scheduler" onClick={closeMobileMenu} />
+                      </div>
+                    </div>
                   </div>
-                )}
-              </div>
-            )}
 
-            {/* STUDENT */}
-
-            {user?.role === "STUDENT" && (
-              <>
-                <div className="nav-dropdown">
-                  <button className={`nav-menu-link ${activeDropdown === 'st-learn' ? 'active-btn' : ''}`} onClick={() => toggleDropdown('st-learn')}>
-                    <FaBook /> Learning Hub <FaChevronDown className={`drop-icon ${activeDropdown === 'st-learn' ? 'rotate' : ''}`} />
-                  </button>
-                  {activeDropdown === 'st-learn' && (
-                    <div className="dropdown-content">
-                      <NavLink to="/student/courses" onClick={closeMobileMenu}>📚 My Courses & Batches</NavLink>
-                      <NavLink to="/student/attendance" onClick={closeMobileMenu}>🗓 Attendance</NavLink>
-                      <NavLink to="/student/time-tracking" onClick={closeMobileMenu}>⏱️ Punch In / Out</NavLink>
-                      <NavLink to="/student/timetable" onClick={closeMobileMenu}>📅 Timetable</NavLink>
-                      <NavLink to="/student/announcements" onClick={closeMobileMenu}>📢 Announcements</NavLink>
-                      <NavLink to="/student/fees" onClick={closeMobileMenu}>💰 Fee Records</NavLink>
-                      <NavLink to="/student/leave" onClick={closeMobileMenu}>📅 My Leaves</NavLink>
-                      <NavLink to="/student/counseling" onClick={closeMobileMenu}>🧑‍⚕️ Counseling</NavLink>
-                      <NavLink to="/student/certificates" onClick={closeMobileMenu}>🏆 Certificates</NavLink>
-
-
+                  <div className="nav-dropdown">
+                    <button className={`nav-menu-link ${activeDropdown === 'config' ? 'active-btn' : ''}`} onClick={() => toggleDropdown('config')}>
+                      ⚙️ System Config <FaChevronDown className={`drop-icon ${activeDropdown === 'config' ? 'rotate' : ''}`} />
+                    </button>
+                    <div className={`mega-menu ${activeDropdown === 'config' ? 'open' : ''}`}>
+                      <div className="mega-group">
+                        <div className="mega-group-title">Setup</div>
+                        <MegaLink to="/superadmin/settings" icon={<FaCog/>} name="Core Settings" desc="Global platform parameters" onClick={closeMobileMenu} />
+                        <MegaLink to="/superadmin/qr-station" icon={<FaSatellite/>} name="Tracking Hardware" desc="Maintain QR & GPS infrastructure" onClick={closeMobileMenu} />
+                      </div>
+                      <div className="mega-group">
+                        <div className="mega-group-title">Communication</div>
+                        <MegaLink to="/superadmin/announcements" icon="📢" name="Broadcasts" desc="Global announcement alerts" onClick={closeMobileMenu} />
+                        <MegaLink to="/superadmin/messages" icon="💬" name="Internal Comms" desc="Admin messaging terminal" onClick={closeMobileMenu} />
+                      </div>
                     </div>
+                  </div>
+                </>
+              )}
+
+              {/* 🛡️ ADMIN — OPERATIONAL OVERHAUL */}
+              {user?.role === "ADMIN" && (
+                <>
+                  <div className="nav-dropdown">
+                    <button className={`nav-menu-link ${activeDropdown === 'admin-registry' ? 'active-btn' : ''}`} onClick={() => toggleDropdown('admin-registry')}>
+                      🏢 Registry Hub <FaChevronDown className={`drop-icon ${activeDropdown === 'admin-registry' ? 'rotate' : ''}`} />
+                    </button>
+                    <div className={`mega-menu ${activeDropdown === 'admin-registry' ? 'open' : ''}`}>
+                      <div className="mega-group">
+                        <div className="mega-group-title">Users</div>
+                        <MegaLink to="/admin/students" icon={<FaUserGraduate/>} name="Students" desc="Complete student lifecycle" onClick={closeMobileMenu} />
+                        <MegaLink to="/admin/trainers" icon={<FaChalkboardTeacher/>} name="Faculty" desc="Instructors and trainers" onClick={closeMobileMenu} />
+                        <MegaLink to="/admin/create-user" icon="👤+" name="Provision" desc="Create new user accounts" onClick={closeMobileMenu} />
+                      </div>
+                      <div className="mega-group">
+                        <div className="mega-group-title">Security</div>
+                        <MegaLink to="/admin/id-management" icon="🔢" name="ID Control" desc="Access card and ID generator" onClick={closeMobileMenu} />
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="nav-dropdown">
+                    <button className={`nav-menu-link ${activeDropdown === 'admin-academic' ? 'active-btn' : ''}`} onClick={() => toggleDropdown('admin-academic')}>
+                      📚 Academic Hub <FaChevronDown className={`drop-icon ${activeDropdown === 'admin-academic' ? 'rotate' : ''}`} />
+                    </button>
+                    <div className={`mega-menu`} style={{gap: '60px'}}>
+                      <div className="mega-group">
+                        <div className="mega-group-title">Curriculum</div>
+                        <MegaLink to="/admin/courses" icon="📚" name="Course Catalog" desc="Digital academic registry" onClick={closeMobileMenu} />
+                        <MegaLink to="/admin/create-batch" icon="🗂" name="Batches" desc="Manage active learning groups" onClick={closeMobileMenu} />
+                        <MegaLink to="/admin/create-course" icon="➕" name="New Course" desc="Define new academic modules" onClick={closeMobileMenu} />
+                      </div>
+                      <div className="mega-group">
+                        <div className="mega-group-title">Scheduling</div>
+                        <MegaLink to="/admin/schedule-class" icon={<FaCalendarAlt/>} name="Class Scheduler" desc="Plan and publish session timings" onClick={closeMobileMenu} />
+                        <MegaLink to="/admin/student-allotment" icon="🔗" name="Allotment" desc="Batch and course mapping" onClick={closeMobileMenu} />
+                      </div>
+                      <div className="mega-group">
+                        <div className="mega-group-title">Operations</div>
+                        <MegaLink to="/admin/attendance" icon="🗓" name="Attendance" desc="Central monitoring panel" onClick={closeMobileMenu} />
+                        <MegaLink to="/admin/leave" icon="🛌" name="Leaves" desc="Review student absence requests" onClick={closeMobileMenu} />
+                        <MegaLink to="/admin/fees" icon="💰" name="Finance" desc="Financial records and dues" onClick={closeMobileMenu} />
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="nav-dropdown">
+                    <button className={`nav-menu-link ${activeDropdown === 'admin-career' ? 'active-btn' : ''}`} onClick={() => toggleDropdown('admin-career')}>
+                      💼 Career Hub <FaChevronDown className={`drop-icon ${activeDropdown === 'admin-career' ? 'rotate' : ''}`} />
+                    </button>
+                    <div className={`mega-menu ${activeDropdown === 'admin-career' ? 'open' : ''}`}>
+                      <div className="mega-group">
+                        <div className="mega-group-title">Placement</div>
+                        <MegaLink to="/admin/post-job" icon={<FaBriefcase/>} name="Placement Prep" desc="Post job opportunities" onClick={closeMobileMenu} />
+                        <MegaLink to="/admin/manage-jobs" icon="📝" name="Listings" desc="Edit and manage active posts" onClick={closeMobileMenu} />
+                        <MegaLink to="/admin/post-internship" icon="🎓" name="Internships" desc="Create internship programs" onClick={closeMobileMenu} />
+                      </div>
+                      <div className="mega-group">
+                        <div className="mega-group-title">External</div>
+                        <MegaLink to="/admin/company-partners" icon={<FaBuilding/>} name="Partners" desc="Industrial tie-up registry" onClick={closeMobileMenu} />
+                        <MegaLink to="/admin/job-applications" icon="📥" name="Applications" desc="Submission desk manager" onClick={closeMobileMenu} />
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="nav-dropdown">
+                    <button className={`nav-menu-link ${activeDropdown === 'admin-ops' ? 'active-btn' : ''}`} onClick={() => toggleDropdown('admin-ops')}>
+                      ⚙️ Operations <FaChevronDown className={`drop-icon ${activeDropdown === 'admin-ops' ? 'rotate' : ''}`} />
+                    </button>
+                    <div className={`mega-menu ${activeDropdown === 'admin-ops' ? 'open' : ''}`}>
+                      <div className="mega-group">
+                        <div className="mega-group-title">Terminal</div>
+                        <MegaLink to="/admin/qr-station" icon={<FaQrcode/>} name="QR Station" desc="Physical scanning terminal" onClick={closeMobileMenu} />
+                        <MegaLink to="/admin/time-tracking" icon={<FaHistory/>} name="System Check-in" desc="Daily punch records" onClick={closeMobileMenu} />
+                      </div>
+                      <div className="mega-group">
+                        <div className="mega-group-title">Comms</div>
+                        <MegaLink to="/admin/announcements" icon="📢" name="Bulletins" desc="Publish general announcements" onClick={closeMobileMenu} />
+                      </div>
+                    </div>
+                  </div>
+                </>
+              )}
+
+              {/* 🎓 STUDENT — LEARNING PATHWAY */}
+              {user?.role === "STUDENT" && (
+                <>
+                  <div className="nav-dropdown">
+                    <button className={`nav-menu-link ${activeDropdown === 'st-learn' ? 'active-btn' : ''}`} onClick={() => toggleDropdown('st-learn')}>
+                      🎓 Learning Hub <FaChevronDown className={`drop-icon ${activeDropdown === 'st-learn' ? 'rotate' : ''}`} />
+                    </button>
+                    <div className={`mega-menu ${activeDropdown === 'st-learn' ? 'open' : ''}`}>
+                      <div className="mega-group">
+                        <div className="mega-group-title">Academic Life</div>
+                        <MegaLink to="/student/courses" icon={<FaBook/>} name="Knowledge Base" desc="My Courses and Active Batches" onClick={closeMobileMenu} />
+                        <MegaLink to="/student/timetable" icon="📅" name="Calendar" desc="My daily learning schedule" onClick={closeMobileMenu} />
+                        <MegaLink to="/student/announcements" icon="📢" name="Bulletins" desc="Important updates and notices" onClick={closeMobileMenu} />
+                      </div>
+                      <div className="mega-group">
+                        <div className="mega-group-title">Operations</div>
+                        <MegaLink to="/student/attendance" icon={<FaHistory/>} name="Audit Log" desc="Historical presence records" onClick={closeMobileMenu} />
+                        <MegaLink to="/student/time-tracking" icon={<FaQrcode/>} name="Punch Portal" desc="Live daily check-in station" onClick={closeMobileMenu} />
+                      </div>
+                      <div className="mega-group">
+                        <div className="mega-group-title">Support</div>
+                        <MegaLink to="/student/fees" icon="💰" name="Finance" desc="Secure fee payment records" onClick={closeMobileMenu} />
+                        <MegaLink to="/student/leave" icon={<FaCalendarAlt/>} name="Absence" desc="Request leave of absence" onClick={closeMobileMenu} />
+                        <MegaLink to="/student/counseling" icon="🧑‍⚕️" name="Wellness" desc="Connect with counselors" onClick={closeMobileMenu} />
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="nav-dropdown">
+                    <button className={`nav-menu-link ${activeDropdown === 'st-hiring' ? 'active-btn' : ''}`} onClick={() => toggleDropdown('st-hiring')}>
+                      🚀 Career Hub <FaChevronDown className={`drop-icon ${activeDropdown === 'st-hiring' ? 'rotate' : ''}`} />
+                    </button>
+                    <div className={`mega-menu ${activeDropdown === 'st-hiring' ? 'open' : ''}`}>
+                      <div className="mega-group">
+                        <div className="mega-group-title">Growth</div>
+                        <MegaLink to="/student/jobs" icon={<FaBriefcase/>} name="Placement" desc="Global professional roles" onClick={closeMobileMenu} />
+                        <MegaLink to="/student/internships" icon={<FaLaptopCode/>} name="Internships" desc="Gain real-world experience" onClick={closeMobileMenu} />
+                      </div>
+                      <div className="mega-group">
+                        <div className="mega-group-title">Achievement</div>
+                        <MegaLink to="/student/certificates" icon={<FaAward/>} name="Vault" desc="Download earned certificates" onClick={closeMobileMenu} />
+                      </div>
+                    </div>
+                  </div>
+                </>
+              )}
+
+              <NavLink to={`/${rolePath}/performance`} className="nav-menu-link" onClick={closeMobileMenu}>📈 Performance</NavLink>
+              <NavLink to={`/${rolePath}/profile`} className="nav-menu-link" onClick={closeMobileMenu}>👤 Profile</NavLink>
+            </nav>
+
+            <div className="user-actions-right">
+              {(user?.role === "ADMIN" || user?.role === "SUPERADMIN") && <NotificationDropdown />}
+              <div className="user-role-badge">
+                <div className="role-badge-content">
+                  <span className="role-text-label">{user?.role?.replace("_", " ")}</span>
+                  {(user?.portalId || user?.studentId) && (
+                    <span className="student-id-label">{user.portalId || user.studentId}</span>
                   )}
                 </div>
-                <div className="nav-dropdown">
-                  <button className={`nav-menu-link ${activeDropdown === 'st-hiring' ? 'active-btn' : ''}`} onClick={() => toggleDropdown('st-hiring')}>
-                    <FaBriefcase /> Career <FaChevronDown className={`drop-icon ${activeDropdown === 'st-hiring' ? 'rotate' : ''}`} />
-                  </button>
-                  {activeDropdown === 'st-hiring' && (
-                    <div className="dropdown-content">
-                      <NavLink to="/student/jobs" onClick={closeMobileMenu}>🏢 Job Board</NavLink>
-                      <NavLink to="/student/internships" onClick={closeMobileMenu}>🎓 Internships</NavLink>
-                    </div>
-                  )}
-                </div>
-              </>
-            )}
-
-            <NavLink to={`/${rolePath}/performance`} className="nav-menu-link" onClick={closeMobileMenu}>📈 Performance</NavLink>
-            <NavLink to={`/${rolePath}/profile`} className="nav-menu-link" onClick={closeMobileMenu}>👤 Profile</NavLink>
-          </nav>
-
-          <div className="user-actions-right">
-            {(user?.role === "ADMIN" || user?.role === "SUPERADMIN") && <NotificationDropdown />}
-            <div className="user-role-badge">
-              <div className="role-badge-content">
-                <span className="role-text-label">{user?.role?.replace("_", " ")}</span>
-                {(user?.portalId || user?.studentId) && (
-                  <span className="student-id-label">{user.portalId || user.studentId}</span>
-                )}
+                <div className="avatar-circle">{avatarLetter}</div>
               </div>
-              <div className="avatar-circle">{avatarLetter}</div>
-            </div>
-            {/* <button className="nav-logout-btn" onClick={handleLogout}>
-              <FaSignOutAlt /> Logout
-            </button> */}
-            {/* ── LOGOUT: clears activity so next login starts fresh ── */}
-                <button className="sd-drop-btn sd-drop-btn--danger" onClick={() => {
-                  handleLogout();
-                  localStorage.clear();
-                  navigate("/login");
-                }}>🚪 Logout</button>
+              <button className="sd-drop-btn sd-drop-btn--danger" style={{padding: '8px 16px', fontSize: '12px'}} onClick={handleLogout}>🚪 Logout</button>
             </div>
           </div>
         </div>
       </header>
 
+      {/* 🚀 CONTENT VIEW */}
       <main className="dashboard-view-content">
         <GlobalAnnouncementPopup />
         <div className="nav-container-inner">

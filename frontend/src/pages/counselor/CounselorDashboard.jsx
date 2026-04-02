@@ -72,8 +72,8 @@ export default function CounselorDashboard() {
         </div>
       </div>
 
-      <div style={{ margin: '20px 0', maxWidth: '400px' }}>
-        <QuickPunch />
+      <div style={{ marginBottom: '2rem' }}>
+        <QuickPunch variant="horizontal" />
         <div style={{ marginTop: '1rem' }}>
            <AttendanceRules />
         </div>

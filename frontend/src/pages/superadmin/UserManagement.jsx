@@ -35,9 +35,6 @@ function UserManagement() {
   // Nuclear Reset state
   const [showNuclearModal, setShowNuclearModal] = useState(false);
   const [isNuking, setIsNuking] = useState(false);
-  
-  // Password Visibility State
-  const [visiblePasswords, setVisiblePasswords] = useState({});
 
   useEffect(() => {
     fetchUsers();
@@ -155,13 +152,6 @@ function UserManagement() {
     return matchSearch && matchRole && matchStatus;
   });
 
-  const togglePasswordVisibility = (userId) => {
-    setVisiblePasswords(prev => ({
-      ...prev,
-      [userId]: !prev[userId]
-    }));
-  };
-
   const getRoleIcon = (roleName) => {
     switch (roleName) {
       case "SUPERADMIN": return <FaUserShield style={{color: '#f59e0b'}} />;
@@ -267,9 +257,8 @@ function UserManagement() {
               <table className="um-table">
                 <thead>
                   <tr>
-                    <th>Member</th>
                     <th>Role</th>
-                    <th>Password</th>
+                    <th>Member</th>
                     <th>Status</th>
                     <th>Actions</th>
                   </tr>
@@ -277,6 +266,12 @@ function UserManagement() {
                 <tbody>
                   {filteredUsers.map(u => (
                     <tr key={u.id}>
+                      <td data-label="Role">
+                        <div className="um-role-badge">
+                          {getRoleIcon(u.role.roleName)}
+                          <span>{u.role.roleName}</span>
+                        </div>
+                      </td>
                       <td data-label="Member">
                         <div className="um-member-cell">
                           <div className="um-avatar">{u.name.charAt(0)}</div>
@@ -299,26 +294,6 @@ function UserManagement() {
                               </span>
                             )}
                           </div>
-                        </div>
-                      </td>
-                      <td data-label="Role">
-                        <div className="um-role-badge">
-                          {getRoleIcon(u.role.roleName)}
-                          <span>{u.role.roleName}</span>
-                        </div>
-                      </td>
-                      <td data-label="Password">
-                        <div className="um-password-cell">
-                          <span className="um-pass-text">
-                            {visiblePasswords[u.id] ? (u.plainPassword || 'N/A') : '••••••••'}
-                          </span>
-                          <button 
-                            className="um-pass-toggle"
-                            onClick={() => togglePasswordVisibility(u.id)}
-                            title={visiblePasswords[u.id] ? "Hide Password" : "Show Password"}
-                          >
-                            {visiblePasswords[u.id] ? <FaEyeSlash /> : <FaEye />}
-                          </button>
                         </div>
                       </td>
                       <td data-label="Status">

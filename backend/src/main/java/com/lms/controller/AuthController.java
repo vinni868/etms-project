@@ -209,7 +209,6 @@ public class AuthController {
         }
 
         user.setPassword(passwordEncoder.encode(newPassword));
-        user.setPlainPassword(newPassword);
         user.setResetOtp(null); // Clear OTP after use
         user.setResetOtpExpiry(null);
         userRepository.save(user);

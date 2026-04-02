@@ -51,7 +51,6 @@ public class UserServiceImpl implements UserService {
         }
         user.setPhone(request.getPhone());
         user.setPassword(passwordEncoder.encode(request.getPassword()));
-        user.setPlainPassword(request.getPassword());
 
         String roleName = request.getRole() != null
                 ? request.getRole().toUpperCase()

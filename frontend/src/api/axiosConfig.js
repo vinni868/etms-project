@@ -13,6 +13,12 @@ api.interceptors.request.use(
     if (user && user.token) {
       config.headers.Authorization = `Bearer ${user.token}`;
     }
+    
+    // Automatically let the browser handle multipart boundaries
+    if (config.data instanceof FormData) {
+      delete config.headers["Content-Type"];
+    }
+    
     return config;
   },
   (error) => {

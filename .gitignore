@@ -4,4 +4,7 @@ target/
 .vscode/
 *.log
 .env
-.env.local"backend/uploads/" 
+.env.local
+backend/uploads/
+.gemini/
+brain/
