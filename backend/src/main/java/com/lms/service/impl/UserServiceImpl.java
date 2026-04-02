@@ -13,6 +13,7 @@ import com.lms.service.IdGeneratorService;
 import com.lms.service.UserService;
 import com.lms.repository.CourseRepository;
 import com.lms.entity.CourseMaster;
+import com.lms.service.NotificationService;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.transaction.annotation.Transactional;
 
