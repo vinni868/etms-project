@@ -66,8 +66,15 @@ public class CloudinaryService {
             throw new RuntimeException("Cloudinary is not configured. Please set CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, and CLOUDINARY_API_SECRET environment variables.");
         }
 
-        // Use an explicit, unique public_id including folder to avoid name collisions and double-nesting
-        String publicId = folder + "/" + UUID.randomUUID() + "_" + sanitize(file.getOriginalFilename());
+        // Remove extension from publicId if it's an image or auto, 
+        // Cloudinary handles extensions automatically in the URL.
+        String sanitizedName = sanitize(file.getOriginalFilename());
+        int lastDot = sanitizedName.lastIndexOf('.');
+        if (lastDot > 0 && !"raw".equals(resourceType)) {
+            sanitizedName = sanitizedName.substring(0, lastDot);
+        }
+        
+        String publicId = folder + "/" + UUID.randomUUID() + "_" + sanitizedName;
 
         @SuppressWarnings("unchecked")
         Map<String, Object> result = cloudinary.uploader().upload(
@@ -88,7 +95,8 @@ public class CloudinaryService {
      * Convenience: upload a PDF or document (resource_type = "raw").
      */
     public String uploadDocument(MultipartFile file, String folder) throws IOException {
-        return upload(file, folder, "auto");
+        // Use "raw" for PDFs and documents to bypass "Strict PDF delivery" errors in some Cloudinary accounts
+        return upload(file, folder, "raw");
     }
 
     /**
