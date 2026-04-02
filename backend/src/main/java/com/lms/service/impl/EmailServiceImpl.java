@@ -19,7 +19,9 @@ public class EmailServiceImpl implements EmailService {
 
     @Override
     public void sendOtpEmail(String toEmail, String otp) {
-        System.out.println("DEBUG: Preparing to send OTP to: " + toEmail + " from: " + fromEmail);
+        System.out.println("DEBUG: [START] Preparing to send OTP to: " + toEmail);
+        System.out.println("DEBUG: [AUTH] Using Gmail account: " + fromEmail);
+        System.out.println("DEBUG: [CONFIG] Using SSL Port 465 for SMTP connection");
         try {
             MimeMessage message = mailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
