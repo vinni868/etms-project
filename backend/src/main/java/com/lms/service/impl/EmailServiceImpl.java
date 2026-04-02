@@ -19,6 +19,7 @@ public class EmailServiceImpl implements EmailService {
 
     @Override
     public void sendOtpEmail(String toEmail, String otp) {
+        System.out.println("DEBUG: Preparing to send OTP to: " + toEmail + " from: " + fromEmail);
         try {
             MimeMessage message = mailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
@@ -47,6 +48,7 @@ public class EmailServiceImpl implements EmailService {
 
         } catch (Exception e) {
             System.err.println("❌ Critical Email Failure for " + toEmail + ": " + e.getMessage());
+            e.printStackTrace(); // Print full stack trace for cloud deployment debugging
             throw new RuntimeException("Email delivery failed: " + e.getMessage());
         }
     }
