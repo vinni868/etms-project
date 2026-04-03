@@ -6,16 +6,30 @@ import QuickPunch from '../../components/QuickPunch/QuickPunch';
 import AttendanceRules from '../../components/AttendanceRules/AttendanceRules';
 
 export default function CounselorDashboard() {
+  const user = JSON.parse(localStorage.getItem("user") || "{}");
   const [sessions, setSessions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState({ pending: 0, completed: 0 });
   const [showModal, setShowModal] = useState(false);
   const [activeSession, setActiveSession] = useState(null);
   const [msg, setMsg] = useState(null);
+  const [nowTime, setNowTime] = useState(new Date());
   
   const [formData, setFormData] = useState({
     status: '', meetingLink: '', notes: '', actionItems: '', nextSessionAt: ''
   });
+
+  useEffect(() => {
+    const t = setInterval(() => setNowTime(new Date()), 60000);
+    return () => clearInterval(t);
+  }, []);
+
+  const greeting = (() => {
+    const h = new Date().getHours();
+    if (h < 12) return "Good Morning";
+    if (h < 17) return "Good Afternoon";
+    return "Good Evening";
+  })();
 
   const fetchSessions = async () => {
     try {
@@ -61,67 +75,81 @@ export default function CounselorDashboard() {
   };
 
   return (
-    <div className="admin-page">
-      <div className="page-header">
-        <div className="header-left">
-          <div className="icon-wrapper bg-blue"><FaUserMd /></div>
-          <div>
-            <h1>Counselor Dashboard</h1>
-            <p className="page-subtitle">Manage student academic & mental health counseling sessions</p>
+    <div className="cr-page">
+      {/* ── Hero Header ── */}
+      <header className="cr-hero">
+        <div className="cr-hero__inner">
+          <div className="cr-hero__left">
+            <div className="cr-greeting-chip">{greeting} 👋</div>
+            <h1 className="cr-hero__name">{user?.name || "Counselor"}</h1>
+            <p className="cr-hero__role">Academic & Wellness · EtMS Smart Learning</p>
+          </div>
+
+          <div className="cr-hero__right">
+            <div className="cr-live-clock">
+              <div className="cr-clock__time">
+                {nowTime.toLocaleTimeString('en-US', { hour: "2-digit", minute: "2-digit", hour12: true }).toUpperCase()}
+              </div>
+              <div className="cr-clock__date">
+                {nowTime.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" })}
+              </div>
+            </div>
           </div>
         </div>
-      </div>
+      </header>
 
-      <div style={{ marginBottom: '2rem' }}>
-        <QuickPunch variant="horizontal" />
-        <div style={{ marginTop: '1rem' }}>
-           <AttendanceRules />
-        </div>
-      </div>
-
-      <div className="stats-row">
-        <div className="stat-card">
-          <div className="stat-icon bg-blue"><FaCalendarAlt /></div>
-          <div className="stat-details">
-            <h3>{stats.pending}</h3><p>Upcoming Sessions</p>
+      <div className="cr-content">
+        <div className="cr-attendance-section">
+          <QuickPunch variant="horizontal" />
+          <div style={{ marginTop: '1rem' }}>
+            <AttendanceRules />
           </div>
         </div>
-        <div className="stat-card">
-          <div className="stat-icon bg-green"><FaCheck /></div>
-          <div className="stat-details">
-            <h3>{stats.completed}</h3><p>Completed Sessions</p>
+
+        <div className="stats-row">
+          <div className="stat-card">
+            <div className="stat-icon bg-blue"><FaCalendarAlt /></div>
+            <div className="stat-details">
+              <h3>{stats.pending}</h3><p>Upcoming Sessions</p>
+            </div>
+          </div>
+          <div className="stat-card">
+            <div className="stat-icon bg-green"><FaCheck /></div>
+            <div className="stat-details">
+              <h3>{stats.completed}</h3><p>Completed Sessions</p>
+            </div>
           </div>
         </div>
-      </div>
 
-      {msg && <div className={`alert-msg ${msg.type === 'ok' ? 'alert-success' : 'alert-error'}`}>{msg.text}</div>}
+        {msg && <div className={`alert-msg ${msg.type === 'ok' ? 'alert-success' : 'alert-error'}`}>{msg.text}</div>}
 
-      <div className="sessions-list">
-        {loading ? <div className="loading-state">Loading schedule...</div> :
-         sessions.length === 0 ? <p className="text-muted">No sessions assigned yet.</p> :
-         sessions.map(s => (
-           <div className={`session-card st-${s.status.toLowerCase()}`} key={s.id}>
-             <div className="scard-header">
-               <div>
-                 <h3>{s.studentName}</h3>
-                 <span className="text-muted">{s.studentEmail}</span>
+        <div className="sessions-list">
+          {loading ? <div className="loading-state">Loading schedule...</div> :
+           sessions.length === 0 ? <p className="text-muted">No sessions assigned yet.</p> :
+           sessions.map(s => (
+             <div className={`session-card st-${s.status.toLowerCase()}`} key={s.id}>
+               <div className="scard-header">
+                 <div>
+                   <h3>{s.studentName}</h3>
+                   <span className="text-muted">{s.studentEmail}</span>
+                 </div>
+                 <span className={`status-badge st-${s.status.toLowerCase()}`}>{s.status}</span>
                </div>
-               <span className={`status-badge st-${s.status.toLowerCase()}`}>{s.status}</span>
+               
+               <div className="scard-details">
+                 <p><strong>Type:</strong> {s.type}</p>
+                 <p><strong>Scheduled:</strong> {s.scheduledAt ? new Date(s.scheduledAt).toLocaleString() : 'Not Set'}</p>
+                 {s.meetingLink && <p><strong>Meet:</strong> <a href={s.meetingLink} target="_blank" rel="noreferrer">Join Link <FaVideo /></a></p>}
+                 {s.notes && <p><strong>Notes:</strong> {s.notes}</p>}
+                 {s.actionItems && <p><strong>Action Items:</strong> {s.actionItems}</p>}
+               </div>
+               
+               <div className="scard-actions">
+                 <button className="secondary-btn" onClick={() => openModal(s)}><FaStickyNote /> Log Notes & Update</button>
+               </div>
              </div>
-             
-             <div className="scard-details">
-               <p><strong>Type:</strong> {s.type}</p>
-               <p><strong>Scheduled:</strong> {s.scheduledAt ? new Date(s.scheduledAt).toLocaleString() : 'Not Set'}</p>
-               {s.meetingLink && <p><strong>Meet:</strong> <a href={s.meetingLink} target="_blank" rel="noreferrer">Join Link <FaVideo /></a></p>}
-               {s.notes && <p><strong>Notes:</strong> {s.notes}</p>}
-               {s.actionItems && <p><strong>Action Items:</strong> {s.actionItems}</p>}
-             </div>
-             
-             <div className="scard-actions">
-               <button className="secondary-btn" onClick={() => openModal(s)}><FaStickyNote /> Log Notes & Update</button>
-             </div>
-           </div>
-         ))}
+           ))}
+        </div>
       </div>
 
       {showModal && activeSession && (

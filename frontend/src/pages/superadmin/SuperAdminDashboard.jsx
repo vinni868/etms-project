@@ -291,12 +291,14 @@ export default function SuperAdminDashboard() {
                 <div className="sa-card-ic">📊</div>
                 <h3>Platform Overview</h3>
               </div>
-              <div className="sa-ov-grid">
+              <div className="sa-ov-grid" style={{gridTemplateColumns: 'repeat(4, 1fr)'}}>
                 <OvTile icon="📚" value={dashboard.totalCourses  || 0} label="Courses"  color="blue" />
                 <OvTile icon="🎓" value={dashboard.totalBatches  || 0} label="Batches"  color="gold" />
                 <OvTile icon="👨‍🏫" value={dashboard.totalTrainers || 0} label="Trainers" color="green" />
                 <OvTile icon="👩‍💻" value={dashboard.totalStudents || 0} label="Students" color="orange" />
                 <OvTile icon="🏫" value={dashboard.totalAdmins   || 0} label="Admins"   color="purple" />
+                <OvTile icon="📣" value={dashboard.totalMarketers || 0} label="Marketers" color="orange" />
+                <OvTile icon="❤️" value={dashboard.totalCounselors || 0} label="Counselors" color="pink" />
                 <OvTile icon="✅" value={dashboard.activeBatches || 0} label="Active"   color="blue" />
               </div>
               <button className="sa-link-btn" onClick={() => navigate("/superadmin/analytics")}>

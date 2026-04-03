@@ -229,6 +229,31 @@
     border-radius: 0 4px 4px 0;
 }
 
+.np-item.clickable {
+    cursor: pointer;
+}
+
+.np-item.clickable:hover {
+    background: #f1f7ff;
+    border-color: #cbd5e1;
+}
+
+.np-action-tip {
+    display: block;
+    margin-top: 8px;
+    font-size: 11px;
+    font-weight: 700;
+    color: #2563eb;
+    opacity: 0;
+    transform: translateX(-10px);
+    transition: all 0.3s ease;
+}
+
+.np-item.clickable:hover .np-action-tip {
+    opacity: 1;
+    transform: translateX(0);
+}
+
 .np-item-icon {
     flex-shrink: 0;
     width: 48px;

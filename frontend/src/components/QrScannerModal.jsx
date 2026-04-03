@@ -64,23 +64,13 @@ export default function QrScannerModal({ isOpen, onClose, onSuccess }) {
       try {
         const { Html5QrcodeScanner, Html5QrcodeSupportedFormats, Html5QrcodeScanType } = await import('html5-qrcode');
         
-        // Check user role
-        const user = JSON.parse(localStorage.getItem('user') || '{}');
-        const isStudent = user?.role === 'STUDENT';
-
-        // Role-based scan types
-        const supportedScanTypes = isStudent 
-          ? [Html5QrcodeScanType.SCAN_TYPE_CAMERA] 
-          : [Html5QrcodeScanType.SCAN_TYPE_CAMERA, Html5QrcodeScanType.SCAN_TYPE_FILE_CAMERA];
-
         const html5QrcodeScanner = new Html5QrcodeScanner(
           'qr-reader',
           { 
             fps: 10, 
             qrbox: { width: 250, height: 250 }, 
             aspectRatio: 1.0,
-            formatsToSupport: [Html5QrcodeSupportedFormats.QR_CODE],
-            supportedScanTypes: supportedScanTypes
+            formatsToSupport: [Html5QrcodeSupportedFormats.QR_CODE]
           },
           /* verbose= */ false
         );

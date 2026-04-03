@@ -10,50 +10,7 @@ import AttendanceRules from "../../components/AttendanceRules/AttendanceRules";
    Key is tied to user ID so different students
    never share activity. Cleared on logout.
 ══════════════════════════════════════════════════ */
-function getSessionKey() {
-  const user = JSON.parse(localStorage.getItem("user") || "{}");
-  return `sd_activity_${user?.id || "guest"}`;
-}
 
-function getSessionActivity() {
-  try {
-    // If login just happened (flag set), wipe old data first
-    if (sessionStorage.getItem("sd_fresh_login") === "1") {
-      sessionStorage.removeItem(getSessionKey());
-      sessionStorage.removeItem("sd_fresh_login");
-    }
-    return JSON.parse(sessionStorage.getItem(getSessionKey()) || "[]");
-  } catch { return []; }
-}
-
-function addSessionActivity(icon, text, color = "blue") {
-  const key  = getSessionKey();
-  const prev = (() => {
-    try { return JSON.parse(sessionStorage.getItem(key) || "[]"); }
-    catch { return []; }
-  })();
-
-  const now = Date.now();
-  const entry = {
-    id:    now,
-    icon,
-    text,
-    color,
-    time:  new Date().toLocaleTimeString('en-US', { hour: "2-digit", minute: "2-digit", hour12: true }).toUpperCase(),
-  };
-
-  // Deduplicate — skip if same text logged within last 60 seconds
-  const deduped = prev.filter(p => !(p.text === text && now - p.id < 60000));
-  const updated = [entry, ...deduped].slice(0, 15); // keep max 15 items
-  sessionStorage.setItem(key, JSON.stringify(updated));
-  return updated;
-}
-
-function clearSessionActivity() {
-  sessionStorage.removeItem(getSessionKey());
-  sessionStorage.removeItem("sd_login_logged");
-  sessionStorage.removeItem("sd_fresh_login");
-}
 
 /* ══════════════════════════════════════════════════
    HELPERS
@@ -148,8 +105,43 @@ function StudentDashboard() {
   const [currentTime, setCurrentTime] = useState(new Date());
   const [activeTab,   setActiveTab]   = useState("overview");
 
-  /* ── Session activity ── */
-  const [activity, setActivity] = useState(() => getSessionActivity());
+  const quotes = [
+    "The secret of getting ahead is getting started.",
+    "Small steps in the right direction can turn into a giant leap.",
+    "Your education is a dress rehearsal for a life that is yours to lead.",
+    "The beautiful thing about learning is that no one can take it away from you.",
+    "Don't let what you cannot do interfere with what you can do.",
+    "Everything you've ever wanted is on the other side of fear.",
+    "Success is the sum of small efforts, repeated day in and day out.",
+    "The future belongs to those who believe in the beauty of their dreams.",
+    "It always seems impossible until it's done.",
+    "The only way to achieve the impossible is to believe it is possible.",
+    "Believe in yourself and all that you are. You are stronger than you think.",
+    "Quality is not an act, it is a habit.",
+    "The harder you work for something, the greater you'll feel when you achieve it.",
+    "Dream big, stay positive, work hard, and enjoy the journey.",
+    "Strive for progress, not perfection.",
+    "Don't wait for opportunity. Create it.",
+    "Your limitation—it's only your imagination.",
+    "Push yourself, because no one else is going to do it for you.",
+    "Great things never come from comfort zones.",
+    "Focus on being productive instead of busy.",
+    "Success doesn't just find you. You have to go out and get it.",
+    "The key to success is to focus on goals, not obstacles.",
+    "Do something today that your future self will thank you for.",
+    "Little things make big days.",
+    "Don't stop when you're tired. Stop when you're done.",
+    "Wake up with determination. Go to bed with satisfaction.",
+    "It's going to be hard, but hard does not mean impossible.",
+    "Learning is a treasure that will follow its owner everywhere.",
+    "Motivation is what gets you started. Habit is what keeps you going.",
+    "The expert in anything was once a beginner.",
+    "Stay focused and never give up on your dreams."
+  ];
+  
+  const dailyQuote = quotes[new Date().getDate() % quotes.length];
+
+
 
   /* ── Stats ── */
   const [stats, setStats] = useState({
@@ -183,10 +175,7 @@ function StudentDashboard() {
   const token      = localStorage.getItem("token");
   const headers    = { Authorization: `Bearer ${token}` };
 
-  /* ── push activity helper ── */
-  const pushActivity = useCallback((icon, text, color) => {
-    setActivity(addSessionActivity(icon, text, color));
-  }, []);
+
 
   /* ── Greeting ── */
   useEffect(() => {
@@ -200,15 +189,7 @@ function StudentDashboard() {
     return () => clearInterval(t);
   }, []);
 
-  /* ── Log login (once per session) ── */
-  useEffect(() => {
-    const alreadyLogged = sessionStorage.getItem("sd_login_logged");
-    if (!alreadyLogged) {
-      const updated = addSessionActivity("🔐", `Logged in as ${user?.name || "Student"}`, "indigo");
-      setActivity(updated);
-      sessionStorage.setItem("sd_login_logged", "1");
-    }
-  }, []);
+
 
   /* ════════════════════════════════════════════
      1. DASHBOARD STATS
@@ -407,7 +388,6 @@ function StudentDashboard() {
       }));
       setCourses(mapped);
       setCoursesLoaded(true);
-      pushActivity("📚", `Viewed ${mapped.length} enrolled course(s)`, "blue");
 
       // Build notifications once we have batches + courses
       if (allBatches.length > 0) buildNotifications(allBatches, mapped);
@@ -435,9 +415,8 @@ function StudentDashboard() {
   /* ── Tab handler ── */
   const handleTabChange = tab => {
     setActiveTab(tab);
-    if (tab === "courses")  { fetchCourses();  pushActivity("📚", "Opened My Courses tab", "blue"); }
-    if (tab === "schedule") { fetchSchedule(); pushActivity("📅", "Checked class schedule", "indigo"); }
-    if (tab === "activity") { pushActivity("🕐", "Viewed session activity", "green"); }
+    if (tab === "courses")  { fetchCourses(); }
+    if (tab === "schedule") { fetchSchedule(); }
   };
 
   /* ── Click outside dropdowns ── */
@@ -459,11 +438,6 @@ function StudentDashboard() {
   const timeStr = currentTime.toLocaleTimeString('en-US', { hour: "2-digit", minute: "2-digit", hour12: true }).toUpperCase();
   const dateStr = currentTime.toLocaleDateString([], { weekday: "long", month: "long", day: "numeric" });
 
-  const activityColors = {
-    blue: "#2563eb", green: "#16a34a", indigo: "#4f46e5",
-    amber: "#d97706", red: "#dc2626", purple: "#7c3aed",
-  };
-
   /* ════════════════════════════════════════════
      JSX
   ════════════════════════════════════════════ */
@@ -476,20 +450,8 @@ function StudentDashboard() {
         <div className="sd-hero__left">
           <div className="sd-greeting-tag">{greeting} 👋</div>
           <h1 className="sd-hero__name">{user?.name || "Student"}</h1>
-          {(user?.portalId || user?.studentId) && (
-            <div className="sd-hero__student-id">System ID: {user.portalId || user.studentId}</div>
-          )}
+          <p className="sd-hero__quote">“{dailyQuote}”</p>
           <p className="sd-hero__sub">Keep pushing — you're making great progress today.</p>
-          <div className="sd-hero__meta">
-            {/* Dynamic: shows ALL batch names */}
-            {batchNames && (
-              <span className="sd-meta-chip">🎓 {batchNames}</span>
-            )}
-            {/* Dynamic: shows location from user profile, hidden if empty */}
-            {userLocation && (
-              <span className="sd-meta-chip">📍 {userLocation}</span>
-            )}
-          </div>
         </div>
 
         <div className="sd-hero__right">
@@ -500,46 +462,7 @@ function StudentDashboard() {
 
 
 
-          {/* ── Profile ── */}
-          <div className="sd-profile-wrap" ref={profileRef}>
-            <button className="sd-avatar"
-              onClick={() => { setShowProfile(v => !v); setShowNotif(false); }}>
-              {user?.name?.charAt(0)?.toUpperCase() || "S"}
-            </button>
 
-            {showProfile && (
-              <div className="sd-dropdown sd-profile-drop">
-                <div className="sd-profile-info">
-                  <div className="sd-profile-avatar-lg">
-                    {user?.name?.charAt(0)?.toUpperCase()}
-                  </div>
-                  <div>
-                    <div className="sd-profile-name">{user?.name}</div>
-                    <div className="sd-profile-email">{user?.email}</div>
-                    {(user?.portalId || user?.studentId) && (
-                      <div className="sd-profile-student-id">ID: {user.portalId || user.studentId}</div>
-                    )}
-                  </div>
-                </div>
-                <hr className="sd-divider" />
-                <button className="sd-drop-btn" onClick={() => {
-                  setShowProfile(false);
-                  pushActivity("👤", "Visited My Profile", "blue");
-                  navigate("/student/profile");
-                }}>👤 My Profile</button>
-
-                <button className="sd-drop-btn" onClick={() => {
-                  setShowProfile(false);
-                  navigate("/change-password");
-                }}>🔑 Change Password</button>
-
-
-                <hr className="sd-divider" />
-
-                
-              </div>
-            )}
-          </div>
         </div>
       </div>
 
@@ -553,14 +476,13 @@ function StudentDashboard() {
 
       {/* ══════════ TABS ══════════ */}
       <div className="sd-tabs">
-        {["overview","courses","schedule","activity"].map(tab => (
+        {["overview","courses","schedule"].map(tab => (
           <button key={tab}
             className={`sd-tab ${activeTab === tab ? "sd-tab--active" : ""}`}
             onClick={() => handleTabChange(tab)}>
             {tab === "overview"  && "📊 Overview"}
             {tab === "courses"   && "📚 My Courses"}
             {tab === "schedule"  && "📅 Schedule"}
-            {tab === "activity"  && "🕐 Activity"}
           </button>
         ))}
       </div>
@@ -582,19 +504,15 @@ function StudentDashboard() {
             <div className="sd-card-head"><h2>⚡ Quick Actions</h2></div>
             <div className="sd-actions">
               <button className="sd-action-btn sd-action-btn--blue" onClick={() => {
-                pushActivity("📚","Navigated to Courses","blue");
                 navigate("/student/courses");
               }}><span>📚</span><span>View Courses</span></button>
               <button className="sd-action-btn sd-action-btn--green" onClick={() => {
-                pushActivity("📊","Opened Attendance","green");
                 navigate("/student/attendance");
               }}><span>📊</span><span>My Attendance</span></button>
               <button className="sd-action-btn sd-action-btn--purple" onClick={() => {
-                pushActivity("🏆","Checked Performance","purple");
                 navigate("/student/performance");
               }}><span>🏆</span><span>Performance</span></button>
               <button className="sd-action-btn sd-action-btn--orange" onClick={() => {
-                pushActivity("⚡","Opened Punch In/Out","amber");
                 navigate("/student/time-tracking");
               }}><span>⚡</span><span>Punch In / Out</span></button>
             </div>
@@ -681,7 +599,6 @@ function StudentDashboard() {
                   <div className="sd-course-tile__actions">
                     <span className="sd-enrolled-chip">✓ Enrolled</span>
                     <button className="sd-course-btn" onClick={() => {
-                      pushActivity("📘", `Opened course: ${c.name}`, "indigo");
                       navigate("/student/courses");
                     }}>View →</button>
                   </div>
@@ -725,13 +642,11 @@ function StudentDashboard() {
                   </div>
                   {u.meetingLink
                     ? <a className="sd-join-btn" href={u.meetingLink}
-                         target="_blank" rel="noreferrer"
-                         onClick={() => pushActivity("🎥",`Joined: ${u.subject}`,"blue")}>
+                         target="_blank" rel="noreferrer">
                          Join Now →
                       </a>
-                    : <button className="sd-join-btn"
-                        onClick={() => pushActivity("🎥",`Join clicked: ${u.subject}`,"blue")}>
-                        Join Now →
+                    : <button className="sd-join-btn">
+                         Join Now →
                       </button>
                   }
                 </div>
@@ -758,13 +673,11 @@ function StudentDashboard() {
                   </div>
                   {u.meetingLink
                     ? <a className="sd-join-btn sd-join-btn--outline"
-                         href={u.meetingLink} target="_blank" rel="noreferrer"
-                         onClick={() => pushActivity("🎥",`Joined: ${u.subject}`,"indigo")}>
+                         href={u.meetingLink} target="_blank" rel="noreferrer">
                          Join →
                       </a>
-                    : <button className="sd-join-btn sd-join-btn--outline"
-                        onClick={() => pushActivity("🎥",`Join clicked: ${u.subject}`,"indigo")}>
-                        Join →
+                    : <button className="sd-join-btn sd-join-btn--outline">
+                         Join →
                       </button>
                   }
                 </div>

@@ -156,11 +156,17 @@ function Register() {
               type="tel"
               placeholder="10-digit number"
               required
+              maxLength="10"
               value={data.phone}
               onChange={(e) =>
                 setData({ ...data, phone: e.target.value.replace(/\D/g, "").slice(0, 10) })
               }
             />
+            {data.phone && data.phone.length < 10 && (
+              <p style={{ color: "#ef4444", fontSize: "12px", fontWeight: "600", marginTop: "5px" }}>
+                ⚠️ Exactly 10 digits required
+              </p>
+            )}
           </div>
 
           <div className="etms-input-group">
@@ -174,7 +180,7 @@ function Register() {
             />
           </div>
 
-          <button type="submit" className="etms-submit-btn" disabled={loading}>
+          <button type="submit" className="etms-submit-btn" disabled={loading || (data.phone && data.phone.length < 10)}>
             {loading ? "Processing..." : "Register Now"}
           </button>
         </form>

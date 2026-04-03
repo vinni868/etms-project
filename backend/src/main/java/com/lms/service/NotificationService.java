@@ -51,4 +51,8 @@ public class NotificationService {
     public long getUnreadCountForRole(String role) {
         return notificationRepository.countByRecipientRoleAndRead(role, false);
     }
+
+    public void deleteNotification(Long id) {
+        notificationRepository.deleteById(id);
+    }
 }

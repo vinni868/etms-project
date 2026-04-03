@@ -1,309 +1,389 @@
+/* =========================================================
+   QuickPunch.css — Dashboard Attendance Widget
+   Two-method design: QR Scan OR Quick GPS Punch
+   ========================================================= */
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&display=swap');
+
+/* ── BASE CARD ────────────────────────────────────────── */
 .quick-punch-card {
-    background: #ffffff;
-    border-radius: 16px;
-    padding: 20px;
-    border: 1px solid #e2e8f0;
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    position: relative;
-    /* overflow: hidden; Removed to allow floating messages */
-    min-width: 280px;
-    margin-bottom: 20px;
+  font-family: 'Outfit', -apple-system, sans-serif;
+  border-radius: 18px;
+  padding: 18px 20px;
+  border: 1.5px solid transparent;
+  transition: all 0.35s ease;
+  position: relative;
+  overflow: hidden;
 }
 
-.quick-punch-card:hover {
-    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
-    transform: translateY(-2px);
+.quick-punch-card.status-in {
+  background: linear-gradient(145deg, #ecfdf5, #d1fae5);
+  border-color: #6ee7b7;
+  box-shadow: 0 6px 30px rgba(16,185,129,0.12);
 }
 
-.status-in {
-    border-left: 6px solid #10b981;
+.quick-punch-card.status-out {
+  background: linear-gradient(145deg, #eff6ff, #dbeafe);
+  border-color: #93c5fd;
+  box-shadow: 0 6px 30px rgba(37,99,235,0.10);
 }
 
-.status-out {
-    border-left: 6px solid #f59e0b;
+/* ── HORIZONTAL VARIANT ───────────────────────────────── */
+.quick-punch-card.qp-horizontal {
+  border-radius: 16px;
+  padding: 14px 16px;
+}
+.quick-punch-card.qp-horizontal .qp-header {
+  margin-bottom: 8px;
+}
+.quick-punch-card.qp-horizontal .qp-title-box h3 {
+  font-size: 13px;
+}
+.quick-punch-card.qp-horizontal .qp-methods {
+  flex-direction: column;
+}
+.quick-punch-card.qp-horizontal .qp-or {
+  width: 100%;
+  height: 18px;
+  border-left: none;
+  border-right: none;
+  border-top: 1px solid rgba(0,0,0,0.07);
+  border-bottom: 1px solid rgba(0,0,0,0.07);
+}
+.quick-punch-card.qp-horizontal .qp-method-btn {
+  padding: 10px;
+}
+.quick-punch-card.qp-horizontal .qp-method-btn span {
+  font-size: 11px;
 }
 
+/* ── HEADER ───────────────────────────────────────────── */
 .qp-header {
-    display: flex;
-    align-items: center;
-    margin-bottom: 20px;
-    gap: 15px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.qp-sync-btn {
+  background: rgba(255, 255, 255, 0.6);
+  border: 1px solid rgba(0,0,0,0.08);
+  color: #64748b;
+  width: 25px;
+  height: 25px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s;
+  flex-shrink: 0;
+}
+
+.qp-sync-btn:hover {
+  background: #fff;
+  color: #2563eb;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.qp-spin {
+  animation: qp-sync-spin 0.8s linear infinite;
+}
+
+@keyframes qp-sync-spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
 }
 
 .qp-icon-box {
-    background: #f1f5f9;
-    color: #475569;
-    width: 48px;
-    height: 48px;
-    border-radius: 12px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: all 0.3s ease;
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.7);
+  border: 1.5px solid rgba(0,0,0,0.07);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  color: #1e3a8a;
+  backdrop-filter: blur(4px);
 }
 
-.status-in .qp-icon-box {
-    background: #ecfdf5;
-    color: #059669;
-}
+.status-in .qp-icon-box  { color: #059669; }
+.status-out .qp-icon-box { color: #2563eb; }
 
-.status-out .qp-icon-box {
-    background: #fff7ed;
-    color: #ea580c;
+.qp-title-box {
+  flex: 1;
 }
 
 .qp-title-box h3 {
-    margin: 0;
-    font-size: 1.1rem;
-    color: #1e293b;
-    font-weight: 700;
+  font-size: 14px;
+  font-weight: 800;
+  color: #0f172a;
+  margin: 0 0 2px;
 }
 
 .qp-title-box p {
-    margin: 0;
-    font-size: 0.85rem;
-    color: #64748b;
+  font-size: 12px;
+  color: #64748b;
+  font-weight: 500;
+  margin: 0;
 }
 
-.qp-body {
-    display: flex;
-    flex-direction: column;
-    gap: 15px;
+.qp-details-link {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12px;
+  font-weight: 700;
+  color: #2563eb;
+  text-decoration: none;
+  padding: 5px 10px;
+  border-radius: 20px;
+  background: rgba(255,255,255,0.7);
+  border: 1px solid rgba(37,99,235,0.2);
+  transition: background 0.18s;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
-.qp-info-text {
-    font-size: 0.8rem;
-    font-weight: 600;
-    color: #475569;
-    background: #f8fafc;
-    padding: 8px 12px;
-    border-radius: 8px;
-    display: flex;
-    align-items: center;
+.qp-details-link:hover {
+  background: #2563eb;
+  color: #fff;
+  border-color: #2563eb;
 }
 
-.qp-action-btn {
-    border: none;
-    padding: 12px;
-    border-radius: 10px;
-    font-weight: 700;
-    cursor: pointer;
-    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    width: 100%;
-    font-size: 0.95rem;
-    box-shadow: 0 4px 6px -1px rgba(37, 99, 235, 0.2);
+/* ── INFO ROW (chips) ─────────────────────────────────── */
+.qp-info-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  margin-bottom: 10px;
 }
 
-.status-out .qp-action-btn {
-    background: #2563eb;
-    color: #fff;
+.qp-info-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 4px 10px;
+  border-radius: 20px;
+  background: rgba(255,255,255,0.7);
+  color: #475569;
+  border: 1px solid rgba(0,0,0,0.07);
 }
 
-.status-out .qp-action-btn:hover {
-    background: #1d4ed8;
+.qp-info-chip--blue  { color: #2563eb; background: #eff6ff; border-color: #bfdbfe; }
+.qp-info-chip--green { color: #059669; background: #ecfdf5; border-color: #6ee7b7; }
+.qp-info-chip--grey  { color: #64748b; background: #f1f5f9; border-color: #e2e8f0; }
+
+.qp-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  display: inline-block;
+}
+.qp-dot--green { background: #10b981; animation: qp-pulse 1.5s infinite; }
+.qp-dot--red   { background: #ef4444; }
+
+@keyframes qp-pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50%       { opacity: 0.5; transform: scale(1.3); }
 }
 
-.status-in .qp-action-btn {
-    background: #f1f5f9;
-    color: #475569;
-    border: 1px solid #e2e8f0;
-    box-shadow: none;
+/* ── ACTION LABEL ─────────────────────────────────────── */
+.qp-action-label {
+  font-size: 11.5px;
+  font-weight: 700;
+  color: #334155;
+  margin-bottom: 10px;
+  letter-spacing: 0.1px;
 }
 
-.status-in .qp-action-btn:hover {
-    background: #e2e8f0;
+/* ── METHODS GRID ─────────────────────────────────────── */
+.qp-methods {
+  display: flex;
+  align-items: stretch;
+  border-radius: 14px;
+  overflow: hidden;
+  border: 1.5px solid rgba(255,255,255,0.8);
+  background: rgba(255,255,255,0.4);
+  backdrop-filter: blur(6px);
+  margin-bottom: 10px;
 }
 
+.qp-method-btn {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 14px 10px;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  transition: background 0.18s ease, transform 0.15s ease;
+  font-family: inherit;
+  text-align: center;
+}
+
+.qp-method-btn span {
+  font-size: 13px;
+  font-weight: 800;
+  color: #0f172a;
+  display: block;
+}
+
+.qp-method-btn small {
+  font-size: 10px;
+  color: #64748b;
+  font-weight: 500;
+  display: block;
+}
+
+.qp-method-btn svg,
+.qp-method-btn .qp-spinner {
+  color: #1e3a8a;
+}
+
+.status-in .qp-method-btn svg  { color: #dc2626; }
+.status-out .qp-method-btn svg { color: #2563eb; }
+
+.qp-method-btn:hover:not(:disabled) {
+  transform: translateY(-1px);
+}
+
+.qp-method-btn--in.qp-method-btn--qr:hover:not(:disabled) {
+  background: rgba(37,99,235,0.12);
+}
+
+.qp-method-btn--out.qp-method-btn--qr:hover:not(:disabled) {
+  background: rgba(220,38,38,0.08);
+}
+
+.qp-method-btn--in.qp-method-btn--quick:hover:not(:disabled) {
+  background: rgba(37,99,235,0.08);
+}
+
+.qp-method-btn--out.qp-method-btn--quick:hover:not(:disabled) {
+  background: rgba(220,38,38,0.06);
+}
+
+.qp-method-btn:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.qp-or {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  flex-shrink: 0;
+  font-size: 10px;
+  font-weight: 800;
+  color: #94a3b8;
+  background: rgba(255,255,255,0.5);
+  border-left: 1px solid rgba(0,0,0,0.07);
+  border-right: 1px solid rgba(0,0,0,0.07);
+  letter-spacing: 1px;
+}
+
+/* ── SPINNER ──────────────────────────────────────────── */
+.qp-spinner {
+  width: 18px;
+  height: 18px;
+  border: 2.5px solid rgba(0,0,0,0.12);
+  border-top-color: #2563eb;
+  border-radius: 50%;
+  animation: qp-spin 0.7s linear infinite;
+}
+
+@keyframes qp-spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ── MESSAGES ─────────────────────────────────────────── */
 .qp-msg {
-    padding: 10px;
-    border-radius: 8px;
-    font-size: 0.85rem;
-    font-weight: 600;
-    animation: fadeIn 0.3s ease-out;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 8px 12px;
+  border-radius: 10px;
+  margin-bottom: 8px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
 }
 
-.qp-msg.success {
-    background: #ecfdf5;
-    color: #059669;
-    border: 1px solid #b7f4d8;
+.qp-msg--success {
+  background: #dcfce7;
+  color: #16a34a;
+  border: 1px solid #bbf7d0;
 }
 
-.qp-msg.error {
-    background: #fef2f2;
-    color: #dc2626;
-    border: 1px solid #fecaca;
-    display: flex;
-    align-items: center;
+.qp-msg--error {
+  background: #fff7ed;
+  color: #ea580c;
+  border: 1px solid #fed7aa;
 }
 
-.qp-footer {
-    margin-top: 15px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding-top: 15px;
-    border-top: 1px dashed #e2e8f0;
+/* ── FOOTER ROW ───────────────────────────────────────── */
+.qp-footer-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 4px;
 }
 
 .qp-tag {
-    font-size: 0.75rem;
-    font-weight: 700;
-    color: #94a3b8;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
+  font-size: 11px;
+  color: #64748b;
+  font-weight: 500;
 }
 
-.qp-spinner {
-    width: 20px;
-    height: 20px;
-    border: 3px solid rgba(255, 255, 255, 0.3);
-    border-radius: 50%;
-    border-top-color: #fff;
-    animation: spin 0.8s linear infinite;
+.qp-history-link {
+  font-size: 12px;
+  font-weight: 700;
+  color: #2563eb;
+  text-decoration: none;
+  transition: color 0.15s;
 }
 
-.status-in .qp-spinner {
-    border-top-color: #2563eb;
-    border-color: rgba(37, 99, 235, 0.1);
+.qp-history-link:hover {
+  color: #1e3a8a;
+  text-decoration: underline;
 }
 
-@keyframes spin {
-    to { transform: rotate(360deg); }
-}
-
-@keyframes fadeIn {
-    from { opacity: 0; transform: translateY(-5px); }
-    to { opacity: 1; transform: translateY(0); }
-}
-
+/* ── SKELETON ─────────────────────────────────────────── */
 .qp-skeleton {
-    background: #f1f5f9;
-    border-radius: 16px;
-    height: 180px;
-    animation: pulse 1.5s infinite ease-in-out;
+  padding: 18px 20px;
+  font-size: 13px;
+  color: #94a3b8;
+  background: #f8fafc;
+  border-radius: 18px;
+  font-weight: 600;
+  animation: qp-blink 1.4s ease infinite;
 }
 
-@keyframes pulse {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.5; }
+@keyframes qp-blink {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.4; }
 }
 
-.sa-hr-dot {
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-    display: inline-block;
-}
-
-.sa-hr-dot.green { background: #10b981; box-shadow: 0 0 8px #10b981; }
-.sa-hr-dot.gold { background: #f59e0b; box-shadow: 0 0 8px #f59e0b; }
-.sa-hr-dot.red { background: #ef4444; box-shadow: 0 0 8px #ef4444; }
-
-/* ─── HORIZONTAL VARIANT (PREMIUM) ─── */
-.qp-horizontal {
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    justify-content: space-between;
-    padding: 18px 32px;
-    gap: 40px;
-    min-height: 90px;
-    background: linear-gradient(to right, #ffffff, #f8faff);
-    border: 1.5px solid #e2e8f0;
-    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05);
-    border-left: 8px solid #10b981; /* Default/Active state */
-    margin-bottom: 24px;
+/* ── RESPONSIVE ───────────────────────────────────────── */
+@media (max-width: 500px) {
+  .qp-methods {
+    flex-direction: column;
+  }
+  .qp-or {
     width: 100%;
-}
-
-.qp-horizontal.status-out {
-    border-left-color: #f59e0b;
-}
-
-.qp-horizontal .qp-header {
-    margin-bottom: 0;
-    flex: 1;
-    gap: 20px;
-}
-
-.qp-horizontal .qp-icon-box {
-    width: 52px;
-    height: 52px;
-    border-radius: 14px;
-}
-
-.qp-horizontal .qp-title-box h3 {
-    font-size: 1.25rem;
-}
-
-.qp-horizontal .qp-body {
-    flex: 2;
-    flex-direction: row;
-    align-items: center;
-    justify-content: flex-end;
-    gap: 32px;
-}
-
-.qp-horizontal .qp-body-left {
-    flex: 0 0 auto;
-    display: flex;
-    align-items: center;
-}
-
-.qp-horizontal .qp-info-text {
-    padding: 10px 16px;
-    font-size: 0.9rem;
-    background: #f1f5f9;
-}
-
-.qp-horizontal .qp-body-right {
-    flex: 0 0 auto;
-    min-width: 200px;
-}
-
-.qp-horizontal .qp-action-btn {
-    width: 100%;
-    padding: 14px 32px;
-    font-size: 1rem;
-    letter-spacing: 0.5px;
-}
-
-.qp-horizontal .qp-msg {
-    position: absolute;
-    top: -15px; /* Float slightly above the card to avoid overlap */
-    right: 32px;
-    transform: translateY(0);
-    margin: 0;
-    box-shadow: 0 10px 20px rgba(0,0,0,0.1);
-    z-index: 50;
-    max-width: 320px;
-    border-width: 1.5px;
-}
-
-.qp-horizontal .qp-msg.warning, 
-.qp-horizontal .qp-msg.error {
-    /* Keep them at the same top-right position, floating above */
-    right: 32px; 
-}
-
-@media (max-width: 768px) {
-    .qp-horizontal {
-        flex-direction: column;
-        align-items: stretch;
-        gap: 15px;
-    }
-    .qp-horizontal .qp-body {
-        flex-direction: column;
-        align-items: stretch;
-    }
-    .qp-horizontal .qp-body-right {
-        width: 100%;
-    }
-    .qp-horizontal .qp-action-btn {
-        width: 100%;
-    }
+    height: 24px;
+    border-left: none;
+    border-right: none;
+    border-top: 1px solid rgba(0,0,0,0.07);
+    border-bottom: 1px solid rgba(0,0,0,0.07);
+  }
 }

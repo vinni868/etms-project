@@ -131,6 +131,7 @@ function DashboardLayout() {
                       <div className="mega-group">
                         <div className="mega-group-title">Master Registry</div>
                         <MegaLink to="/superadmin/users" icon="👥" name="Global Directory" desc="Cross-portal user database" onClick={closeMobileMenu} />
+                        <MegaLink to="/superadmin/notifications" icon={<FaBullhorn/>} name="Notifications Hub" desc="Manage system-wide alerts" onClick={closeMobileMenu} />
                         <MegaLink to="/superadmin/leave" icon="📅" name="Leave Board" desc="Monitor staff/student absence" onClick={closeMobileMenu} />
                       </div>
                     </div>
@@ -185,7 +186,7 @@ function DashboardLayout() {
                       <div className="mega-group">
                         <div className="mega-group-title">Users</div>
                         <MegaLink to="/admin/students" icon={<FaUserGraduate/>} name="Students" desc="Complete student lifecycle" onClick={closeMobileMenu} />
-                        <MegaLink to="/admin/trainers" icon={<FaChalkboardTeacher/>} name="Faculty" desc="Instructors and trainers" onClick={closeMobileMenu} />
+                        <MegaLink to="/admin/trainers" icon={<FaChalkboardTeacher/>} name="Trainers" desc="Instructors and trainers" onClick={closeMobileMenu} />
                         <MegaLink to="/admin/create-user" icon="👤+" name="Provision" desc="Create new user accounts" onClick={closeMobileMenu} />
                       </div>
                       <div className="mega-group">
@@ -252,6 +253,7 @@ function DashboardLayout() {
                       <div className="mega-group">
                         <div className="mega-group-title">Comms</div>
                         <MegaLink to="/admin/announcements" icon="📢" name="Bulletins" desc="Publish general announcements" onClick={closeMobileMenu} />
+                        <MegaLink to="/admin/notifications" icon={<FaBullhorn/>} name="Notifications Hub" desc="Manage administrative alerts" onClick={closeMobileMenu} />
                       </div>
                     </div>
                   </div>
@@ -276,6 +278,7 @@ function DashboardLayout() {
                         <div className="mega-group-title">Operations</div>
                         <MegaLink to="/student/attendance" icon={<FaHistory/>} name="Audit Log" desc="Historical presence records" onClick={closeMobileMenu} />
                         <MegaLink to="/student/time-tracking" icon={<FaQrcode/>} name="Punch Portal" desc="Live daily check-in station" onClick={closeMobileMenu} />
+                        <MegaLink to="/student/notifications" icon={<FaBullhorn/>} name="Notifications Hub" desc="My personal alert history" onClick={closeMobileMenu} />
                       </div>
                       <div className="mega-group">
                         <div className="mega-group-title">Support</div>
@@ -323,6 +326,7 @@ function DashboardLayout() {
                         <div className="mega-group-title">Tracking</div>
                         <MegaLink to="/trainer/attendance" icon={<FaHistory/>} name="Attendance" desc="Class attendance records" onClick={closeMobileMenu} />
                         <MegaLink to="/trainer/time-tracking" icon={<FaQrcode/>} name="Punch Portal" desc="Daily check-in station" onClick={closeMobileMenu} />
+                        <MegaLink to="/trainer/notifications" icon={<FaBullhorn/>} name="Notifications Hub" desc="My personal alert history" onClick={closeMobileMenu} />
                         <MegaLink to="/trainer/leave" icon={<FaCalendarAlt/>} name="Leave" desc="Request absence" onClick={closeMobileMenu} />
                       </div>
                     </div>
@@ -347,6 +351,7 @@ function DashboardLayout() {
                       <div className="mega-group">
                         <div className="mega-group-title">Operations</div>
                         <MegaLink to="/marketer/time-tracking" icon={<FaQrcode/>} name="Punch Portal" desc="Daily check-in station" onClick={closeMobileMenu} />
+                        <MegaLink to="/marketer/notifications" icon={<FaBullhorn/>} name="Notifications Hub" desc="My alert history" onClick={closeMobileMenu} />
                         <MegaLink to="/marketer/leave" icon={<FaCalendarAlt/>} name="Leave" desc="Request absence" onClick={closeMobileMenu} />
                       </div>
                     </div>
@@ -370,6 +375,7 @@ function DashboardLayout() {
                       <div className="mega-group">
                         <div className="mega-group-title">Operations</div>
                         <MegaLink to="/counselor/time-tracking" icon={<FaQrcode/>} name="Punch Portal" desc="Daily check-in station" onClick={closeMobileMenu} />
+                        <MegaLink to="/counselor/notifications" icon={<FaBullhorn/>} name="Notifications Hub" desc="My alert history" onClick={closeMobileMenu} />
                         <MegaLink to="/counselor/leave" icon={<FaCalendarAlt/>} name="Leave" desc="Request absence" onClick={closeMobileMenu} />
                       </div>
                     </div>
@@ -384,7 +390,7 @@ function DashboardLayout() {
             </nav>
 
             <div className="user-actions-right">
-              {(user?.role === "ADMIN" || user?.role === "SUPERADMIN") && <NotificationDropdown />}
+              <NotificationDropdown />
               <div className="user-role-badge">
                 <div className="role-badge-content">
                   <span className="role-text-label">{user?.role?.replace("_", " ")}</span>

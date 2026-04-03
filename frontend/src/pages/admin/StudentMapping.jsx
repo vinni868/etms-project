@@ -45,6 +45,8 @@ function StudentMapping() {
   const [selectedCourse,       setSelectedCourse]       = useState("");
   const [selectedStudentBatch,  setSelectedStudentBatch]  = useState("");
   const [selectedBatch,        setSelectedBatch]        = useState("");
+  const [lockedCourseStudent,   setLockedCourseStudent]   = useState(false);
+  const [lockedBatchStudent,    setLockedBatchStudent]    = useState(false);
 
   /* edit mode — which mapping is being edited */
   const [editingCourseMapping, setEditingCourseMapping] = useState(null); // { studentId, courseName, mappingId }
@@ -159,6 +161,7 @@ function StudentMapping() {
   const handleQuickEnroll = (stu) => {
     setActivePanel(PANEL_COURSE);
     setSelectedStudentCourse(stu.studentId?.toString());
+    setLockedCourseStudent(true);
     setSelectedCourse("");
     setEditingCourseMapping(null);
     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -167,6 +170,7 @@ function StudentMapping() {
   const handleQuickAllot = (stu) => {
     setActivePanel(PANEL_BATCH);
     setSelectedStudentBatch(stu.studentId?.toString());
+    setLockedBatchStudent(true);
     setSelectedBatch("");
     setEditingBatchMapping(null);
     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -179,6 +183,7 @@ function StudentMapping() {
     // Pre-select the student
     const student = students.find(s => s.name === item.studentName || s.id === item.studentId);
     setSelectedStudentCourse(student?.id?.toString() || "");
+    setLockedCourseStudent(true);
     // Pre-select the course
     const course = courses.find(c => c.courseName === item.courseName);
     setSelectedCourse(course?.id?.toString() || "");
@@ -192,6 +197,7 @@ function StudentMapping() {
     // Pre-select the student
     const student = students.find(s => s.name === item.studentName || s.id === item.studentId);
     setSelectedStudentBatch(student?.id?.toString() || "");
+    setLockedBatchStudent(true);
     // Pre-select the batch
     const batch = batches.find(b => b.batchName === item.batchName);
     setSelectedBatch(batch?.id?.toString() || "");
@@ -201,6 +207,7 @@ function StudentMapping() {
 
   const resetCourseForm = () => {
     setSelectedStudentCourse("");
+    setLockedCourseStudent(false);
     setSelectedCourse("");
     setEditingCourseMapping(null);
     setError("");
@@ -208,6 +215,7 @@ function StudentMapping() {
 
   const resetBatchForm = () => {
     setSelectedStudentBatch("");
+    setLockedBatchStudent(false);
     setSelectedBatch("");
     setEditingBatchMapping(null);
     setError("");
@@ -322,7 +330,7 @@ function StudentMapping() {
                       : "Link a student to a course"}
                   </p>
                 </div>
-                {editingCourseMapping && (
+                {(editingCourseMapping || lockedCourseStudent) && (
                   <button className="ms-cancel-edit" onClick={resetCourseForm}>
                     <FaTimes />
                   </button>
@@ -336,6 +344,8 @@ function StudentMapping() {
                     className="ms-select"
                     value={selectedStudentCourse}
                     onChange={e => { setSelectedStudentCourse(e.target.value); setError(""); }}
+                    disabled={lockedCourseStudent}
+                    style={lockedCourseStudent ? { backgroundColor: '#f1f5f9', cursor: 'not-allowed' } : {}}
                   >
                     <option value="">— Choose Student —</option>
                     {students
@@ -374,7 +384,7 @@ function StudentMapping() {
                     ? <><span className="ms-spinner" /> Saving…</>
                     : <><FaLink /> {editingCourseMapping ? "Update Enrollment" : "Link Course"}</>}
                 </button>
-                {editingCourseMapping && (
+                {(editingCourseMapping || lockedCourseStudent) && (
                   <button className="ms-btn-cancel" onClick={resetCourseForm}>✕ Cancel</button>
                 )}
               </div>
@@ -396,7 +406,7 @@ function StudentMapping() {
                       : "Allot a student to an active batch"}
                   </p>
                 </div>
-                {editingBatchMapping && (
+                {(editingBatchMapping || lockedBatchStudent) && (
                   <button className="ms-cancel-edit" onClick={resetBatchForm}>
                     <FaTimes />
                   </button>
@@ -420,6 +430,8 @@ function StudentMapping() {
                         else setSelectedBatch("");
                       }
                     }}
+                    disabled={lockedBatchStudent}
+                    style={lockedBatchStudent ? { backgroundColor: '#f1f5f9', cursor: 'not-allowed' } : {}}
                   >
                     <option value="">— Choose Student —</option>
                     {students
@@ -462,7 +474,7 @@ function StudentMapping() {
                     ? <><span className="ms-spinner" /> Saving…</>
                     : <><FaLayerGroup /> {editingBatchMapping ? "Update Batch" : "Assign Batch"}</>}
                 </button>
-                {editingBatchMapping && (
+                {(editingBatchMapping || lockedBatchStudent) && (
                   <button className="ms-btn-cancel" onClick={resetBatchForm}>✕ Cancel</button>
                 )}
               </div>

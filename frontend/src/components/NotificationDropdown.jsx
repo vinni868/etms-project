@@ -11,6 +11,10 @@ const NotificationDropdown = () => {
   const dropdownRef = useRef(null);
   const navigate = useNavigate();
 
+  const user = JSON.parse(localStorage.getItem("user") || "{}");
+  const rolePath = user?.role?.toLowerCase().replace("_", "") || "admin";
+  const notificationsPath = `/${rolePath}/notifications`;
+
   const fetchNotifications = async () => {
     try {
       const res = await api.get("/notifications/unread");
@@ -86,7 +90,7 @@ const NotificationDropdown = () => {
           <div className="notif-drop-body">
             {notifications.length > 0 ? (
               notifications.map((n) => (
-                <div key={n.id} className="notif-row-item" onClick={() => navigate("/admin/notifications")}>
+                <div key={n.id} className="notif-row-item" onClick={() => { navigate(notificationsPath); setIsOpen(false); }}>
                   <div className="notif-icon-box">{getIcon(n.type)}</div>
                   <div className="notif-content">
                     <p className="notif-msg">{n.message}</p>
@@ -106,7 +110,7 @@ const NotificationDropdown = () => {
           </div>
 
           <div className="notif-drop-footer">
-            <Link to="/admin/notifications" onClick={() => setIsOpen(false)}>
+            <Link to={notificationsPath} onClick={() => setIsOpen(false)}>
               View All Notifications →
             </Link>
           </div>

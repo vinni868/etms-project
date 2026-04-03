@@ -23,14 +23,196 @@ import {
   FaHandPointer,
   FaProjectDiagram,
   FaFingerprint,
-  FaTimes
+  FaTimes,
+  FaIdBadge,
+  FaExclamationCircle,
+  FaCalendarCheck,
+  FaUser,
+  FaMapMarkerAlt,
+  FaInfoCircle,
+  FaGraduationCap
 } from "react-icons/fa";
+import { createPortal } from "react-dom";
 import "./ManageStudents.css";
 
 const PAGE_SIZE = 10;
 
 const MODES = ["ONLINE", "OFFLINE", "HYBRID"];
 const STATUSES = ["ACTIVE", "INACTIVE"];
+
+/* ── Avatar colours for modal ── */
+const AVATAR_COLORS = [
+  { bg: "#eff6ff", color: "#2563eb" },
+  { bg: "#f5f3ff", color: "#7c3aed" },
+  { bg: "#ecfdf5", color: "#059669" },
+  { bg: "#fff7ed", color: "#ea580c" },
+  { bg: "#fdf2f8", color: "#db2777" },
+  { bg: "#f0fdf4", color: "#16a34a" },
+];
+
+/* ══════════════════════════════════════════════════
+   STUDENT PROFILE MODAL
+   Shows detailed profile completion bar + data
+   ══════════════════════════════════════════════════ */
+function StudentProfileModal({ student, onClose }) {
+  const [enrichedProfile, setEnrichedProfile] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (!student?.email) { setLoading(false); return; }
+    const fetchProfile = async () => {
+      try {
+        const res = await api.get(`/student/profile/${student.email}`);
+        if (res.data && Object.keys(res.data).length > 0) setEnrichedProfile(res.data);
+      } catch { /* extended profile not yet created */ }
+      finally { setLoading(false); }
+    };
+    fetchProfile();
+  }, [student]);
+
+  const completionFields = enrichedProfile
+    ? [
+        enrichedProfile.name, enrichedProfile.phone, enrichedProfile.gender,
+        enrichedProfile.qualification, enrichedProfile.yearOfPassing || enrichedProfile.year, 
+        enrichedProfile.address, enrichedProfile.city, enrichedProfile.pincode,
+        enrichedProfile.aadharCardUrl, enrichedProfile.resumeUrl
+      ]
+    : [];
+  
+  const completion = completionFields.length
+    ? Math.round(completionFields.filter(f => f?.toString().trim()).length / completionFields.length * 100)
+    : 0;
+
+  const displayName = enrichedProfile?.name || student.name;
+  const avatarLetter = displayName?.charAt(0).toUpperCase() || "S";
+  const avatarColors = AVATAR_COLORS[student.id % AVATAR_COLORS.length];
+
+  return createPortal(
+    <div className="spm-overlay" onClick={(e) => e.target.classList.contains('spm-overlay') && onClose()}>
+      <div className="spm-modal">
+        <div className="spm-modal__header">
+          <div className="spm-modal__header-left">
+            <div className="spm-modal__header-icon"><FaUserGraduate /></div>
+            <div>
+              <h2 className="spm-modal__header-title">Student Profile</h2>
+              <p className="spm-modal__header-sub">Registration & background insights</p>
+            </div>
+          </div>
+          <button className="spm-close-btn" onClick={onClose}><FaTimes /></button>
+        </div>
+
+        <div className="spm-body">
+          <div className="spm-identity">
+            <div className="spm-identity__avatar-wrap">
+              {enrichedProfile?.profilePic ? (
+                <img src={enrichedProfile.profilePic} alt={displayName} className="spm-identity__avatar-img" />
+              ) : (
+                <div className="spm-identity__avatar-letter" style={{ background: avatarColors.bg, color: avatarColors.color }}>
+                  {avatarLetter}
+                </div>
+              )}
+              <span className="spm-identity__status-dot" />
+            </div>
+
+            <div className="spm-identity__info">
+              <h3 className="spm-identity__name">{displayName}</h3>
+              <p className="spm-identity__qual">{enrichedProfile?.qualification || "Registered Student"}</p>
+              <div className="spm-identity__badges">
+                <span className="spm-badge spm-badge--id"><FaIdBadge /> {student.studentId || student.portalId}</span>
+                <span className="spm-badge spm-badge--active"><FaCheckCircle /> Registered</span>
+              </div>
+            </div>
+
+            <div className="spm-strength">
+              <div className="spm-strength__label">
+                <span>Profile Strength</span>
+                <span className="spm-strength__pct">{completion}%</span>
+              </div>
+              <div className="spm-strength__bar">
+                <div className="spm-strength__fill" style={{ width: `${completion}%` }} />
+              </div>
+            </div>
+          </div>
+
+          <div className="spm-grid">
+            <div className="spm-section">
+              <h4 className="spm-section__title"><FaEnvelope className="spm-section__ico" /> Contact</h4>
+              <div className="spm-fields">
+                <div className="spm-field">
+                  <span className="spm-field__lbl">Email</span>
+                  <span className="spm-field__val">{student.email}</span>
+                </div>
+                <div className="spm-field">
+                  <span className="spm-field__lbl">Phone</span>
+                  <span className="spm-field__val">{student.phone || <em style={{color:'#94a3b8'}}>Not Set</em>}</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="spm-section">
+              <h4 className="spm-section__title"><FaUser className="spm-section__ico" /> Personal</h4>
+              <div className="spm-fields">
+                <div className="spm-field">
+                  <span className="spm-field__lbl">Gender</span>
+                  <span className="spm-field__val">{enrichedProfile?.gender || "—"}</span>
+                </div>
+                <div className="spm-field">
+                  <span className="spm-field__lbl">YOP</span>
+                  <span className="spm-field__val">{enrichedProfile?.yearOfPassing || enrichedProfile?.year || "—"}</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="spm-section">
+              <h4 className="spm-section__title"><FaGraduationCap className="spm-section__ico" /> Academic</h4>
+              <div className="spm-fields">
+                <div className="spm-field">
+                  <span className="spm-field__lbl">Agg. %</span>
+                  <span className="spm-field__val">{enrichedProfile?.aggregatePercentage || "—"}</span>
+                </div>
+                <div className="spm-field spm-field--full">
+                  <span className="spm-field__lbl" style={{marginBottom:'4px'}}>Skills</span>
+                  <div className="spm-skills-wrap">
+                    {enrichedProfile?.skills ? enrichedProfile.skills.split(',').map(s => <span key={s} className="spm-skill-tag">{s.trim()}</span>) : <span className="spm-field__val--empty">—</span>}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="spm-section">
+              <h4 className="spm-section__title"><FaMapMarkerAlt className="spm-section__ico" /> Location</h4>
+              <div className="spm-fields">
+                <div className="spm-field">
+                  <span className="spm-field__lbl">City</span>
+                  <span className="spm-field__val">{enrichedProfile?.city || "—"}</span>
+                </div>
+                <div className="spm-field">
+                  <span className="spm-field__lbl">Pincode</span>
+                  <span className="spm-field__val">{enrichedProfile?.pincode || "—"}</span>
+                </div>
+              </div>
+            </div>
+
+            {!loading && enrichedProfile?.bio && (
+              <div className="spm-section spm-section--full">
+                <h4 className="spm-section__title"><FaInfoCircle className="spm-section__ico" /> About Student</h4>
+                <p className="spm-bio">{enrichedProfile.bio}</p>
+              </div>
+            )}
+          </div>
+
+          {!loading && !enrichedProfile && (
+            <div className="spm-notice">
+              <span className="spm-notice__ico">ℹ️</span>
+              <p>This student has not yet completed their detailed profile information. Basic registration details are shown.</p>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>,
+    document.body
+  );
+}
 
 function ManageStudents() {
   const [students, setStudents] = useState([]);
@@ -45,6 +227,7 @@ function ManageStudents() {
   /* Editing States */
   const [editingStudent, setEditingStudent] = useState(null);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [profileStudent, setProfileStudent] = useState(null);
   
   /* UI Feedback */
   const [loading, setLoading] = useState(true);
@@ -218,6 +401,7 @@ function ManageStudents() {
             <tr>
               <th>Member Identity</th>
               <th>Contact Info</th>
+              <th>Member Since</th>
               <th>Course Enrollments</th>
               <th>Assigned Batches</th>
               <th>System Status</th>
@@ -249,7 +433,9 @@ function ManageStudents() {
                         {stu.name?.charAt(0).toUpperCase()}
                       </div>
                       <div className="stu-info">
-                        <span className="stu-name">{stu.name}</span>
+                        <button className="stu-name-link" onClick={() => setProfileStudent(stu)}>
+                          {stu.name}
+                        </button>
                         <span className="stu-id"><FaFingerprint size={10} /> {stu.studentId || stu.portalId || "TEMP-ID"}</span>
                       </div>
                     </div>
@@ -258,6 +444,16 @@ function ManageStudents() {
                     <div className="contact-cell">
                       <div className="contact-item"><FaEnvelope /> {stu.email}</div>
                       <div className="contact-item"><FaPhoneAlt /> {stu.phone || "---"}</div>
+                    </div>
+                  </td>
+                  <td>
+                    <div className="contact-cell">
+                       <span style={{fontSize:'13px', fontWeight:700, color:'#1e293b'}}>
+                         {stu.createdAt ? new Date(stu.createdAt).toLocaleDateString('en-GB', { day:'2-digit', month:'short', year:'numeric'}) : "---"}
+                       </span>
+                       <span style={{fontSize:'11px', color:'#64748b', fontWeight:600}}>
+                         <FaCalendarCheck size={10} /> Account Created
+                       </span>
                     </div>
                   </td>
                   <td>
@@ -390,10 +586,19 @@ function ManageStudents() {
                     <label><FaPhoneAlt /> Phone Number</label>
                     <input 
                       type="text" 
-                      placeholder="+91 XXXXX XXXXX"
+                      placeholder="Enter 10-digit number"
+                      maxLength="10"
                       value={editingStudent.phone || ""}
-                      onChange={(e) => setEditingStudent({...editingStudent, phone: e.target.value})}
+                      onChange={(e) => {
+                        const digitsOnly = e.target.value.replace(/\D/g, "");
+                        setEditingStudent({...editingStudent, phone: digitsOnly});
+                      }}
                     />
+                    {editingStudent.phone && editingStudent.phone.length < 10 && (
+                      <div className="val-error-msg">
+                        <FaExclamationCircle /> Min 10 digits required
+                      </div>
+                    )}
                   </div>
                 </div>
                 
@@ -420,13 +625,22 @@ function ManageStudents() {
               </div>
               <div className="modal-footer">
                 <button type="button" className="hub-link-btn" style={{padding: '12px 24px'}} onClick={() => setIsEditModalOpen(false)}>Discard</button>
-                <button type="submit" className="hub-primary-btn" style={{padding: '12px 36px'}} disabled={actionLoading}>
+                <button type="submit" className="hub-primary-btn" style={{padding: '12px 36px'}} 
+                  disabled={actionLoading || (editingStudent.phone && editingStudent.phone.length < 10)}>
                    {actionLoading ? "Syncing..." : "Apply Changes"}
                 </button>
               </div>
             </form>
           </div>
         </div>
+      )}
+
+      {/* STUDENT PROFILE POPUP */}
+      {profileStudent && (
+        <StudentProfileModal 
+          student={profileStudent} 
+          onClose={() => setProfileStudent(null)} 
+        />
       )}
     </div>
   );

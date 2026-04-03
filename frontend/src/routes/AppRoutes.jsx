@@ -126,6 +126,7 @@ export default function AppRoutes() {
         <Route path="certificates" element={<StudentCertificates />} />
         <Route path="profile"      element={<StudentProfile />} />
         <Route path="fees"         element={<StudentFees />} />
+        <Route path="notifications" element={<NotificationsPage />} />
         <Route path="leave"        element={<StudentLeaves />} />
         <Route path="counseling"   element={<StudentCounseling />} />
         {/* ── Career Hub Routes ── */}
@@ -153,6 +154,7 @@ export default function AppRoutes() {
         <Route path="timetable"       element={<TrainerTimetable />} />
         <Route path="performance"     element={<TrainerPerformance />} />
         <Route path="announcements"   element={<TrainerAnnouncements />} />
+        <Route path="notifications"   element={<NotificationsPage />} />
         <Route path="leave"           element={<TrainerLeaves />} />
       </Route>
 
@@ -242,6 +244,7 @@ export default function AppRoutes() {
         {/* Marketing Hub Placeholders */}
         <Route path="campaigns"    element={<div style={{padding:'20px'}}><h3>Campaigns</h3><p>Coming Soon</p></div>} />
         <Route path="vouchers"     element={<div style={{padding:'20px'}}><h3>Vouchers</h3><p>Coming Soon</p></div>} />
+        <Route path="notifications" element={<NotificationsPage />} />
         <Route path="leave"        element={<TrainerLeaves />} />
       </Route>
 
@@ -259,6 +262,7 @@ export default function AppRoutes() {
         <Route path="sessions"  element={<CounselorDashboard />} />
         <Route path="time-tracking" element={<UserTimeTracking />} />
         <Route path="messages"      element={<CounselorDashboard />} />
+        <Route path="notifications" element={<NotificationsPage />} />
         <Route path="leave"         element={<TrainerLeaves />} />
       </Route>
 

@@ -180,7 +180,12 @@ function StudentProfile() {
                   </div>
                   <div className="sp-input-group">
                     <label><FaWhatsapp /> WhatsApp Number</label>
-                    <input type="text" name="phone" value={student.phone} onChange={handleChange} placeholder="10-digit number" />
+                    <input type="text" name="phone" value={student.phone} onChange={handleChange} placeholder="10-digit number" maxLength="10" />
+                    {student.phone && student.phone.length < 10 && (
+                      <p style={{ color: "#ef4444", fontSize: "11px", fontWeight: "700", marginTop: "4px" }}>
+                        ⚠️ 10 digits required
+                      </p>
+                    )}
                   </div>
                   <div className="sp-input-group">
                     <label>Parent / Guardian Name</label>
@@ -188,7 +193,12 @@ function StudentProfile() {
                   </div>
                   <div className="sp-input-group">
                     <label>Parent Contact Number</label>
-                    <input type="text" name="parentPhone" value={student.parentPhone} onChange={handleChange} placeholder="10-digit parent number" />
+                    <input type="text" name="parentPhone" value={student.parentPhone} onChange={handleChange} placeholder="10-digit parent number" maxLength="10" />
+                    {student.parentPhone && student.parentPhone.length < 10 && (
+                      <p style={{ color: "#ef4444", fontSize: "11px", fontWeight: "700", marginTop: "4px" }}>
+                        ⚠️ 10 digits required
+                      </p>
+                    )}
                   </div>
                 </div>
               </div>
@@ -276,7 +286,11 @@ function StudentProfile() {
               </div>
               <div className="sp-footer-actions">
                 <button className="btn-back" onClick={() => setStep(1)}>← Previous</button>
-                <button className="btn-save" onClick={handleSave} disabled={saving}>
+                <button 
+                  className="btn-save" 
+                  onClick={handleSave} 
+                  disabled={saving || (student.phone && student.phone.length < 10) || (student.parentPhone && student.parentPhone.length < 10)}
+                >
                   {saving ? <div className="sp-btn-spinner" /> : "💾 Update & Sync Profile Hub"}
                 </button>
               </div>

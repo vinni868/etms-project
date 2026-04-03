@@ -50,6 +50,12 @@ public class NotificationController {
         return ResponseEntity.ok(Map.of("message", "All marked as read"));
     }
 
+    @DeleteMapping("/{id}")
+    public ResponseEntity<?> deleteNotification(@PathVariable Long id) {
+        notificationService.deleteNotification(id);
+        return ResponseEntity.ok(Map.of("message", "Notification deleted"));
+    }
+
     private String getRole(Authentication auth) {
         return auth.getAuthorities().stream()
                 .findFirst()

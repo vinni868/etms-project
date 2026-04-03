@@ -16,7 +16,11 @@ import {
   FaUserEdit,
   FaCircle,
   FaPlus,
-  FaUsers
+  FaUsers,
+  FaFingerprint,
+  FaCalendarCheck,
+  FaLayerGroup,
+  FaIdCard
 } from "react-icons/fa";
 import "./ManageTrainers.css";
 
@@ -73,7 +77,8 @@ function ManageTrainers() {
         name: editingTrainer.name,
         email: editingTrainer.email,
         phone: editingTrainer.phone,
-        password: editingTrainer.password || "" // Backend handles empty password
+        password: editingTrainer.password || "", // Backend handles empty password
+        portalId: editingTrainer.portalId || editingTrainer.studentId || ""
       };
       
       await api.put(`/admin/update-trainer/${editingTrainer.id}`, payload);
@@ -133,9 +138,7 @@ function ManageTrainers() {
           <p className="hub-subtitle">Oversee trainer profiles, batch assignments, and approval statuses.</p>
         </div>
         <div className="hub-actions">
-          <Link to="/admin/assign-trainer" className="hub-primary-btn">
-            <FaPlus /> Assign to Batch
-          </Link>
+           {/* Assign to Batch functionality removed as requested */}
         </div>
       </div>
 
@@ -202,47 +205,61 @@ function ManageTrainers() {
           <table className="hub-table">
             <thead>
               <tr>
-                <th>Trainer Info</th>
-                <th>Contact Details</th>
+                <th>Member Identity</th>
+                <th>Contact Info</th>
+                <th>Member Since</th>
                 <th>Assigned Batches</th>
-                <th>Status</th>
+                <th>System Status</th>
                 <th>Actions</th>
               </tr>
             </thead>
             <tbody>
               {pagedList.length > 0 ? pagedList.map((trainer) => (
                 <tr key={trainer.id}>
-                  <td data-label="Trainer Info">
+                  <td data-label="Member Identity">
                     <div className="tra-cell">
                       <div className="avatar-box">
                         {trainer.name?.charAt(0).toUpperCase()}
                       </div>
                       <div className="tra-info">
                         <span className="tra-name">{trainer.name}</span>
-                        <span className="tra-id">ID: {trainer.portalId || trainer.studentId || trainer.id}</span>
+                        <span className="tra-id"><FaFingerprint size={10} /> {trainer.portalId || trainer.studentId || trainer.id}</span>
                       </div>
                     </div>
                   </td>
-                  <td data-label="Contact Details">
+                  <td data-label="Contact Info">
                     <div className="contact-cell">
                       <div className="contact-item"><FaEnvelope /> {trainer.email}</div>
                       <div className="contact-item"><FaPhoneAlt /> {trainer.phone}</div>
+                    </div>
+                  </td>
+                  <td data-label="Member Since">
+                    <div className="contact-cell">
+                       <span style={{fontSize:'13px', fontWeight:700, color:'#1e293b'}}>
+                         {trainer.createdAt ? new Date(trainer.createdAt).toLocaleDateString('en-GB', { day:'2-digit', month:'short', year:'numeric'}) : "---"}
+                       </span>
+                       <span style={{fontSize:'11px', color:'#64748b', fontWeight:600}}>
+                         <FaCalendarCheck size={10} /> Account Created
+                       </span>
                     </div>
                   </td>
                   <td data-label="Assigned Batches">
                     <div className="batch-stack">
                       {getTrainerBatches(trainer.id).length > 0 ? (
                         getTrainerBatches(trainer.id).map(b => (
-                          <span key={b.id} className="batch-pill">{b.batchName}</span>
+                          <span key={b.id} className="batch-pill">
+                             <FaLayerGroup size={10} style={{marginRight: '6px', opacity: 0.6}} />
+                             {b.batchName}
+                          </span>
                         ))
                       ) : (
                         <span style={{ fontSize: '12px', color: '#94a3b8', fontStyle: 'italic' }}>No Batches Assigned</span>
                       )}
                     </div>
                   </td>
-                  <td data-label="Status">
+                  <td data-label="System Status">
                      <span className={`status-pill status-pill--${(typeof trainer.status === 'object' ? trainer.status.name : trainer.status || "PENDING").toLowerCase()}`}>
-                        <FaCircle /> {typeof trainer.status === 'object' ? trainer.status.name : trainer.status || "PENDING"}
+                        <FaCircle size={6} /> {typeof trainer.status === 'object' ? trainer.status.name : trainer.status || "PENDING"}
                      </span>
                   </td>
                   <td data-label="Actions">
@@ -257,7 +274,7 @@ function ManageTrainers() {
                 </tr>
               )) : (
                 <tr>
-                  <td colSpan="5" style={{ textAlign: 'center', padding: '60px', color: '#64748b' }}>
+                  <td colSpan="6" style={{ textAlign: 'center', padding: '60px', color: '#64748b' }}>
                     <FaUsers size={40} style={{ opacity: 0.2, marginBottom: '16px' }} />
                     <p>No trainers found matching your criteria.</p>
                   </td>
@@ -302,6 +319,15 @@ function ManageTrainers() {
             <form onSubmit={handleUpdateProfile}>
               <div className="modal-body">
                 <div className="m-field">
+                  <label><FaIdCard /> Portal / Trainer ID</label>
+                  <input 
+                    type="text" 
+                    value={editingTrainer.portalId || editingTrainer.studentId || ""} 
+                    onChange={(e) => setEditingTrainer({...editingTrainer, portalId: e.target.value, studentId: e.target.value})}
+                    required
+                  />
+                </div>
+                <div className="m-field">
                   <label>Full Name</label>
                   <input 
                     type="text" 
@@ -328,14 +354,24 @@ function ManageTrainers() {
                     required
                   />
                 </div>
-                <div className="m-field">
-                  <label>Change Password (Leave blank to keep current)</label>
-                  <input 
-                    type="password" 
-                    placeholder="Enter new password"
-                    value={editingTrainer.password || ""} 
-                    onChange={(e) => setEditingTrainer({...editingTrainer, password: e.target.value})}
-                  />
+                <div style={{
+                  marginTop: '10px',
+                  background: '#fefce8', 
+                  border: '1.5px dashed #facc15', 
+                  padding: '16px', 
+                  borderRadius: '12px', 
+                  fontSize: '13px', 
+                  color: '#854d0e', 
+                  fontWeight: 600, 
+                  display: 'flex', 
+                  gap: '12px', 
+                  alignItems: 'center',
+                  lineHeight: '1.5'
+                }}>
+                   <FaFingerprint size={18} style={{minWidth: '18px'}} />
+                   <span>
+                     <strong>Security Protocol:</strong> Direct password modification is restricted for security. Trainers manage their own passwords.
+                   </span>
                 </div>
               </div>
               <div className="modal-footer">

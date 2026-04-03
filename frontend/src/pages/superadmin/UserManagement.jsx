@@ -3,7 +3,7 @@ import { useSearchParams } from "react-router-dom";
 import api from "../../api/axiosConfig";
 import "./UserManagement.css";
 import "./SuperAdminCommon.css";
-import { FaUserPlus, FaSearch, FaFilter, FaTrafficLight, FaUserShield, FaUserTie, FaUserGraduate, FaUserTag, FaUsers, FaEye, FaEyeSlash } from "react-icons/fa";
+import { FaUserPlus, FaSearch, FaFilter, FaTrafficLight, FaUserShield, FaUserTie, FaUserGraduate, FaUserTag, FaUsers, FaEye, FaEyeSlash, FaUserMd } from "react-icons/fa";
 
 function UserManagement() {
   const [searchParams] = useSearchParams();
@@ -159,6 +159,7 @@ function UserManagement() {
       case "TRAINER": return <FaUserTie style={{color: '#16a34a'}} />;
       case "STUDENT": return <FaUserGraduate style={{color: '#2f59e0'}} />;
       case "MARKETER": return <FaUserTag style={{color: '#f97316'}} />;
+      case "COUNSELOR": return <FaUserMd style={{color: '#db2777'}} />;
       default: return <FaUserTag />;
     }
   };
@@ -233,6 +234,7 @@ function UserManagement() {
                   <option value="TRAINER">Trainers</option>
                   <option value="STUDENT">Students</option>
                   <option value="MARKETER">Marketers</option>
+                  <option value="COUNSELOR">Counselors</option>
                 </select>
               </div>
               <div className="um-filter-group">
@@ -402,6 +404,7 @@ function UserManagement() {
                     <option value="TRAINER">Trainer</option>
                     <option value="STUDENT">Student</option>
                     <option value="MARKETER">Marketer</option>
+                    <option value="COUNSELOR">Counselor</option>
                   </select>
                 </div>
               </div>

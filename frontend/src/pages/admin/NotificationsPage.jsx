@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { FaBell, FaCalendarTimes, FaUserPlus, FaInfoCircle, FaCheck, FaTrashAlt, FaFilter, FaSearch, FaHistory } from "react-icons/fa";
 import api from "../../api/axiosConfig";
 import "./NotificationsPage.css";
@@ -43,9 +44,13 @@ const NotificationsPage = () => {
         }
     };
 
-    const deleteNotification = (id) => {
-        // Implementation for deletion if backend supports it
-        setNotifications(notifications.filter(n => n.id !== id));
+    const deleteNotification = async (id) => {
+        try {
+            await api.delete(`/notifications/${id}`);
+            setNotifications(notifications.filter(n => n.id !== id));
+        } catch (err) {
+            console.error("Failed to delete notification:", err);
+        }
     };
 
     const getIcon = (type) => {
@@ -54,6 +59,30 @@ const NotificationsPage = () => {
             case "USER_CREATION": return <FaUserPlus className="np-icon us" />;
             case "QUERY": return <FaInfoCircle className="np-icon qu" />;
             default: return <FaInfoCircle className="np-icon sy" />;
+        }
+    };
+
+    const navigate = useNavigate();
+    const userRole = JSON.parse(localStorage.getItem("user") || "{}").role || "STUDENT";
+    const rolePath = userRole.toLowerCase().replace("_", "");
+
+    const getTargetLink = (n) => {
+        switch (n.type) {
+            case "LEAVE": return `/${rolePath}/leave`;
+            case "USER_CREATION": return (userRole === "ADMIN") ? "/admin/students" : "/superadmin/users";
+            case "QUERY": return `/${rolePath}/messages`;
+            case "ANNOUNCEMENT": return `/${rolePath}/announcements`;
+            default: return null;
+        }
+    };
+
+    const handleItemClick = (n) => {
+        const link = getTargetLink(n);
+        if (link) {
+            navigate(link);
+        }
+        if (!n.read) {
+            markAsRead(n.id);
         }
     };
 
@@ -72,8 +101,8 @@ const NotificationsPage = () => {
                     <div className="np-title-box">
                         <FaBell className="np-bell-main" />
                         <div>
-                            <h1>System Notifications</h1>
-                            <p>Manage and track all administrative alerts and student requests.</p>
+                            <h1>{userRole.replace("_", " ")} Notifications</h1>
+                            <p>Manage and track your personalized alerts and system updates.</p>
                         </div>
                     </div>
                 </div>
@@ -98,11 +127,11 @@ const NotificationsPage = () => {
                 </div>
                 <div className="np-stat-card success">
                     <span className="np-stat-val">{notifications.filter(n => n.type === 'USER_CREATION').length}</span>
-                    <span className="np-stat-lbl">New Enrollments</span>
+                    <span className="np-stat-lbl">Role Updates</span>
                 </div>
                 <div className="np-stat-card info">
                     <span className="np-stat-val">{notifications.filter(n => n.type === 'LEAVE').length}</span>
-                    <span className="np-stat-lbl">Leave Requests</span>
+                    <span className="np-stat-lbl">Lifecycle Events</span>
                 </div>
             </div>
 
@@ -111,8 +140,8 @@ const NotificationsPage = () => {
                     <div className="np-filters">
                         <button className={`np-filter-btn ${filter === 'ALL' ? 'active' : ''}`} onClick={() => setFilter("ALL")}>All</button>
                         <button className={`np-filter-btn ${filter === 'UNREAD' ? 'active' : ''}`} onClick={() => setFilter("UNREAD")}>Unread</button>
-                        <button className={`np-filter-btn ${filter === 'LEAVE' ? 'active' : ''}`} onClick={() => setFilter("LEAVE")}>Leaves</button>
-                        <button className={`np-filter-btn ${filter === 'USER_CREATION' ? 'active' : ''}`} onClick={() => setFilter("USER_CREATION")}>Enrollments</button>
+                        <button className={`np-filter-btn ${filter === 'LEAVE' ? 'active' : ''}`} onClick={() => setFilter("LEAVE")}>Events</button>
+                        <button className={`np-filter-btn ${filter === 'USER_CREATION' ? 'active' : ''}`} onClick={() => setFilter("USER_CREATION")}>System</button>
                     </div>
                     <div className="np-search-box">
                         <FaSearch className="np-search-ico" />
@@ -133,7 +162,11 @@ const NotificationsPage = () => {
                         </div>
                     ) : filteredNotifications.length > 0 ? (
                         filteredNotifications.map((n) => (
-                            <div key={n.id} className={`np-item ${!n.read ? 'unread' : ''}`}>
+                            <div 
+                                key={n.id} 
+                                className={`np-item ${!n.read ? 'unread' : ''} ${getTargetLink(n) ? 'clickable' : ''}`}
+                                onClick={() => handleItemClick(n)}
+                            >
                                 <div className="np-item-icon">{getIcon(n.type)}</div>
                                 <div className="np-item-body">
                                     <div className="np-item-top">
@@ -141,14 +174,15 @@ const NotificationsPage = () => {
                                         <span className="np-date">{new Date(n.createdAt).toLocaleString()}</span>
                                     </div>
                                     <p className="np-message">{n.message}</p>
+                                    {getTargetLink(n) && <span className="np-action-tip">Click to view details →</span>}
                                 </div>
                                 <div className="np-item-actions">
                                     {!n.read && (
-                                        <button className="np-action-btn read" onClick={() => markAsRead(n.id)} title="Mark as Read">
+                                        <button className="np-action-btn read" onClick={(e) => { e.stopPropagation(); markAsRead(n.id); }} title="Mark as Read">
                                             <FaCheck />
                                         </button>
                                     )}
-                                    <button className="np-action-btn delete" onClick={() => deleteNotification(n.id)} title="Delete">
+                                    <button className="np-action-btn delete" onClick={(e) => { e.stopPropagation(); deleteNotification(n.id); }} title="Delete">
                                         <FaTrashAlt />
                                     </button>
                                 </div>

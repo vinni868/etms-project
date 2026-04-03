@@ -432,7 +432,7 @@ export default function CreateUser() {
             <button
               type="submit"
               className={`cu-submit ${loading ? "loading" : ""}`}
-              disabled={loading}
+              disabled={loading || (formData.phone && formData.phone.length < 10)}
             >
               {loading ? (
                 <>

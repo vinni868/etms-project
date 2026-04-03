@@ -47,12 +47,16 @@ public class SuperAdminDashboardController {
         long totalStudents = userRepository.findByRoleRoleNameIn(java.util.List.of("STUDENT")).size();
         long totalTrainers = userRepository.findByRole_RoleName("TRAINER").size();
         long totalAdmins = userRepository.findByRoleRoleNameIn(java.util.List.of("ADMIN", "SUPERADMIN")).size();
+        long totalCounselors = userRepository.findByRole_RoleName("COUNSELOR").size();
+        long totalMarketers = userRepository.findByRole_RoleName("MARKETER").size();
         long totalCourses = courseRepository.count();
 
         stats.put("totalStudents", totalStudents);
         stats.put("activeStudents", totalStudents); // Mocking active for now
         stats.put("totalTrainers", totalTrainers);
         stats.put("totalAdmins", totalAdmins);
+        stats.put("totalCounselors", totalCounselors);
+        stats.put("totalMarketers", totalMarketers);
         stats.put("totalBatches", batchRepository.countByStatusNot("INACTIVE"));
         stats.put("activeBatches", batchRepository.countByStatus("ONGOING"));
         stats.put("totalCourses", totalCourses);
