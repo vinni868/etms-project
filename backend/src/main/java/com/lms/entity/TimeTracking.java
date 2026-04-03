@@ -41,6 +41,9 @@ public class TimeTracking {
     @Column(name = "distance_from_office")
     private Double distanceFromOffice;
 
+    @Column(name = "distance_out")
+    private Double distanceOut;
+
     @Column(name = "punch_method")
     private String punchMethod; // "QR_SCAN", "QUICK_PUNCH"
 

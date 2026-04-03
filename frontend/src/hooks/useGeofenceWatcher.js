@@ -67,7 +67,7 @@ export default function useGeofenceWatcher(isPunchedIn, onAutoCheckout, onLocati
       didCheckoutRef.current = true;
       // Trigger auto-checkout
       api
-        .post('/qr/auto-checkout', { reason: 'GEOFENCE_EXIT' })
+        .post('/qr/auto-checkout', { reason: 'GEOFENCE_EXIT', distance: dist.toFixed(1) })
         .then((res) => {
           if (res.data?.status === 'CHECKED_OUT') {
             // Show browser notification if supported

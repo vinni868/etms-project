@@ -27,7 +27,7 @@ export default function SuperAdminAttendanceReport() {
     }
   };
 
-  const formatTime = (dateStr) =>
+  const fmtTime = (dateStr) =>
     dateStr
       ? new Date(dateStr).toLocaleTimeString('en-US', {
           hour: '2-digit',
@@ -172,6 +172,7 @@ export default function SuperAdminAttendanceReport() {
                   <th>User / ID</th>
                   <th>Role</th>
                   <th>Date</th>
+                  <th>Distance (In)</th>
                   <th>Total Hours Today</th>
                   <th>Status</th>
                   <th>Action</th>
@@ -194,6 +195,9 @@ export default function SuperAdminAttendanceReport() {
                       </span>
                     </td>
                     <td>{fmtDate(report.date)}</td>
+                    <td style={{ fontSize: '0.85rem', color: '#64748b' }}>
+                        {report.distanceIn ? `${Math.round(report.distanceIn)}m` : '—'}
+                    </td>
                     <td style={{ fontWeight: 700, color: '#1e293b' }}>
                       {fmtDuration(report.totalMinutes)}
                     </td>
@@ -292,12 +296,12 @@ export default function SuperAdminAttendanceReport() {
                             {session.logoutTime && (
                                 <div style={{ 
                                     fontSize: '0.75rem', marginTop: '4px',
-                                    fontWeight: 600,
+                                    fontWeight: 700,
                                     color: (session.checkoutReason === 'System Closed' || session.checkoutReason === 'MIDNIGHT_AUTO_CLOSE' || session.checkoutReason === 'GEOFENCE_EXIT') ? '#ea580c' : '#10b981' 
                                 }}>
                                     Reason: {!session.checkoutReason ? 'Manual / Unknown' : 
-                                             session.checkoutReason === 'MIDNIGHT_AUTO_CLOSE' ? 'System Automatically Logout' :
-                                             session.checkoutReason === 'GEOFENCE_EXIT' ? 'Auto: Left Area' :
+                                             session.checkoutReason === 'MIDNIGHT_AUTO_CLOSE' ? 'System Cleanup: Midnight Auto-Logout (Violation: No manual punch-out)' :
+                                             session.checkoutReason === 'GEOFENCE_EXIT' ? `Auto Logout: User exited institute boundary (~${Math.round(session.distanceOut || 0)}m away)` :
                                              session.checkoutReason}
                                 </div>
                             )}

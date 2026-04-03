@@ -93,21 +93,43 @@ export default function StudentTimeTracking() {
       return;
     }
 
-    setActionLoading(true);
-    try {
-      if (isPunchedIn) {
-        await api.post('/qr/punch-out', { userId });
-        showToast('success', 'Session Synced! Punched out successfully.');
-      } else {
-        await api.post('/qr/punch-in', { userId });
-        showToast('success', 'Tracker Active! Attendance record started.');
-      }
-      await loadData();
-    } catch (err) {
-      showToast('error', err?.response?.data?.message || 'Server Exception. Try again later.');
-    } finally {
-      setActionLoading(false);
+    if (!navigator.geolocation) {
+      showToast('error', 'GPS Logic Error: Geolocation is not supported by your browser.');
+      return;
     }
+
+    setActionLoading(true);
+    
+    // Get location first
+    navigator.geolocation.getCurrentPosition(
+      async (pos) => {
+        try {
+          const body = { 
+            userId,
+            latitude: pos.coords.latitude,
+            longitude: pos.coords.longitude
+          };
+
+          if (isPunchedIn) {
+            await api.post('/qr/punch-out', body);
+            showToast('success', 'Session Synced! Punched out successfully.');
+          } else {
+            await api.post('/qr/punch-in', body);
+            showToast('success', 'Tracker Active! Attendance record started.');
+          }
+          await loadData();
+        } catch (err) {
+          showToast('error', err?.response?.data?.message || 'Server Exception. Try again later.');
+        } finally {
+          setActionLoading(false);
+        }
+      },
+      (err) => {
+        setActionLoading(false);
+        showToast('error', 'GPS access required for attendance tracking. Please enable location services.');
+      },
+      { enableHighAccuracy: true, timeout: 10000 }
+    );
   };
 
   const showToast = (type, msg) => {

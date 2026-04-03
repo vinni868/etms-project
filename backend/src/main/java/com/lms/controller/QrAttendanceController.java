@@ -133,8 +133,9 @@ public class QrAttendanceController {
             Authentication authentication) {
         User user = getUserFromAuth(authentication);
         String reason = (body != null && body.containsKey("reason")) ? body.get("reason") : "GEOFENCE_EXIT";
+        Double dist = (body != null && body.get("distance") != null) ? Double.parseDouble(body.get("distance")) : null;
         
-        return ResponseEntity.ok(qrService.autoCheckout(user.getId(), reason));
+        return ResponseEntity.ok(qrService.autoCheckout(user.getId(), reason, dist));
     }
 
     // ─── Helper ─────────────────────────────────────────────────────────────

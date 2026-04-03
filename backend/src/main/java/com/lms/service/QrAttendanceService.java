@@ -83,6 +83,7 @@ public class QrAttendanceService {
             dto.put("punchMethod",   t.getPunchMethod());
             dto.put("checkoutReason", t.getCheckoutReason());
             dto.put("distanceIn",    t.getDistanceFromOffice());
+            dto.put("distanceOut",   t.getDistanceOut());
             dto.put("sessionCount",  1); 
             logDtos.add(dto);
         }
@@ -143,6 +144,7 @@ public class QrAttendanceService {
             dto.put("punchMethod",   t.getPunchMethod());
             dto.put("checkoutReason", t.getCheckoutReason());
             dto.put("distanceIn",    t.getDistanceFromOffice());
+            dto.put("distanceOut",   t.getDistanceOut());
             dto.put("lat",           t.getLatitude());
             dto.put("lng",           t.getLongitude());
             
@@ -346,7 +348,7 @@ public class QrAttendanceService {
 
     // ─── Auto-Checkout (Geofence Exit or Manual Trigger) ───────────────────
     @Transactional
-    public Map<String, Object> autoCheckout(Long userId, String reason) {
+    public Map<String, Object> autoCheckout(Long userId, String reason, Double distance) {
         LocalDate today = LocalDate.now();
         LocalDateTime now = LocalDateTime.now();
 
@@ -358,6 +360,7 @@ public class QrAttendanceService {
         TimeTracking record = openSessions.get(0);
         record.setLogoutTime(now);
         record.setCheckoutReason(reason != null ? reason : "GEOFENCE_EXIT");
+        record.setDistanceOut(distance);
         long diffMinutes = java.time.Duration.between(record.getLoginTime(), now).toMinutes();
         record.setTotalMinutes((int) diffMinutes);
         trackingRepo.save(record);
@@ -371,7 +374,8 @@ public class QrAttendanceService {
             "reason",        reason,
             "logoutTime",    now.toString(),
             "totalMinutes",  (int) diffMinutes,
-            "duration",      duration
+            "duration",      duration,
+            "distanceOut",   distance != null ? distance : 0.0
         );
     }
 
