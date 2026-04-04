@@ -12,6 +12,9 @@ public class LmsApplication {
 		// Set default timezone to IST before Spring starts
 		java.util.TimeZone.setDefault(java.util.TimeZone.getTimeZone("Asia/Kolkata"));
 		
+		// Force IPv4 to prevent Render connection timeouts
+		System.setProperty("java.net.preferIPv4Stack", "true");
+		
 		io.github.cdimascio.dotenv.Dotenv dotenv = io.github.cdimascio.dotenv.Dotenv.configure().ignoreIfMissing().load();
 		dotenv.entries().forEach(entry -> System.setProperty(entry.getKey(), entry.getValue()));
 		
