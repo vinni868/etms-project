@@ -1,33 +1,34 @@
 package com.lms.service.impl;
 
 import com.lms.service.EmailService;
-import jakarta.mail.internet.MimeMessage;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.mail.javamail.MimeMessageHelper;
-import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Service;
+import java.io.OutputStream;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.nio.charset.StandardCharsets;
 
 @Service
 public class EmailServiceImpl implements EmailService {
 
-    @Autowired
-    private JavaMailSender mailSender;
+    @Value("${brevo.api.key}")
+    private String brevoApiKey;
 
-    @Value("${spring.mail.username}")
+    @Value("${spring.mail.username:vinayakavinni868@gmail.com}")
     private String fromEmail;
 
     @Override
     public void sendOtpEmail(String toEmail, String otp) {
-        System.out.println("DEBUG: [START] Using Strict SMTP Port 587 (STARTTLS)");
-        System.out.println("DEBUG: [AUTH] Sending FROM: " + fromEmail);
+        System.out.println("DEBUG: [START] Sending Firewall-Proof Email via BREVO API");
+        System.out.println("DEBUG: [API] Using HTTPS Port 443 (Firewall Bypass)");
+        
         try {
-            MimeMessage message = mailSender.createMimeMessage();
-            MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
-
-            helper.setFrom(fromEmail);
-            helper.setTo(toEmail);
-            helper.setSubject("Secure OTP for Password Reset - LMS");
+            URL url = new URL("https://api.brevo.com/v3/smtp/email");
+            HttpURLConnection conn = (HttpURLConnection) url.openConnection();
+            conn.setRequestMethod("POST");
+            conn.setRequestProperty("Content-Type", "application/json");
+            conn.setRequestProperty("api-key", brevoApiKey);
+            conn.setDoOutput(true);
 
             String htmlContent = 
                 "<div style='font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 10px;'>" +
@@ -42,21 +43,28 @@ public class EmailServiceImpl implements EmailService {
                 "  <p style='color: #7f8c8d; font-size: 12px; text-align: center;'>Best Regards,<br>LMS Technical Team</p>" +
                 "</div>";
 
-            helper.setText(htmlContent, true);
-            mailSender.send(message);
+            // Properly escaped JSON payload
+            String jsonInputString = String.format(
+                "{\"sender\":{\"name\":\"EtMS Support\",\"email\":\"%s\"},\"to\":[{\"email\":\"%s\"}],\"subject\":\"Secure OTP for Password Reset - LMS\",\"htmlContent\":\"%s\"}",
+                fromEmail, toEmail, htmlContent.replace("\"", "\\\"")
+            );
 
-            System.out.println("✅ HTML Email sent successfully to " + toEmail);
+            try(OutputStream os = conn.getOutputStream()) {
+                byte[] input = jsonInputString.getBytes(StandardCharsets.UTF_8);
+                os.write(input, 0, input.length);           
+            }
 
-        } catch (jakarta.mail.AuthenticationFailedException e) {
-            System.err.println("❌ SMTP AUTHENTICATION FAILED for " + toEmail + ": " + e.getMessage());
-            System.err.println("👉 Please check if your Gmail App Password is still valid.");
-            throw new RuntimeException("Email delivery failed: AUTHENTICATION ERROR");
+            int responseCode = conn.getResponseCode();
+            if (responseCode >= 200 && responseCode <= 299) {
+                System.out.println("✅ BREVO API SUCCESS: Email delivered to " + toEmail);
+            } else {
+                throw new RuntimeException("Brevo API failed with response code: " + responseCode);
+            }
+
         } catch (Exception e) {
-            System.err.println("❌ ERROR: Email delivery failed for: " + toEmail);
-            System.err.println("❌ SENDER: " + fromEmail);
-            System.err.println("❌ CAUSE: " + e.getMessage());
-            e.printStackTrace(); // Print full stack trace for cloud deployment debugging
-            throw new RuntimeException("Email delivery failed: " + e.getMessage());
+            System.err.println("❌ CRITICAL BREVO FAILURE: " + e.getMessage());
+            e.printStackTrace();
+            throw new RuntimeException("Firewall-Proof email delivery failed: " + e.getMessage());
         }
     }
 }
