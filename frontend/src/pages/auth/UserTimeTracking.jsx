@@ -214,25 +214,64 @@ export default function UserTimeTracking() {
   /* ─── Geofence watcher (runs while page is open) ────────────────────── */
   useGeofenceWatcher(isPunchedIn, handleAutoCheckout);
 
+  /* ─── Smart GPS Acquisition with Fallback ───────────────────────────── */
+  const getSmartLocation = () => {
+    return new Promise((resolve, reject) => {
+      const options = { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 };
+      navigator.geolocation.getCurrentPosition(
+        (pos) => resolve(pos),
+        (err) => {
+          if (err.code === 3 || err.code === 2) {
+            console.warn("High accuracy GPS failed, trying fallback...");
+            navigator.geolocation.getCurrentPosition(
+              (pos) => resolve(pos),
+              (err2) => reject(err2),
+              { enableHighAccuracy: false, timeout: 10000 }
+            );
+          } else {
+            reject(err);
+          }
+        },
+        options
+      );
+    });
+  };
+
   /* ─── Direct punch (fallback) ───────────────────────────────────────── */
   const handleDirectPunch = async () => {
     setActionLoading(true);
     try {
       let coords = { latitude: null, longitude: null };
-      if (navigator.geolocation) {
-        try {
-          const pos = await new Promise((res, rej) => {
-            navigator.geolocation.getCurrentPosition(res, rej, { enableHighAccuracy: true, timeout: 5000 });
-          });
-          coords = { latitude: pos.coords.latitude, longitude: pos.coords.longitude };
-        } catch (e) {
-          console.warn("Location fetch failed for direct punch:", e);
-          const msg = e.code === 1 ? 'Location permission denied in browser.' : 'Unable to acquire GPS location. Please check your signal.';
-          showToast('error', `🛑 ${msg}`);
-          setActionLoading(false);
-          return;
-        }
+      if (!navigator.geolocation) {
+        showToast('error', "🛑 Geolocation is not supported by your browser.");
+        setActionLoading(false);
+        return;
       }
+
+      try {
+        const pos = await getSmartLocation();
+        coords = { latitude: pos.coords.latitude, longitude: pos.coords.longitude };
+      } catch (e) {
+        console.warn("Location fetch failed for direct punch:", e);
+        let msg = "";
+        if (e.code === 1) msg = "Location permission denied. Please allow location in your settings.";
+        else if (e.code === 3) msg = "Location request timed out. Please step near a window.";
+        else msg = "Unable to acquire GPS location. Please check your signal.";
+        
+        showToast('error', (
+            <span>
+                🛑 {msg} 
+                <button onClick={handleDirectPunch} style={{ 
+                    background: 'none', border: 'none', color: '#dc2626', 
+                    textDecoration: 'underline', cursor: 'pointer', marginLeft: '8px',
+                    fontWeight: 'bold'
+                }}>Try Again</button>
+            </span>
+        ));
+        setActionLoading(false);
+        return;
+      }
+
       const payload = { ...coords, userId };
       if (isPunchedIn) {
         await api.post('/qr/punch-out', payload);

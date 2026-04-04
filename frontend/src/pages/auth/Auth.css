@@ -81,26 +81,32 @@
 
 .input-icon {
   position: absolute;
-  left: 14px;
+  left: 16px;
   top: 50%;
   transform: translateY(-50%);
   color: #94a3b8;
-  font-size: 14px;
+  font-size: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.2s;
+  pointer-events: none;
 }
 
-.input-with-icon input {
+.auth-input-clean {
   width: 100%;
-  padding: 12px 14px 12px 40px;
-  border: 1px solid var(--auth-border);
-  border-radius: 8px;
+  padding: 13px 16px;
+  border: 2px solid var(--auth-border);
+  border-radius: 10px;
   font-size: 15px;
   background-color: var(--auth-bg);
   color: var(--auth-text-main);
   outline: none;
-  transition: all 0.2s;
+  transition: all 0.2s ease-in-out;
+  box-sizing: border-box;
 }
 
-.input-with-icon input:focus {
+.auth-input-clean:focus {
   background-color: #ffffff;
   border-color: var(--auth-brand);
   box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1);
@@ -241,10 +247,28 @@
     cursor: not-allowed;
 }
 
-.mt-4 { margin-top: 1rem; }
-.mr-1 { margin-right: 0.25rem; }
-.inline { display: inline; }
-.flex { display: flex; }
-.items-center { align-items: center; }
-.justify-center { justify-content: center; }
-.gap-2 { gap: 0.5rem; }
+.success-card {
+    text-align: center;
+}
+
+.success-icon-bg {
+    background-color: #f0fdf4 !important;
+}
+
+.success-icon {
+    font-size: 24px;
+    color: #16a34a;
+}
+
+.success-title {
+    color: #16a34a !important;
+}
+
+.success-message {
+    color: var(--auth-text-sub);
+    line-height: 1.5;
+}
+
+.no-underline { text-decoration: none; }
+.block { display: block; }
+.text-center { text-align: center; }

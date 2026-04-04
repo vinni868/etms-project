@@ -13,6 +13,8 @@ import DashboardLayout from "../layouts/DashboardLayout";
 
 /* ================= SHARED MODULES ================= */
 import UserTimeTracking from "../pages/auth/UserTimeTracking";
+import AppReviewPage from "../pages/shared/AppReviewPage";
+import AdminAppReviews from "../pages/admin/AdminAppReviews";
 
 /* ================= COURSES ================= */
 import JavaCoursePage from "../pages/courses/JavaCoursePage";
@@ -129,6 +131,7 @@ export default function AppRoutes() {
         <Route path="notifications" element={<NotificationsPage />} />
         <Route path="leave"        element={<StudentLeaves />} />
         <Route path="counseling"   element={<StudentCounseling />} />
+        <Route path="app-review"   element={<AppReviewPage />} />
         {/* ── Career Hub Routes ── */}
 
 
@@ -156,6 +159,7 @@ export default function AppRoutes() {
         <Route path="announcements"   element={<TrainerAnnouncements />} />
         <Route path="notifications"   element={<NotificationsPage />} />
         <Route path="leave"           element={<TrainerLeaves />} />
+        <Route path="app-review"      element={<AppReviewPage />} />
       </Route>
 
       {/* ================= SUPER ADMIN ================= */}
@@ -182,6 +186,8 @@ export default function AppRoutes() {
         <Route path="announcements"     element={<AdminAnnouncements />} />
         <Route path="leave"             element={<AdminLeaves />} />
         <Route path="notifications"     element={<NotificationsPage />} />
+        <Route path="app-review"        element={<AppReviewPage />} />
+        <Route path="reviews"           element={<AdminAppReviews />} />
       </Route>
 
       {/* ================= ADMIN ================= */}
@@ -214,6 +220,8 @@ export default function AppRoutes() {
         <Route path="leave"          element={<AdminLeaves />} />
         <Route path="my-leave"       element={<TrainerLeaves />} />
         <Route path="notifications"  element={<NotificationsPage />} />
+        <Route path="app-review"     element={<AppReviewPage />} />
+        <Route path="reviews"        element={<AdminAppReviews />} />
         
         {/* Career Hub */}
         <Route path="post-job"           element={<PostJob />} />
@@ -246,6 +254,7 @@ export default function AppRoutes() {
         <Route path="vouchers"     element={<div style={{padding:'20px'}}><h3>Vouchers</h3><p>Coming Soon</p></div>} />
         <Route path="notifications" element={<NotificationsPage />} />
         <Route path="leave"        element={<TrainerLeaves />} />
+        <Route path="app-review"   element={<AppReviewPage />} />
       </Route>
 
 
@@ -264,6 +273,7 @@ export default function AppRoutes() {
         <Route path="messages"      element={<CounselorDashboard />} />
         <Route path="notifications" element={<NotificationsPage />} />
         <Route path="leave"         element={<TrainerLeaves />} />
+        <Route path="app-review"    element={<AppReviewPage />} />
       </Route>
 
       {/* ================= FALLBACK ================= */}

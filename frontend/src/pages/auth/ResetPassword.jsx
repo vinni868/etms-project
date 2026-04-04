@@ -45,12 +45,19 @@ const ResetPassword = () => {
   if (success) {
     return (
       <div className="auth-container">
-        <div className="auth-card" style={{ textAlign: 'center' }}>
-          <div className="auth-icon-circle" style={{ background: '#f0fdf4' }}>
-             <FaCheckCircle style={{ fontSize: '24px', color: '#16a34a' }} />
+        <div className="auth-card success-card">
+          <div className="auth-header">
+            <div className="auth-icon-circle success-icon-bg">
+               <FaCheckCircle className="success-icon" />
+            </div>
+            <h1 className="success-title">Success!</h1>
+            <p className="success-message">Your password has been reset successfully. <br/>Redirecting to login...</p>
           </div>
-          <h1 style={{ color: '#16a34a' }}>Success!</h1>
-          <p>Your password has been reset successfully. <br/>Redirecting to login...</p>
+          <div className="auth-footer">
+            <Link to="/login" className="auth-btn block text-center no-underline">
+              Go to Login
+            </Link>
+          </div>
         </div>
       </div>
     );
@@ -70,35 +77,31 @@ const ResetPassword = () => {
         <form onSubmit={handleSubmit} className="auth-form">
           <div className="form-group">
             <label htmlFor="newPassword">New Password</label>
-            <div className="input-with-icon">
-              <FaLock className="input-icon" />
-              <input
-                id="newPassword"
-                type="password"
-                placeholder="••••••••"
-                value={newPassword}
-                onChange={(e) => setNewPassword(e.target.value)}
-                required
-                disabled={loading}
-                autoFocus
-              />
-            </div>
+            <input
+              id="newPassword"
+              type="password"
+              className="auth-input-clean"
+              placeholder="••••••••"
+              value={newPassword}
+              onChange={(e) => setNewPassword(e.target.value)}
+              required
+              disabled={loading}
+              autoFocus
+            />
           </div>
 
           <div className="form-group">
             <label htmlFor="confirmPassword">Confirm Password</label>
-            <div className="input-with-icon">
-               <FaLock className="input-icon" />
-              <input
-                id="confirmPassword"
-                type="password"
-                placeholder="••••••••"
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                required
-                disabled={loading}
-              />
-            </div>
+            <input
+              id="confirmPassword"
+              type="password"
+              className="auth-input-clean"
+              placeholder="••••••••"
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              required
+              disabled={loading}
+            />
           </div>
 
           {error && <div className="auth-error">{error}</div>}

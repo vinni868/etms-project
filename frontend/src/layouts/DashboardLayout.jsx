@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { Outlet, useNavigate, NavLink, Link } from "react-router-dom";
+import { Outlet, useNavigate, NavLink, Link, useLocation } from "react-router-dom";
 import Footer from "../components/Footer";
 import { 
   FaPhoneAlt, FaEnvelope, FaFacebookF, FaTwitter, 
@@ -44,10 +44,17 @@ const MegaLink = ({ to, icon, name, desc, onClick }) => (
 
 function DashboardLayout() {
   const navigate = useNavigate();
+  const location = useLocation();
   const user = JSON.parse(localStorage.getItem("user"));
   const [activeDropdown, setActiveDropdown] = useState(null);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const dropdownRef = useRef(null);
+
+  // FIXED: Automatically close dropdown when route changes
+  useEffect(() => {
+    setActiveDropdown(null);
+    setIsMobileMenuOpen(false);
+  }, [location.pathname]);
 
   const toggleDropdown = (name) => {
     setActiveDropdown(activeDropdown === name ? null : name);
@@ -154,6 +161,7 @@ function DashboardLayout() {
                 </>
               )}
               <NavLink to={`/${rolePath}/profile`} className="drawer-item" onClick={() => { closeMobileMenu(); setActiveDropdown(null); }}>👤 Profile</NavLink>
+              <NavLink to={`/${rolePath}/app-review`} className="drawer-item" onClick={() => { closeMobileMenu(); setActiveDropdown(null); }}>⭐ App Review</NavLink>
 
               <div className="drawer-divider" />
               <button className="drawer-item drawer-logout" onClick={handleLogout}>🚪 Logout</button>
@@ -197,6 +205,7 @@ function DashboardLayout() {
                         <div className="mega-group-title">Analytics</div>
                         <MegaLink to="/superadmin/performance" icon={<FaChartLine/>} name="Performance Metrics" desc="System-wide success tracking" onClick={() => { closeMobileMenu(); setActiveDropdown(null); }} />
                         <MegaLink to="/superadmin/finance" icon="💰" name="Finance Ledger" desc="Revenue and fee collection audits" onClick={() => { closeMobileMenu(); setActiveDropdown(null); }} />
+                        <MegaLink to="/superadmin/reviews" icon="⭐" name="Platform Reviews" desc="Monitor user feedback" onClick={() => { closeMobileMenu(); setActiveDropdown(null); }} />
                       </div>
                       <div className="mega-group">
                         <div className="mega-group-title">Operations</div>
@@ -304,6 +313,7 @@ function DashboardLayout() {
                         <div className="mega-group-title">Comms</div>
                         <MegaLink to="/admin/announcements" icon="📢" name="Bulletins" desc="Publish general announcements" onClick={() => { closeMobileMenu(); setActiveDropdown(null); }} />
                         <MegaLink to="/admin/notifications" icon={<FaBullhorn/>} name="Notifications Hub" desc="Manage administrative alerts" onClick={() => { closeMobileMenu(); setActiveDropdown(null); }} />
+                        <MegaLink to="/admin/reviews" icon="⭐" name="User Reviews" desc="Read platform feedback" onClick={() => { closeMobileMenu(); setActiveDropdown(null); }} />
                       </div>
                     </div>
                   </div>
@@ -433,13 +443,17 @@ function DashboardLayout() {
                 <NavLink to={`/${rolePath}/performance`} className="nav-menu-link">📈 Performance</NavLink>
               )}
               <NavLink to={`/${rolePath}/profile`} className="nav-menu-link">👤 Profile</NavLink>
+              <NavLink to={`/${rolePath}/app-review`} className="nav-menu-link" style={{color: '#fbbf24', fontWeight: 'bold'}}>⭐ App Review</NavLink>
             </nav>
 
             <div className="user-actions-right">
               {/* 📱 MOBILE BELL — Hidden on desktop */}
               <button className="mobile-bell-btn" style={{display:'none'}}>🔔</button>
 
-              <NotificationDropdown />
+              <NotificationDropdown 
+                isOpen={activeDropdown === 'notifications'} 
+                onToggle={() => toggleDropdown('notifications')} 
+              />
               
               <div className="nav-user-info">
                 <div className="nav-user-text">

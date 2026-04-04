@@ -4,10 +4,9 @@ import { FaBell, FaUserPlus, FaCalendarTimes, FaCheck, FaInfoCircle, FaClock } f
 import api from "../api/axiosConfig";
 import "./NotificationDropdown.css";
 
-const NotificationDropdown = () => {
+const NotificationDropdown = ({ isOpen, onToggle }) => {
   const [notifications, setNotifications] = useState([]);
   const [unreadCount, setUnreadCount] = useState(0);
-  const [isOpen, setIsOpen] = useState(false);
   const dropdownRef = useRef(null);
   const navigate = useNavigate();
 
@@ -75,7 +74,7 @@ const NotificationDropdown = () => {
 
   return (
     <div className="notification-bell-container" ref={dropdownRef}>
-      <button className="nav-bell-btn" onClick={() => setIsOpen(!isOpen)}>
+      <button className="nav-bell-btn" onClick={onToggle}>
         <FaBell />
         {unreadCount > 0 && <span className="notif-badge-pulsing">{unreadCount}</span>}
       </button>
@@ -90,7 +89,7 @@ const NotificationDropdown = () => {
           <div className="notif-drop-body">
             {notifications.length > 0 ? (
               notifications.map((n) => (
-                <div key={n.id} className="notif-row-item" onClick={() => { navigate(notificationsPath); setIsOpen(false); }}>
+                <div key={n.id} className="notif-row-item" onClick={() => { onToggle(); navigate(notificationsPath); }}>
                   <div className="notif-icon-box">{getIcon(n.type)}</div>
                   <div className="notif-content">
                     <p className="notif-msg">{n.message}</p>
@@ -110,7 +109,7 @@ const NotificationDropdown = () => {
           </div>
 
           <div className="notif-drop-footer">
-            <Link to={notificationsPath} onClick={() => setIsOpen(false)}>
+            <Link to={notificationsPath} onClick={onToggle}>
               View All Notifications →
             </Link>
           </div>

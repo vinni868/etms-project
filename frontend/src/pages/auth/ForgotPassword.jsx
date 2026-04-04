@@ -49,19 +49,17 @@ const ForgotPassword = () => {
         <form onSubmit={handleSubmit} className="auth-form">
           <div className="form-group">
             <label htmlFor="email">Registered Email Address</label>
-            <div className="input-with-icon">
-              <FaEnvelope className="input-icon" />
-              <input
-                id="email"
-                type="email"
-                placeholder="your.name@example.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-                disabled={loading}
-                autoFocus
-              />
-            </div>
+            <input
+              id="email"
+              type="email"
+              className="auth-input-clean"
+              placeholder="your.name@example.com"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+              disabled={loading}
+              autoFocus
+            />
           </div>
 
           {error && <div className="auth-error">{error}</div>}

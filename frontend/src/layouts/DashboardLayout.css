@@ -221,36 +221,36 @@
    MEGA MENU DROPDOWN
    ════════════════════════════════ */
 .nav-dropdown {
-  position: relative;
+  position: static; /* FIXED: Mega Menu will now align to the .nav-container-inner instead of the button */
 }
 
-/* FIXED: both hover AND .open class trigger the menu */
 /* MEGA MENU — CLICK CONTROLLED ONLY */
 .mega-menu.open {
   opacity: 1;
   visibility: visible;
-  transform: translate(-50%, 0);
+  transform: translateY(0);
   pointer-events: auto;
 }
 
 .mega-menu {
   position: absolute;
-  top: calc(100% + 15px);
-  left: 50%;
-  transform: translate(-50%, 20px);
+  top: 70px;
+  left: 16px; 
+  right: 16px;
   background: #fff;
   border: 1px solid rgba(0,0,0,0.06);
-  border-radius: 24px;
-  padding: 40px 60px;
-  display: flex; /* Switched to flex for dynamic column support */
-  gap: 60px; /* Generous gap between columns */
-  width: max-content;
-  box-shadow: 0 35px 80px rgba(0,0,0,0.15);
+  border-radius: 0 0 24px 24px;
+  padding: 32px 60px;
+  display: flex;
+  gap: 100px;
+  justify-content: center;
+  box-shadow: 0 25px 50px rgba(0,0,0,0.12);
   z-index: 2000;
   opacity: 0;
   visibility: hidden;
   pointer-events: none;
-  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  transform: translateY(10px);
 }
 
 /* ── MEGA GROUP (column) ── */

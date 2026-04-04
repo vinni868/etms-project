@@ -30,7 +30,7 @@
 * { box-sizing: border-box; }
 
 .sd-page {
-  padding: 28px 36px;
+  padding: 16px 36px;
   min-height: 100vh;
   background: var(--bg);
   font-family: 'Outfit', -apple-system, sans-serif;
@@ -44,11 +44,11 @@
   position: relative;
   background: linear-gradient(135deg, #0f2156 0%, #1e3a8a 50%, #1d4ed8 100%);
   border-radius: 18px;
-  padding: 28px 32px;
+  padding: 24px 32px;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 24px;
+  margin-bottom: 16px;
   overflow: visible;
   box-shadow: 0 8px 32px rgba(30,58,138,0.35);
 }

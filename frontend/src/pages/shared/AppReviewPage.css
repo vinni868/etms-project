@@ -1,0 +1,293 @@
+/* AppReviewPage.css */
+
+.review-page-wrapper {
+  padding: 30px 40px;
+  font-family: 'Outfit', sans-serif;
+  animation: fadeIn 0.4s ease-out;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.review-header {
+  margin-bottom: 30px;
+}
+
+.review-header h1 {
+  font-size: 28px;
+  font-weight: 800;
+  color: #0f172a;
+  margin-bottom: 6px;
+}
+
+.review-header p {
+  font-size: 14px;
+  color: #64748b;
+  font-weight: 500;
+}
+
+.review-content-grid {
+  display: grid;
+  grid-template-columns: 350px 1fr;
+  gap: 24px;
+}
+
+/* ── Ghost Identity Card ── */
+.review-identity-card {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  height: fit-content;
+}
+
+.identity-header {
+  font-size: 14px;
+  font-weight: 800;
+  color: #334155;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 20px;
+  border-bottom: 2px solid #e2e8f0;
+  padding-bottom: 10px;
+}
+
+.identity-field {
+  margin-bottom: 18px;
+}
+
+.identity-field label {
+  display: block;
+  font-size: 11px;
+  font-weight: 700;
+  color: #94a3b8;
+  text-transform: uppercase;
+  margin-bottom: 4px;
+}
+
+.identity-value {
+  font-size: 15px;
+  font-weight: 600;
+  color: #1e293b;
+  background: #ffffff;
+  padding: 10px 14px;
+  border-radius: 8px;
+  border: 1px dashed #cbd5e1;
+  color: #64748b;
+  cursor: not-allowed;
+}
+
+.identity-footer {
+  margin-top: auto;
+  font-size: 11px;
+  color: #94a3b8;
+  line-height: 1.5;
+  font-style: italic;
+  padding-top: 15px;
+}
+
+/* ── Interactive Review Card ── */
+.review-interactive-card {
+  background: #ffffff;
+  border-radius: 16px;
+  padding: 32px;
+  box-shadow: 0 10px 40px rgba(15, 23, 42, 0.06);
+  border: 1px solid rgba(0,0,0,0.04);
+}
+
+.section-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 15px;
+  font-weight: 700;
+  color: #0f172a;
+  margin-bottom: 15px;
+}
+
+.stars-container {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+.rating-star {
+  color: #e2e8f0;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.rating-star:hover {
+  transform: scale(1.15);
+}
+
+.rating-star.active {
+  color: #fbbf24;
+  filter: drop-shadow(0 4px 6px rgba(251, 191, 36, 0.3));
+}
+
+.rating-text {
+  height: 24px;
+  font-size: 14px;
+  font-weight: 600;
+  margin-bottom: 24px;
+}
+
+.rating-desc.superb { color: #10b981; }
+.rating-desc.good { color: #3b82f6; }
+.rating-desc.average { color: #f59e0b; }
+.rating-desc.poor { color: #f97316; }
+.rating-desc.terrible { color: #ef4444; }
+
+.fade-in {
+  animation: fadeIn 0.4s ease-out;
+}
+
+.feedback-textarea {
+  width: 100%;
+  padding: 16px;
+  border: 2px solid #e2e8f0;
+  border-radius: 12px;
+  font-family: inherit;
+  font-size: 14px;
+  color: #1e293b;
+  resize: vertical;
+  min-height: 120px;
+  transition: border-color 0.2s;
+  background: #f8fafc;
+}
+
+.feedback-textarea:focus {
+  outline: none;
+  border-color: #2563eb;
+  background: #ffffff;
+  box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1);
+}
+
+.review-submit-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: 100%;
+  padding: 16px;
+  margin-top: 24px;
+  background: linear-gradient(135deg, #1e3a8a, #2563eb);
+  color: white;
+  border: none;
+  border-radius: 12px;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s;
+  box-shadow: 0 8px 20px rgba(37, 99, 235, 0.25);
+}
+
+.review-submit-btn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 25px rgba(37, 99, 235, 0.35);
+}
+
+.review-submit-btn.disabled {
+  background: #cbd5e1;
+  box-shadow: none;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.inline-icon {
+  font-size: 18px;
+}
+.text-green-500 { color: #22c55e; }
+.text-amber-500 { color: #f59e0b; }
+
+.review-error-msg {
+  color: #dc2626;
+  background: #fef2f2;
+  padding: 12px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  margin-top: 15px;
+  border: 1px solid #fecaca;
+}
+
+/* ── Success State ── */
+.review-success-card {
+  background: #ffffff;
+  border-radius: 20px;
+  padding: 60px 40px;
+  text-align: center;
+  box-shadow: 0 20px 60px rgba(16, 185, 129, 0.1);
+  border: 1px solid #dcfce7;
+  max-width: 600px;
+  margin: 40px auto;
+}
+
+.success-icon-wrapper {
+  width: 80px;
+  height: 80px;
+  background: #ecfdf5;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 20px;
+}
+
+.success-emoji {
+  font-size: 40px;
+  color: #10b981;
+}
+
+.review-success-card h2 {
+  font-size: 28px;
+  font-weight: 800;
+  color: #064e3b;
+  margin-bottom: 12px;
+}
+
+.review-btn-primary {
+  background: #10b981;
+  color: white;
+  padding: 12px 24px;
+  border: none;
+  border-radius: 8px;
+  font-weight: 700;
+  cursor: pointer;
+  margin-top: 20px;
+  transition: opacity 0.2s;
+}
+
+.review-btn-primary:hover {
+  opacity: 0.9;
+}
+
+/* ── Loader ── */
+.loader-spin {
+  width: 20px;
+  height: 20px;
+  border: 3px solid rgba(255,255,255,0.3);
+  border-radius: 50%;
+  border-top-color: #fff;
+  animation: spin 1s ease-in-out infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+@media (max-width: 800px) {
+  .review-content-grid {
+    grid-template-columns: 1fr;
+  }
+}
