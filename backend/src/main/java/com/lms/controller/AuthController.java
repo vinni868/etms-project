@@ -240,7 +240,14 @@ public class AuthController {
         String otp = String.valueOf((int)((Math.random() * 900000) + 100000));
         signupOtpCache.put(email, new SignupOtpData(otp, java.time.LocalDateTime.now().plusMinutes(10)));
 
-        emailService.sendOtpEmail(email, otp);
+        try {
+            emailService.sendOtpEmail(email, otp);
+        } catch (Exception e) {
+            System.err.println("SMTP ERROR during signup for " + email + ": " + e.getMessage());
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body(Map.of("message", "Email delivery failed. Please check your Gmail address or try again later."));
+        }
+
         System.out.println("DEBUG SIGNUP OTP for " + email + ": " + otp);
 
         return ResponseEntity.ok(Map.of("message", "OTP sent successfully to " + email));

@@ -107,15 +107,65 @@ function DashboardLayout() {
             </div>
           </Link>
 
-          <button className="mobile-menu-toggle" onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}>
-            {isMobileMenuOpen ? <FaTimes /> : <FaBars />}
+          <button className="hamburger-btn" style={{display:'none'}} onClick={() => setIsMobileMenuOpen(true)}>
+            <span /><span /><span />
           </button>
 
-          <div className={`nav-right-collapse ${isMobileMenuOpen ? 'open' : ''}`}>
-            <nav className="header-nav-menu">
-              <NavLink to={`/${rolePath}/dashboard`} className="nav-menu-link" onClick={closeMobileMenu}>📊 Dashboard</NavLink>
+          {/* 📱 MOBILE SIDE DRAWER (Hidden on Desktop by default) */}
+          <div className={`mobile-drawer ${isMobileMenuOpen ? 'open' : ''}`}>
+            <div className="drawer-header">
+              <div className="drawer-user">
+                <div className="avatar-circle">{avatarLetter}</div>
+                <div className="user-info-text">
+                  <div className="user-name">{user?.name || "User"}</div>
+                  <div className="user-id">{user?.studentId || user?.portalId || "ID: -"}</div>
+                </div>
+              </div>
+              <button className="drawer-close-x" onClick={closeMobileMenu}>✕</button>
+            </div>
 
-              {/* 👑 SUPER ADMIN — STRATEGIC OVERHAUL */}
+            <div className="drawer-scroll-area">
+              <p className="drawer-section-label">Academic Life</p>
+              <NavLink to={`/${rolePath}/dashboard`} className="drawer-item" onClick={closeMobileMenu}>🏠 Dashboard</NavLink>
+              {user?.role === "STUDENT" && (
+                <>
+                  <NavLink to="/student/courses" className="drawer-item" onClick={closeMobileMenu}>📚 Knowledge Base</NavLink>
+                  <NavLink to="/student/timetable" className="drawer-item" onClick={closeMobileMenu}>📅 Calendar</NavLink>
+                  <NavLink to="/student/announcements" className="drawer-item" onClick={closeMobileMenu}>📢 Bulletins</NavLink>
+                </>
+              )}
+              {/* Other role logic follows this 1-column pattern for mobile simplicity */}
+
+              <p className="drawer-section-label">Operations</p>
+              {user?.role === "STUDENT" && (
+                <>
+                  <NavLink to="/student/time-tracking" className="drawer-item" onClick={closeMobileMenu}>✅ Punch Portal</NavLink>
+                  <NavLink to="/student/attendance" className="drawer-item" onClick={closeMobileMenu}>📋 Audit Log</NavLink>
+                  <NavLink to="/student/leave" className="drawer-item" onClick={closeMobileMenu}>🗓 Absence</NavLink>
+                </>
+              )}
+
+              <p className="drawer-section-label">Support</p>
+              {user?.role === "STUDENT" && (
+                <>
+                  <NavLink to="/student/fees" className="drawer-item" onClick={closeMobileMenu}>💰 Finance</NavLink>
+                  <NavLink to="/student/counseling" className="drawer-item" onClick={closeMobileMenu}>💚 Wellness</NavLink>
+                </>
+              )}
+              <NavLink to={`/${rolePath}/profile`} className="drawer-item" onClick={closeMobileMenu}>👤 Profile</NavLink>
+
+              <div className="drawer-divider" />
+              <button className="drawer-item drawer-logout" onClick={handleLogout}>🚪 Logout</button>
+            </div>
+          </div>
+
+          <div className={`drawer-overlay ${isMobileMenuOpen ? 'open' : ''}`} onClick={closeMobileMenu} />
+
+          {/* 🔹 DESKTOP NAV-RIGHT (Remains Hidden on Mobile via CSS) */}
+          <div className="nav-right-collapse">
+            <nav className="header-nav-menu">
+              <NavLink to={`/${rolePath}/dashboard`} className="nav-menu-link">📊 Dashboard</NavLink>
+              
               {user?.role === "SUPERADMIN" && (
                 <>
                   <div className="nav-dropdown">
@@ -175,7 +225,6 @@ function DashboardLayout() {
                 </>
               )}
 
-              {/* 🛡️ ADMIN — OPERATIONAL OVERHAUL */}
               {user?.role === "ADMIN" && (
                 <>
                   <div className="nav-dropdown">
@@ -200,7 +249,7 @@ function DashboardLayout() {
                     <button className={`nav-menu-link ${activeDropdown === 'admin-academic' ? 'active-btn' : ''}`} onClick={() => toggleDropdown('admin-academic')}>
                       📚 Academic Hub <FaChevronDown className={`drop-icon ${activeDropdown === 'admin-academic' ? 'rotate' : ''}`} />
                     </button>
-                    <div className={`mega-menu`} style={{gap: '60px'}}>
+                    <div className="mega-menu" style={{gap: '60px'}}>
                       <div className="mega-group">
                         <div className="mega-group-title">Curriculum</div>
                         <MegaLink to="/admin/courses" icon="📚" name="Course Catalog" desc="Digital academic registry" onClick={closeMobileMenu} />
@@ -260,7 +309,6 @@ function DashboardLayout() {
                 </>
               )}
 
-              {/* 🎓 STUDENT — LEARNING PATHWAY */}
               {user?.role === "STUDENT" && (
                 <>
                   <div className="nav-dropdown">
@@ -308,7 +356,6 @@ function DashboardLayout() {
                 </>
               )}
 
-              {/* 🏫 TRAINER — TEACHING HUB */}
               {user?.role === "TRAINER" && (
                 <>
                   <div className="nav-dropdown">
@@ -334,7 +381,6 @@ function DashboardLayout() {
                 </>
               )}
 
-              {/* 📣 MARKETER — GROWTH HUB */}
               {user?.role === "MARKETER" && (
                 <>
                   <div className="nav-dropdown">
@@ -359,7 +405,6 @@ function DashboardLayout() {
                 </>
               )}
 
-              {/* 🧑‍⚕️ COUNSELOR — WELLNESS HUB */}
               {user?.role === "COUNSELOR" && (
                 <>
                   <div className="nav-dropdown">
@@ -384,25 +429,48 @@ function DashboardLayout() {
               )}
 
               {user?.role !== "COUNSELOR" && (
-                <NavLink to={`/${rolePath}/performance`} className="nav-menu-link" onClick={closeMobileMenu}>📈 Performance</NavLink>
+                <NavLink to={`/${rolePath}/performance`} className="nav-menu-link">📈 Performance</NavLink>
               )}
-              <NavLink to={`/${rolePath}/profile`} className="nav-menu-link" onClick={closeMobileMenu}>👤 Profile</NavLink>
+              <NavLink to={`/${rolePath}/profile`} className="nav-menu-link">👤 Profile</NavLink>
             </nav>
 
             <div className="user-actions-right">
+              {/* 📱 MOBILE BELL — Hidden on desktop */}
+              <button className="mobile-bell-btn" style={{display:'none'}}>🔔</button>
+
               <NotificationDropdown />
-              <div className="user-role-badge">
-                <div className="role-badge-content">
-                  <span className="role-text-label">{user?.role?.replace("_", " ")}</span>
-                  {(user?.portalId || user?.studentId) && (
-                    <span className="student-id-label">{user.portalId || user.studentId}</span>
-                  )}
+              
+              <div className="nav-user-info">
+                <div className="nav-user-text">
+                  <span className="nav-user-role">{user?.role?.replace("_", " ")}</span>
+                  <span className="nav-user-id">{user?.portalId || user?.studentId || "ID: -"}</span>
                 </div>
-                <div className="avatar-circle">{avatarLetter}</div>
+                <div className="nav-avatar">{avatarLetter}</div>
               </div>
-              <button className="nav-logout-btn" onClick={handleLogout}>🚪 Logout</button>
+
+              <button className="nav-logout-btn logout-btn-desktop" onClick={handleLogout}>Logout</button>
             </div>
           </div>
+
+          {/* 📱 MOBILE TAB BAR (Fixed Bottom) */}
+          <nav className="mobile-tab-bar" style={{display:'none'}}>
+            <NavLink to={`/${rolePath}/dashboard`} className="tab-item">
+              <span>🏠</span><label>Home</label>
+            </NavLink>
+            <NavLink to="/learning-hub" className="tab-item">
+              <span>📚</span><label>Learn</label>
+            </NavLink>
+            <NavLink to="/career-hub" className="tab-item">
+              <span>🚀</span><label>Career</label>
+            </NavLink>
+            <NavLink to={`/${rolePath}/performance`} className="tab-item">
+              <span>📊</span><label>Results</label>
+            </NavLink>
+            <div className="tab-item" onClick={() => setIsMobileMenuOpen(true)}>
+              <span>☰</span><label>More</label>
+            </div>
+          </nav>
+
         </div>
       </header>
 

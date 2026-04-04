@@ -578,13 +578,14 @@
 .utt-modal-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(15, 23, 42, 0.6);
+  background: rgba(15, 23, 42, 0.75); /* Darker for better contrast */
+  backdrop-filter: blur(10px); /* Heavy blur to hide background text */
   z-index: 999999;
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 16px;
-  animation: utt-fade-in 0.2s ease;
+  padding: 20px;
+  animation: utt-fade-in 0.25s ease-out;
 }
 
 @keyframes utt-fade-in {
@@ -593,15 +594,19 @@
 }
 
 .utt-modal {
-  background: #fff;
+  background: #ffffff !important; /* Force solid white to prevent ghosting */
   border-radius: 20px;
   width: 100%;
-  max-width: 600px;
-  max-height: 90vh;
+  max-width: 620px;
+  max-height: 85vh;
   overflow-x: hidden;
   overflow-y: auto;
-  box-shadow: 0 24px 80px rgba(15,23,42,0.2);
-  animation: utt-slide-up 0.25s cubic-bezier(0.22,0.68,0,1.2);
+  box-shadow: 0 30px 100px rgba(15,23,42,0.3);
+  position: relative;
+  z-index: 1000000;
+  animation: utt-slide-up 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  display: flex;
+  flex-direction: column;
 }
 
 @keyframes utt-slide-up {
@@ -753,8 +758,20 @@
 .utt-tl-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 12px;
+  gap: 20px;
+  margin-top: 5px;
 }
+
+.punch-status-in-val { font-weight: 700; color: #16a34a; font-size: 15px; }
+.punch-status-out-val { font-weight: 700; font-size: 15px; }
+.punch-status-method { font-size: 12px; color: #64748b; margin-top: 4px; }
+.punch-status-distance { font-size: 12px; color: #64748b; }
+.punch-status-distance.far { color: #ea580c; font-weight: 600; }
+.punch-active-label { color: #16a34a; font-size: 13px; font-weight: 700; }
+.punch-status-reason { font-size: 11px; margin-top: 4px; font-weight: 600; padding: 2px 8px; border-radius: 4px; display: inline-block; }
+.punch-status-reason.auto { background: #fff7ed; color: #ea580c; }
+.punch-status-reason.ok { background: #f0fdf4; color: #16a34a; }
+.utt-modal-header-sub { color: #64748b; font-size: 13px; margin-top: 4px; font-weight: 500; }
 
 .utt-tl-time {
   display: flex;

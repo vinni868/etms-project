@@ -4,6 +4,94 @@ import QrScannerModal from '../../components/QrScannerModal';
 import useGeofenceWatcher from '../../hooks/useGeofenceWatcher';
 import './UserTimeTracking.css';
 
+/* ─── Session Detail Modal ───────────────────────────────────────────── */
+/* Moved outside to prevent re-declaration/flickering on clock ticks */
+const SessionDetailModal = ({ report, onClose, fmtDate, fmtTime, fmtDuration }) => {
+  if (!report) return null;
+  return (
+    <div className="utt-modal-overlay" onClick={onClose}>
+      <div className="utt-modal" onClick={e => e.stopPropagation()}>
+        <div className="utt-modal-header">
+          <div>
+            <h2>📅 {fmtDate(report.date)}</h2>
+            <p className="utt-modal-header-sub">
+              Detailed Punch Sessions — {report.sessions.length} scan{report.sessions.length !== 1 ? 's' : ''}
+            </p>
+          </div>
+          <button className="utt-modal-close" onClick={onClose}>×</button>
+        </div>
+
+        <div className="utt-modal-summary">
+          <div className="utt-sum-box">
+            <span>Total Time</span>
+            <strong>{fmtDuration(report.totalMinutes)}</strong>
+          </div>
+          <div className="utt-sum-box">
+            <span>Total Scans</span>
+            <strong>{report.sessions.length}</strong>
+          </div>
+        </div>
+
+        <h4 className="utt-modal-subtitle">Session Timeline</h4>
+
+        <div className="utt-timeline">
+          {report.sessions.map((session, idx) => (
+            <div key={session.id || idx} className="utt-tl-item">
+              <div className="utt-tl-dot" />
+              <div className="utt-tl-content">
+                <div className="utt-tl-row">
+                  <strong>Session {report.sessions.length - idx}</strong>
+                  <span className="utt-tl-dur">{fmtDuration(session.totalMinutes)}</span>
+                </div>
+                <div className="utt-tl-grid">
+                  {/* Punch In */}
+                  <div className="utt-tl-time">
+                    <span className="utt-in-icon">📥</span>
+                    <div>
+                      <small>Punch In</small>
+                      <div className="punch-status-in-val">{fmtTime(session.loginTime)}</div>
+                      <div className="punch-status-method">
+                        Method: {!session.punchMethod ? 'Unknown' :
+                                  session.punchMethod === 'QR_SCAN' ? '📷 QR Scan' : '⚡ Quick Punch'}
+                      </div>
+                      {session.distanceIn != null && (
+                        <div className={`punch-status-distance ${session.distanceIn > 180 ? 'far' : ''}`}>
+                          Distance: {Math.round(session.distanceIn)}m
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                  {/* Punch Out */}
+                  <div className="utt-tl-time">
+                    <span className="utt-out-icon">📤</span>
+                    <div>
+                      <small>Punch Out</small>
+                      <div className="punch-status-out-val" style={{ color: session.logoutTime ? '#dc2626' : '#10b981' }}>
+                        {session.logoutTime ? fmtTime(session.logoutTime) : (
+                          <span className="punch-active-label">🟢 Active</span>
+                        )}
+                      </div>
+                      {session.logoutTime && (
+                        <div className={`punch-status-reason ${ (session.checkoutReason === 'MIDNIGHT_AUTO_CLOSE' || session.checkoutReason === 'GEOFENCE_EXIT') ? 'auto' : 'ok'}`}>
+                          {!session.checkoutReason ? 'Manual logout' :
+                           session.checkoutReason === 'MIDNIGHT_AUTO_CLOSE' ? '🕛 Auto: Midnight Close' :
+                           session.checkoutReason === 'GEOFENCE_EXIT' ? `📍 Auto: Left premises (~${Math.round(session.distanceOut || 0)}m)` :
+                           session.checkoutReason === 'REOPEN_OUTSIDE_RADIUS' ? '📍 Auto: Re-opened outside' :
+                           session.checkoutReason}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+};
+
 /**
  * UserTimeTracking — QR Punch In / Punch Out page
  * Used by: Admin, Trainer, Marketer, Counselor, Student
@@ -199,96 +287,6 @@ export default function UserTimeTracking() {
     info:    { bg: '#eff6ff', color: '#2563eb', border: '#bfdbfe' },
   };
 
-  /* ─── Session Detail Modal ───────────────────────────────────────────── */
-  const SessionDetailModal = ({ report, onClose }) => {
-    if (!report) return null;
-    return (
-      <div className="utt-modal-overlay" onClick={onClose}>
-        <div className="utt-modal" onClick={e => e.stopPropagation()}>
-          <div className="utt-modal-header">
-            <div>
-              <h2>📅 {fmtDate(report.date)}</h2>
-              <p style={{ color: '#64748b', fontSize: '13px', marginTop: '4px' }}>
-                Detailed Punch Sessions — {report.sessions.length} scan{report.sessions.length !== 1 ? 's' : ''}
-              </p>
-            </div>
-            <button className="utt-modal-close" onClick={onClose}>×</button>
-          </div>
-
-          <div className="utt-modal-summary">
-            <div className="utt-sum-box">
-              <span>Total Time</span>
-              <strong>{fmtDuration(report.totalMinutes)}</strong>
-            </div>
-            <div className="utt-sum-box">
-              <span>Total Scans</span>
-              <strong>{report.sessions.length}</strong>
-            </div>
-          </div>
-
-          <h4 className="utt-modal-subtitle">Session Timeline</h4>
-
-          <div className="utt-timeline">
-            {report.sessions.map((session, idx) => (
-              <div key={session.id || idx} className="utt-tl-item">
-                <div className="utt-tl-dot" />
-                <div className="utt-tl-content">
-                  <div className="utt-tl-row">
-                    <strong>Session {report.sessions.length - idx}</strong>
-                    <span className="utt-tl-dur">{fmtDuration(session.totalMinutes)}</span>
-                  </div>
-                  <div className="utt-tl-grid">
-                    {/* Punch In */}
-                    <div className="utt-tl-time">
-                      <span className="utt-in-icon">📥</span>
-                      <div>
-                        <small>Punch In</small>
-                        <div style={{ fontWeight: 700, color: '#16a34a' }}>{fmtTime(session.loginTime)}</div>
-                        <div style={{ fontSize: '0.75rem', marginTop: '4px', color: '#64748b' }}>
-                          Method: {!session.punchMethod ? 'Unknown' :
-                                    session.punchMethod === 'QR_SCAN' ? '📷 QR Scan' : '⚡ Quick Punch'}
-                        </div>
-                        {session.distanceIn != null && (
-                          <div style={{ fontSize: '0.75rem', color: session.distanceIn > 180 ? '#ea580c' : '#64748b' }}>
-                            Distance: {Math.round(session.distanceIn)}m
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                    {/* Punch Out */}
-                    <div className="utt-tl-time">
-                      <span className="utt-out-icon">📤</span>
-                      <div>
-                        <small>Punch Out</small>
-                        <div style={{ fontWeight: 700, color: session.logoutTime ? '#dc2626' : '#10b981' }}>
-                          {session.logoutTime ? fmtTime(session.logoutTime) : (
-                            <span style={{ color: '#16a34a', fontSize: '12px' }}>🟢 Active</span>
-                          )}
-                        </div>
-                        {session.logoutTime && (
-                          <div style={{
-                            fontSize: '0.75rem', marginTop: '4px', fontWeight: 600,
-                            color: (session.checkoutReason === 'MIDNIGHT_AUTO_CLOSE' || session.checkoutReason === 'GEOFENCE_EXIT') ? '#ea580c' : '#10b981'
-                          }}>
-                            {!session.checkoutReason ? 'Manual logout' :
-                             session.checkoutReason === 'MIDNIGHT_AUTO_CLOSE' ? '🕛 Auto: Midnight Close' :
-                             session.checkoutReason === 'GEOFENCE_EXIT' ? `📍 Auto: Left premises (~${Math.round(session.distanceOut || 0)}m)` :
-                             session.checkoutReason === 'REOPEN_OUTSIDE_RADIUS' ? '📍 Auto: Re-opened outside' :
-                             session.checkoutReason}
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
-      </div>
-    );
-  };
-
   return (
     <div className="utt-page">
 
@@ -319,7 +317,13 @@ export default function UserTimeTracking() {
 
       {/* ── Session Detail Modal ── */}
       {selectedDayReport && (
-        <SessionDetailModal report={selectedDayReport} onClose={() => setSelectedDayReport(null)} />
+        <SessionDetailModal 
+          report={selectedDayReport} 
+          onClose={() => setSelectedDayReport(null)} 
+          fmtDate={fmtDate} 
+          fmtTime={fmtTime} 
+          fmtDuration={fmtDuration}
+        />
       )}
 
       {/* ── Page Header ── */}

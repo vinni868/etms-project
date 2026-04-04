@@ -12,7 +12,7 @@
     position: fixed;
     bottom: 25px;
     right: 25px;
-    z-index: 20000;
+    z-index: 4000;
     font-family: 'Inter', system-ui, -apple-system, sans-serif;
 }
 
@@ -643,4 +643,15 @@
 @keyframes fadeIn {
     from { opacity: 0; transform: translateY(-4px); }
     to   { opacity: 1; transform: translateY(0); }
+}
+
+/* 📱 MOBILE ADJUSTMENTS — Move above the tab bar */
+@media (max-width: 768px) {
+    .etms-chat-wrapper {
+        bottom: 90px;
+        right: 15px;
+    }
+    .chat-badge-label {
+        bottom: 75px; 
+    }
 }

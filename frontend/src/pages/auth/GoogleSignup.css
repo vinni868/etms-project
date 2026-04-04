@@ -258,6 +258,38 @@
   box-shadow: 0 0 0 4px rgba(37, 99, 235, 0.1);
 }
 
+/* ── Alerts ── */
+.gs-alert {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  border-radius: 14px;
+  margin-bottom: 24px;
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1.4;
+  animation: gsFadeInUp 0.4s ease-out;
+}
+
+.gs-alert svg {
+  width: 20px;
+  height: 20px;
+  flex-shrink: 0;
+}
+
+.gs-alert-error {
+  background: #fff1f2;
+  color: #9f1239;
+  border: 1px solid #ffe4e6;
+}
+
+.gs-alert-success {
+  background: #f0fdf4;
+  color: #166534;
+  border: 1px solid #dcfce7;
+}
+
 /* ── Responsive ── */
 @media (max-width: 480px) {
   .gs-card {
