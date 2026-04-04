@@ -48,9 +48,13 @@ public class EmailServiceImpl implements EmailService {
 
             System.out.println("✅ HTML Email sent successfully to " + toEmail);
 
+        } catch (jakarta.mail.AuthenticationFailedException e) {
+            System.err.println("❌ SMTP AUTHENTICATION FAILED for " + toEmail + ": " + e.getMessage());
+            System.err.println("👉 Please check if the App Password 'lthcqqdvhzsaaspz' is still valid.");
+            throw new RuntimeException("Email delivery failed: AUTHENTICATION ERROR");
         } catch (Exception e) {
-            System.err.println("❌ Critical Email Failure for " + toEmail + ": " + e.getMessage());
-            e.printStackTrace(); // Print full stack trace for cloud deployment debugging
+            System.err.println("❌ Critical Email Failure for " + toEmail + ": " + e.getClass().getSimpleName() + " - " + e.getMessage());
+            e.printStackTrace();
             throw new RuntimeException("Email delivery failed: " + e.getMessage());
         }
     }

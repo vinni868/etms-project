@@ -69,7 +69,7 @@ function DashboardLayout() {
     };
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, [isMobileMenuOpen]);
+  }, [isMobileMenuOpen, activeDropdown]);
 
   const handleLogout = () => {
     localStorage.clear();
@@ -100,16 +100,17 @@ function DashboardLayout() {
         <div className="nav-container-inner" ref={dropdownRef}>
           
           <Link to="/" className="logo-section-left">
-            <div className="logo-icon-box"><FaGraduationCap /></div>
-            <div className="logo-text-group">
-              <h1 className="brand-name">EtMS</h1>
-              <span className="brand-tagline">SMART LEARNING</span>
+            <div className="logo-container-white" style={{ background: '#fff', padding: '6px 12px', borderRadius: '8px', border: '1px solid #eee', display: 'flex', alignItems: 'center' }}>
+              <img src="appteknow_logo.png" alt="AppTechno Careers" className="brand-logo-img" style={{ height: '38px' }} />
             </div>
           </Link>
 
-          <button className="hamburger-btn" style={{display:'none'}} onClick={() => setIsMobileMenuOpen(true)}>
-            <span /><span /><span />
-          </button>
+          {/* 🍔 Hamburger menu (Mobile Only) */}
+          {window.innerWidth <= 1024 && (
+            <button className="hamburger-btn" onClick={() => setIsMobileMenuOpen(true)}>
+              <span /><span /><span />
+            </button>
+          )}
 
           {/* 📱 MOBILE SIDE DRAWER (Hidden on Desktop by default) */}
           <div className={`mobile-drawer ${isMobileMenuOpen ? 'open' : ''}`}>
@@ -149,17 +150,17 @@ function DashboardLayout() {
               {user?.role === "STUDENT" && (
                 <>
                   <NavLink to="/student/fees" className="drawer-item" onClick={closeMobileMenu}>💰 Finance</NavLink>
-                  <NavLink to="/student/counseling" className="drawer-item" onClick={closeMobileMenu}>💚 Wellness</NavLink>
+                  <NavLink to="/student/counseling" className="drawer-item" onClick={() => { closeMobileMenu(); setActiveDropdown(null); }}>💚 Wellness</NavLink>
                 </>
               )}
-              <NavLink to={`/${rolePath}/profile`} className="drawer-item" onClick={closeMobileMenu}>👤 Profile</NavLink>
+              <NavLink to={`/${rolePath}/profile`} className="drawer-item" onClick={() => { closeMobileMenu(); setActiveDropdown(null); }}>👤 Profile</NavLink>
 
               <div className="drawer-divider" />
               <button className="drawer-item drawer-logout" onClick={handleLogout}>🚪 Logout</button>
             </div>
           </div>
 
-          <div className={`drawer-overlay ${isMobileMenuOpen ? 'open' : ''}`} onClick={closeMobileMenu} />
+          <div className={`drawer-overlay ${isMobileMenuOpen ? 'open' : ''}`} onClick={() => { closeMobileMenu(); setActiveDropdown(null); }} />
 
           {/* 🔹 DESKTOP NAV-RIGHT (Remains Hidden on Mobile via CSS) */}
           <div className="nav-right-collapse">
@@ -175,14 +176,14 @@ function DashboardLayout() {
                     <div className={`mega-menu ${activeDropdown === 'governance' ? 'open' : ''}`}>
                       <div className="mega-group">
                         <div className="mega-group-title">Administration</div>
-                        <MegaLink to="/superadmin/create-admin" icon={<FaUserShield/>} name="Admin Desk" desc="Manage regional administrators" onClick={closeMobileMenu} />
-                        <MegaLink to="/superadmin/create-user" icon={<FaUsersCog/>} name="Provision" desc="Manage core user accounts" onClick={closeMobileMenu} />
+                        <MegaLink to="/superadmin/create-admin" icon={<FaUserShield/>} name="Admin Desk" desc="Manage regional administrators" onClick={() => { closeMobileMenu(); setActiveDropdown(null); }} />
+                        <MegaLink to="/superadmin/create-user" icon={<FaUsersCog/>} name="Provision" desc="Manage core user accounts" onClick={() => { closeMobileMenu(); setActiveDropdown(null); }} />
                       </div>
                       <div className="mega-group">
                         <div className="mega-group-title">Master Registry</div>
-                        <MegaLink to="/superadmin/users" icon="👥" name="Global Directory" desc="Cross-portal user database" onClick={closeMobileMenu} />
-                        <MegaLink to="/superadmin/notifications" icon={<FaBullhorn/>} name="Notifications Hub" desc="Manage system-wide alerts" onClick={closeMobileMenu} />
-                        <MegaLink to="/superadmin/leave" icon="📅" name="Leave Board" desc="Monitor staff/student absence" onClick={closeMobileMenu} />
+                        <MegaLink to="/superadmin/users" icon="👥" name="Global Directory" desc="Cross-portal user database" onClick={() => { closeMobileMenu(); setActiveDropdown(null); }} />
+                        <MegaLink to="/superadmin/notifications" icon={<FaBullhorn/>} name="Notifications Hub" desc="Manage system-wide alerts" onClick={() => { closeMobileMenu(); setActiveDropdown(null); }} />
+                        <MegaLink to="/superadmin/leave" icon="📅" name="Leave Board" desc="Monitor staff/student absence" onClick={() => { closeMobileMenu(); setActiveDropdown(null); }} />
                       </div>
                     </div>
                   </div>
@@ -194,13 +195,13 @@ function DashboardLayout() {
                     <div className={`mega-menu ${activeDropdown === 'analytics' ? 'open' : ''}`}>
                       <div className="mega-group">
                         <div className="mega-group-title">Analytics</div>
-                        <MegaLink to="/superadmin/performance" icon={<FaChartLine/>} name="Performance Metrics" desc="System-wide success tracking" onClick={closeMobileMenu} />
-                        <MegaLink to="/superadmin/finance" icon="💰" name="Finance Ledger" desc="Revenue and fee collection audits" onClick={closeMobileMenu} />
+                        <MegaLink to="/superadmin/performance" icon={<FaChartLine/>} name="Performance Metrics" desc="System-wide success tracking" onClick={() => { closeMobileMenu(); setActiveDropdown(null); }} />
+                        <MegaLink to="/superadmin/finance" icon="💰" name="Finance Ledger" desc="Revenue and fee collection audits" onClick={() => { closeMobileMenu(); setActiveDropdown(null); }} />
                       </div>
                       <div className="mega-group">
                         <div className="mega-group-title">Operations</div>
-                        <MegaLink to="/superadmin/attendance-report" icon={<FaClipboardList/>} name="Audit Log" desc="Daily attendance consolidation" onClick={closeMobileMenu} />
-                        <MegaLink to="/superadmin/meetings" icon="🤝" name="Strategy Room" desc="Executive session scheduler" onClick={closeMobileMenu} />
+                        <MegaLink to="/superadmin/attendance-report" icon={<FaClipboardList/>} name="Audit Log" desc="Daily attendance consolidation" onClick={() => { closeMobileMenu(); setActiveDropdown(null); }} />
+                        <MegaLink to="/superadmin/meetings" icon="🤝" name="Strategy Room" desc="Executive session scheduler" onClick={() => { closeMobileMenu(); setActiveDropdown(null); }} />
                       </div>
                     </div>
                   </div>
@@ -212,13 +213,13 @@ function DashboardLayout() {
                     <div className={`mega-menu ${activeDropdown === 'config' ? 'open' : ''}`}>
                       <div className="mega-group">
                         <div className="mega-group-title">Setup</div>
-                        <MegaLink to="/superadmin/settings" icon={<FaCog/>} name="Core Settings" desc="Global platform parameters" onClick={closeMobileMenu} />
-                        <MegaLink to="/superadmin/qr-station" icon={<FaSatellite/>} name="Tracking Hardware" desc="Maintain QR & GPS infrastructure" onClick={closeMobileMenu} />
+                        <MegaLink to="/superadmin/settings" icon={<FaCog/>} name="Core Settings" desc="Global platform parameters" onClick={() => { closeMobileMenu(); setActiveDropdown(null); }} />
+                        <MegaLink to="/superadmin/qr-station" icon={<FaSatellite/>} name="Tracking Hardware" desc="Maintain QR & GPS infrastructure" onClick={() => { closeMobileMenu(); setActiveDropdown(null); }} />
                       </div>
                       <div className="mega-group">
                         <div className="mega-group-title">Communication</div>
-                        <MegaLink to="/superadmin/announcements" icon="📢" name="Broadcasts" desc="Global announcement alerts" onClick={closeMobileMenu} />
-                        <MegaLink to="/superadmin/messages" icon="💬" name="Internal Comms" desc="Admin messaging terminal" onClick={closeMobileMenu} />
+                        <MegaLink to="/superadmin/announcements" icon="📢" name="Broadcasts" desc="Global announcement alerts" onClick={() => { closeMobileMenu(); setActiveDropdown(null); }} />
+                        <MegaLink to="/superadmin/messages" icon="💬" name="Internal Comms" desc="Admin messaging terminal" onClick={() => { closeMobileMenu(); setActiveDropdown(null); }} />
                       </div>
                     </div>
                   </div>
@@ -234,13 +235,13 @@ function DashboardLayout() {
                     <div className={`mega-menu ${activeDropdown === 'admin-registry' ? 'open' : ''}`}>
                       <div className="mega-group">
                         <div className="mega-group-title">Users</div>
-                        <MegaLink to="/admin/students" icon={<FaUserGraduate/>} name="Students" desc="Complete student lifecycle" onClick={closeMobileMenu} />
-                        <MegaLink to="/admin/trainers" icon={<FaChalkboardTeacher/>} name="Trainers" desc="Instructors and trainers" onClick={closeMobileMenu} />
-                        <MegaLink to="/admin/create-user" icon="👤+" name="Provision" desc="Create new user accounts" onClick={closeMobileMenu} />
+                        <MegaLink to="/admin/students" icon={<FaUserGraduate/>} name="Students" desc="Complete student lifecycle" onClick={() => { closeMobileMenu(); setActiveDropdown(null); }} />
+                        <MegaLink to="/admin/trainers" icon={<FaChalkboardTeacher/>} name="Trainers" desc="Instructors and trainers" onClick={() => { closeMobileMenu(); setActiveDropdown(null); }} />
+                        <MegaLink to="/admin/create-user" icon="👤+" name="Provision" desc="Create new user accounts" onClick={() => { closeMobileMenu(); setActiveDropdown(null); }} />
                       </div>
                       <div className="mega-group">
                         <div className="mega-group-title">Security</div>
-                        <MegaLink to="/admin/id-management" icon="🔢" name="ID Control" desc="Access card and ID generator" onClick={closeMobileMenu} />
+                        <MegaLink to="/admin/id-management" icon="🔢" name="ID Control" desc="Access card and ID generator" onClick={() => { closeMobileMenu(); setActiveDropdown(null); }} />
                       </div>
                     </div>
                   </div>
@@ -249,23 +250,23 @@ function DashboardLayout() {
                     <button className={`nav-menu-link ${activeDropdown === 'admin-academic' ? 'active-btn' : ''}`} onClick={() => toggleDropdown('admin-academic')}>
                       📚 Academic Hub <FaChevronDown className={`drop-icon ${activeDropdown === 'admin-academic' ? 'rotate' : ''}`} />
                     </button>
-                    <div className="mega-menu" style={{gap: '60px'}}>
+                    <div className={`mega-menu ${activeDropdown === 'admin-academic' ? 'open' : ''}`} style={{gap: '60px'}}>
                       <div className="mega-group">
                         <div className="mega-group-title">Curriculum</div>
-                        <MegaLink to="/admin/courses" icon="📚" name="Course Catalog" desc="Digital academic registry" onClick={closeMobileMenu} />
-                        <MegaLink to="/admin/create-batch" icon="🗂" name="Batches" desc="Manage active learning groups" onClick={closeMobileMenu} />
-                        <MegaLink to="/admin/create-course" icon="➕" name="New Course" desc="Define new academic modules" onClick={closeMobileMenu} />
+                        <MegaLink to="/admin/courses" icon="📚" name="Course Catalog" desc="Digital academic registry" onClick={() => { closeMobileMenu(); setActiveDropdown(null); }} />
+                        <MegaLink to="/admin/create-batch" icon="🗂" name="Batches" desc="Manage active learning groups" onClick={() => { closeMobileMenu(); setActiveDropdown(null); }} />
+                        <MegaLink to="/admin/create-course" icon="➕" name="New Course" desc="Define new academic modules" onClick={() => { closeMobileMenu(); setActiveDropdown(null); }} />
                       </div>
                       <div className="mega-group">
                         <div className="mega-group-title">Scheduling</div>
-                        <MegaLink to="/admin/schedule-class" icon={<FaCalendarAlt/>} name="Class Scheduler" desc="Plan and publish session timings" onClick={closeMobileMenu} />
-                        <MegaLink to="/admin/student-allotment" icon="🔗" name="Allotment" desc="Batch and course mapping" onClick={closeMobileMenu} />
+                        <MegaLink to="/admin/schedule-class" icon={<FaCalendarAlt/>} name="Class Scheduler" desc="Plan and publish session timings" onClick={() => { closeMobileMenu(); setActiveDropdown(null); }} />
+                        <MegaLink to="/admin/student-allotment" icon="🔗" name="Allotment" desc="Batch and course mapping" onClick={() => { closeMobileMenu(); setActiveDropdown(null); }} />
                       </div>
                       <div className="mega-group">
                         <div className="mega-group-title">Operations</div>
-                        <MegaLink to="/admin/attendance" icon="🗓" name="Attendance" desc="Central monitoring panel" onClick={closeMobileMenu} />
-                        <MegaLink to="/admin/leave" icon="🛌" name="Leaves" desc="Review student absence requests" onClick={closeMobileMenu} />
-                        <MegaLink to="/admin/fees" icon="💰" name="Finance" desc="Financial records and dues" onClick={closeMobileMenu} />
+                        <MegaLink to="/admin/attendance" icon="🗓" name="Attendance" desc="Central monitoring panel" onClick={() => { closeMobileMenu(); setActiveDropdown(null); }} />
+                        <MegaLink to="/admin/leave" icon="🛌" name="Leaves" desc="Review student absence requests" onClick={() => { closeMobileMenu(); setActiveDropdown(null); }} />
+                        <MegaLink to="/admin/fees" icon="💰" name="Finance" desc="Financial records and dues" onClick={() => { closeMobileMenu(); setActiveDropdown(null); }} />
                       </div>
                     </div>
                   </div>
@@ -277,14 +278,14 @@ function DashboardLayout() {
                     <div className={`mega-menu ${activeDropdown === 'admin-career' ? 'open' : ''}`}>
                       <div className="mega-group">
                         <div className="mega-group-title">Placement</div>
-                        <MegaLink to="/admin/post-job" icon={<FaBriefcase/>} name="Placement Prep" desc="Post job opportunities" onClick={closeMobileMenu} />
-                        <MegaLink to="/admin/manage-jobs" icon="📝" name="Listings" desc="Edit and manage active posts" onClick={closeMobileMenu} />
-                        <MegaLink to="/admin/post-internship" icon="🎓" name="Internships" desc="Create internship programs" onClick={closeMobileMenu} />
+                        <MegaLink to="/admin/post-job" icon={<FaBriefcase/>} name="Placement Prep" desc="Post job opportunities" onClick={() => { closeMobileMenu(); setActiveDropdown(null); }} />
+                        <MegaLink to="/admin/manage-jobs" icon="📝" name="Listings" desc="Edit and manage active posts" onClick={() => { closeMobileMenu(); setActiveDropdown(null); }} />
+                        <MegaLink to="/admin/post-internship" icon="🎓" name="Internships" desc="Create internship programs" onClick={() => { closeMobileMenu(); setActiveDropdown(null); }} />
                       </div>
                       <div className="mega-group">
                         <div className="mega-group-title">External</div>
-                        <MegaLink to="/admin/company-partners" icon={<FaBuilding/>} name="Partners" desc="Industrial tie-up registry" onClick={closeMobileMenu} />
-                        <MegaLink to="/admin/job-applications" icon="📥" name="Applications" desc="Submission desk manager" onClick={closeMobileMenu} />
+                        <MegaLink to="/admin/company-partners" icon={<FaBuilding/>} name="Partners" desc="Industrial tie-up registry" onClick={() => { closeMobileMenu(); setActiveDropdown(null); }} />
+                        <MegaLink to="/admin/job-applications" icon="📥" name="Applications" desc="Submission desk manager" onClick={() => { closeMobileMenu(); setActiveDropdown(null); }} />
                       </div>
                     </div>
                   </div>
@@ -296,13 +297,13 @@ function DashboardLayout() {
                     <div className={`mega-menu ${activeDropdown === 'admin-ops' ? 'open' : ''}`}>
                       <div className="mega-group">
                         <div className="mega-group-title">Terminal</div>
-                        <MegaLink to="/admin/qr-station" icon={<FaQrcode/>} name="QR Station" desc="Physical scanning terminal" onClick={closeMobileMenu} />
-                        <MegaLink to="/admin/time-tracking" icon={<FaHistory/>} name="System Check-in" desc="Daily punch records" onClick={closeMobileMenu} />
+                        <MegaLink to="/admin/qr-station" icon={<FaQrcode/>} name="QR Station" desc="Physical scanning terminal" onClick={() => { closeMobileMenu(); setActiveDropdown(null); }} />
+                        <MegaLink to="/admin/time-tracking" icon={<FaHistory/>} name="System Check-in" desc="Daily punch records" onClick={() => { closeMobileMenu(); setActiveDropdown(null); }} />
                       </div>
                       <div className="mega-group">
                         <div className="mega-group-title">Comms</div>
-                        <MegaLink to="/admin/announcements" icon="📢" name="Bulletins" desc="Publish general announcements" onClick={closeMobileMenu} />
-                        <MegaLink to="/admin/notifications" icon={<FaBullhorn/>} name="Notifications Hub" desc="Manage administrative alerts" onClick={closeMobileMenu} />
+                        <MegaLink to="/admin/announcements" icon="📢" name="Bulletins" desc="Publish general announcements" onClick={() => { closeMobileMenu(); setActiveDropdown(null); }} />
+                        <MegaLink to="/admin/notifications" icon={<FaBullhorn/>} name="Notifications Hub" desc="Manage administrative alerts" onClick={() => { closeMobileMenu(); setActiveDropdown(null); }} />
                       </div>
                     </div>
                   </div>
@@ -318,21 +319,21 @@ function DashboardLayout() {
                     <div className={`mega-menu ${activeDropdown === 'st-learn' ? 'open' : ''}`}>
                       <div className="mega-group">
                         <div className="mega-group-title">Academic Life</div>
-                        <MegaLink to="/student/courses" icon={<FaBook/>} name="Knowledge Base" desc="My Courses and Active Batches" onClick={closeMobileMenu} />
-                        <MegaLink to="/student/timetable" icon="📅" name="Calendar" desc="My daily learning schedule" onClick={closeMobileMenu} />
-                        <MegaLink to="/student/announcements" icon="📢" name="Bulletins" desc="Important updates and notices" onClick={closeMobileMenu} />
+                        <MegaLink to="/student/courses" icon={<FaBook/>} name="Knowledge Base" desc="My Courses and Active Batches" onClick={() => { closeMobileMenu(); setActiveDropdown(null); }} />
+                        <MegaLink to="/student/timetable" icon="📅" name="Calendar" desc="My daily learning schedule" onClick={() => { closeMobileMenu(); setActiveDropdown(null); }} />
+                        <MegaLink to="/student/announcements" icon="📢" name="Bulletins" desc="Important updates and notices" onClick={() => { closeMobileMenu(); setActiveDropdown(null); }} />
                       </div>
                       <div className="mega-group">
                         <div className="mega-group-title">Operations</div>
-                        <MegaLink to="/student/attendance" icon={<FaHistory/>} name="Audit Log" desc="Historical presence records" onClick={closeMobileMenu} />
-                        <MegaLink to="/student/time-tracking" icon={<FaQrcode/>} name="Punch Portal" desc="Live daily check-in station" onClick={closeMobileMenu} />
-                        <MegaLink to="/student/notifications" icon={<FaBullhorn/>} name="Notifications Hub" desc="My personal alert history" onClick={closeMobileMenu} />
+                        <MegaLink to="/student/attendance" icon={<FaHistory/>} name="Audit Log" desc="Historical presence records" onClick={() => { closeMobileMenu(); setActiveDropdown(null); }} />
+                        <MegaLink to="/student/time-tracking" icon={<FaQrcode/>} name="Punch Portal" desc="Live daily check-in station" onClick={() => { closeMobileMenu(); setActiveDropdown(null); }} />
+                        <MegaLink to="/student/notifications" icon={<FaBullhorn/>} name="Notifications Hub" desc="My personal alert history" onClick={() => { closeMobileMenu(); setActiveDropdown(null); }} />
                       </div>
                       <div className="mega-group">
                         <div className="mega-group-title">Support</div>
-                        <MegaLink to="/student/fees" icon="💰" name="Finance" desc="Secure fee payment records" onClick={closeMobileMenu} />
-                        <MegaLink to="/student/leave" icon={<FaCalendarAlt/>} name="Absence" desc="Request leave of absence" onClick={closeMobileMenu} />
-                        <MegaLink to="/student/counseling" icon="🧑‍⚕️" name="Wellness" desc="Connect with counselors" onClick={closeMobileMenu} />
+                        <MegaLink to="/student/fees" icon="💰" name="Finance" desc="Secure fee payment records" onClick={() => { closeMobileMenu(); setActiveDropdown(null); }} />
+                        <MegaLink to="/student/leave" icon={<FaCalendarAlt/>} name="Absence" desc="Request leave of absence" onClick={() => { closeMobileMenu(); setActiveDropdown(null); }} />
+                        <MegaLink to="/student/counseling" icon="🧑‍⚕️" name="Wellness" desc="Connect with counselors" onClick={() => { closeMobileMenu(); setActiveDropdown(null); }} />
                       </div>
                     </div>
                   </div>
@@ -344,12 +345,12 @@ function DashboardLayout() {
                     <div className={`mega-menu ${activeDropdown === 'st-hiring' ? 'open' : ''}`}>
                       <div className="mega-group">
                         <div className="mega-group-title">Growth</div>
-                        <MegaLink to="/student/jobs" icon={<FaBriefcase/>} name="Placement" desc="Global professional roles" onClick={closeMobileMenu} />
-                        <MegaLink to="/student/internships" icon={<FaLaptopCode/>} name="Internships" desc="Gain real-world experience" onClick={closeMobileMenu} />
+                        <MegaLink to="/student/jobs" icon={<FaBriefcase/>} name="Placement" desc="Global professional roles" onClick={() => { closeMobileMenu(); setActiveDropdown(null); }} />
+                        <MegaLink to="/student/internships" icon={<FaLaptopCode/>} name="Internships" desc="Gain real-world experience" onClick={() => { closeMobileMenu(); setActiveDropdown(null); }} />
                       </div>
                       <div className="mega-group">
                         <div className="mega-group-title">Achievement</div>
-                        <MegaLink to="/student/certificates" icon={<FaAward/>} name="Vault" desc="Download earned certificates" onClick={closeMobileMenu} />
+                        <MegaLink to="/student/certificates" icon={<FaAward/>} name="Vault" desc="Download earned certificates" onClick={() => { closeMobileMenu(); setActiveDropdown(null); }} />
                       </div>
                     </div>
                   </div>
@@ -365,16 +366,16 @@ function DashboardLayout() {
                     <div className={`mega-menu ${activeDropdown === 'tr-teach' ? 'open' : ''}`}>
                       <div className="mega-group">
                         <div className="mega-group-title">My Work</div>
-                        <MegaLink to="/trainer/course" icon={<FaBook/>} name="My Courses" desc="Assigned courses and materials" onClick={closeMobileMenu} />
-                        <MegaLink to="/trainer/timetable" icon="📅" name="Schedule" desc="My teaching timetable" onClick={closeMobileMenu} />
-                        <MegaLink to="/trainer/announcements" icon="📢" name="Bulletins" desc="Important notices" onClick={closeMobileMenu} />
+                        <MegaLink to="/trainer/course" icon={<FaBook/>} name="My Courses" desc="Assigned courses and materials" onClick={() => { closeMobileMenu(); setActiveDropdown(null); }} />
+                        <MegaLink to="/trainer/timetable" icon="📅" name="Schedule" desc="My teaching timetable" onClick={() => { closeMobileMenu(); setActiveDropdown(null); }} />
+                        <MegaLink to="/trainer/announcements" icon="📢" name="Bulletins" desc="Important notices" onClick={() => { closeMobileMenu(); setActiveDropdown(null); }} />
                       </div>
                       <div className="mega-group">
                         <div className="mega-group-title">Tracking</div>
-                        <MegaLink to="/trainer/attendance" icon={<FaHistory/>} name="Attendance" desc="Class attendance records" onClick={closeMobileMenu} />
-                        <MegaLink to="/trainer/time-tracking" icon={<FaQrcode/>} name="Punch Portal" desc="Daily check-in station" onClick={closeMobileMenu} />
-                        <MegaLink to="/trainer/notifications" icon={<FaBullhorn/>} name="Notifications Hub" desc="My personal alert history" onClick={closeMobileMenu} />
-                        <MegaLink to="/trainer/leave" icon={<FaCalendarAlt/>} name="Leave" desc="Request absence" onClick={closeMobileMenu} />
+                        <MegaLink to="/trainer/attendance" icon={<FaHistory/>} name="Attendance" desc="Class attendance records" onClick={() => { closeMobileMenu(); setActiveDropdown(null); }} />
+                        <MegaLink to="/trainer/time-tracking" icon={<FaQrcode/>} name="Punch Portal" desc="Daily check-in station" onClick={() => { closeMobileMenu(); setActiveDropdown(null); }} />
+                        <MegaLink to="/trainer/notifications" icon={<FaBullhorn/>} name="Notifications Hub" desc="My personal alert history" onClick={() => { closeMobileMenu(); setActiveDropdown(null); }} />
+                        <MegaLink to="/trainer/leave" icon={<FaCalendarAlt/>} name="Leave" desc="Request absence" onClick={() => { closeMobileMenu(); setActiveDropdown(null); }} />
                       </div>
                     </div>
                   </div>
@@ -390,15 +391,15 @@ function DashboardLayout() {
                     <div className={`mega-menu ${activeDropdown === 'mk-growth' ? 'open' : ''}`}>
                       <div className="mega-group">
                         <div className="mega-group-title">Marketing</div>
-                        <MegaLink to="/marketer/leads" icon={<FaChartLine/>} name="Leads" desc="Manage and track leads" onClick={closeMobileMenu} />
-                        <MegaLink to="/marketer/campaigns" icon={<FaBullhorn/>} name="Campaigns" desc="Active marketing campaigns" onClick={closeMobileMenu} />
-                        <MegaLink to="/marketer/vouchers" icon="🎟️" name="Vouchers" desc="Discount and coupon management" onClick={closeMobileMenu} />
+                        <MegaLink to="/marketer/leads" icon={<FaChartLine/>} name="Leads" desc="Manage and track leads" onClick={() => { closeMobileMenu(); setActiveDropdown(null); }} />
+                        <MegaLink to="/marketer/campaigns" icon={<FaBullhorn/>} name="Campaigns" desc="Active marketing campaigns" onClick={() => { closeMobileMenu(); setActiveDropdown(null); }} />
+                        <MegaLink to="/marketer/vouchers" icon="🎟️" name="Vouchers" desc="Discount and coupon management" onClick={() => { closeMobileMenu(); setActiveDropdown(null); }} />
                       </div>
                       <div className="mega-group">
                         <div className="mega-group-title">Operations</div>
-                        <MegaLink to="/marketer/time-tracking" icon={<FaQrcode/>} name="Punch Portal" desc="Daily check-in station" onClick={closeMobileMenu} />
-                        <MegaLink to="/marketer/notifications" icon={<FaBullhorn/>} name="Notifications Hub" desc="My alert history" onClick={closeMobileMenu} />
-                        <MegaLink to="/marketer/leave" icon={<FaCalendarAlt/>} name="Leave" desc="Request absence" onClick={closeMobileMenu} />
+                        <MegaLink to="/marketer/time-tracking" icon={<FaQrcode/>} name="Punch Portal" desc="Daily check-in station" onClick={() => { closeMobileMenu(); setActiveDropdown(null); }} />
+                        <MegaLink to="/marketer/notifications" icon={<FaBullhorn/>} name="Notifications Hub" desc="My alert history" onClick={() => { closeMobileMenu(); setActiveDropdown(null); }} />
+                        <MegaLink to="/marketer/leave" icon={<FaCalendarAlt/>} name="Leave" desc="Request absence" onClick={() => { closeMobileMenu(); setActiveDropdown(null); }} />
                       </div>
                     </div>
                   </div>
@@ -414,14 +415,14 @@ function DashboardLayout() {
                     <div className={`mega-menu ${activeDropdown === 'cs-wellness' ? 'open' : ''}`}>
                       <div className="mega-group">
                         <div className="mega-group-title">My Work</div>
-                        <MegaLink to="/counselor/sessions" icon={<FaHeartbeat/>} name="Sessions" desc="Active counseling sessions" onClick={closeMobileMenu} />
-                        <MegaLink to="/counselor/messages" icon={<FaComments/>} name="Messages" desc="Student communications" onClick={closeMobileMenu} />
+                        <MegaLink to="/counselor/sessions" icon={<FaHeartbeat/>} name="Sessions" desc="Active counseling sessions" onClick={() => { closeMobileMenu(); setActiveDropdown(null); }} />
+                        <MegaLink to="/counselor/messages" icon={<FaComments/>} name="Messages" desc="Student communications" onClick={() => { closeMobileMenu(); setActiveDropdown(null); }} />
                       </div>
                       <div className="mega-group">
                         <div className="mega-group-title">Operations</div>
-                        <MegaLink to="/counselor/time-tracking" icon={<FaQrcode/>} name="Punch Portal" desc="Daily check-in station" onClick={closeMobileMenu} />
-                        <MegaLink to="/counselor/notifications" icon={<FaBullhorn/>} name="Notifications Hub" desc="My alert history" onClick={closeMobileMenu} />
-                        <MegaLink to="/counselor/leave" icon={<FaCalendarAlt/>} name="Leave" desc="Request absence" onClick={closeMobileMenu} />
+                        <MegaLink to="/counselor/time-tracking" icon={<FaQrcode/>} name="Punch Portal" desc="Daily check-in station" onClick={() => { closeMobileMenu(); setActiveDropdown(null); }} />
+                        <MegaLink to="/counselor/notifications" icon={<FaBullhorn/>} name="Notifications Hub" desc="My alert history" onClick={() => { closeMobileMenu(); setActiveDropdown(null); }} />
+                        <MegaLink to="/counselor/leave" icon={<FaCalendarAlt/>} name="Leave" desc="Request absence" onClick={() => { closeMobileMenu(); setActiveDropdown(null); }} />
                       </div>
                     </div>
                   </div>

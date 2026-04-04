@@ -3,10 +3,11 @@
   --navy-dark:  #0f172a;
   --navy-main:  #1e3a5f;
   --navy-light: #1e4976;
-  --blue-royal: #2b6cb0;
-  --blue-hover: rgba(255,255,255,0.12);
+  --blue-royal: #014aa2; /* Matches Navbar.css */
+  --blue-hover: rgba(1, 74, 162, 0.05);
   --white:      #ffffff;
   --text-main:  #1e293b;
+  --text-gray:  #4a5568; /* Matches Navbar.css */
 }
 
 /* ── PAGE WRAPPER ── */
@@ -40,7 +41,13 @@
   display: flex;
   align-items: center;
   box-sizing: border-box;
-  padding: 0 32px;
+  padding: 0 16px; /* Reduced from 40px to gain horizontal room */
+}
+
+/* 🧪 FLUID OVERRIDE FOR DASHBOARD CONTENT */
+.dashboard-view-content .nav-container-inner {
+  max-width: 100%;
+  padding: 0;
 }
 
 /* ════════════════════════════════
@@ -93,11 +100,12 @@
    MAIN HEADER — DARK NAVY
    ════════════════════════════════ */
 .main-dashboard-header {
-  background: var(--navy-main);
-  height: 64px;
+  background: #ffffff;
+  height: 70px;
   display: flex;
   align-items: center;
-  border-bottom: 1px solid rgba(255,255,255,0.07);
+  border-bottom: 1px solid rgba(0,0,0,0.06);
+  box-shadow: 0 4px 12px rgba(26, 54, 93, 0.08); /* Matches Navbar.css */
   position: sticky;
   top: 0;
   z-index: 1000;
@@ -113,30 +121,37 @@
 }
 
 .logo-icon-box {
-  width: 36px;
-  height: 36px;
-  background: rgba(255,255,255,0.14);
-  border: 1px solid rgba(255,255,255,0.2);
-  border-radius: 8px;
+  width: 44px;
+  height: 44px;
+  background: #fff;
+  border: 1px solid #eee;
+  border-radius: 10px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 17px;
-  color: #fff;
+  font-size: 20px;
+  color: var(--blue-royal);
+  box-shadow: 0 4px 10px rgba(0,0,0,0.06);
+}
+
+.brand-logo-img {
+  height: 40px;
+  width: auto;
+  object-fit: contain;
 }
 
 .brand-name {
-  font-size: 17px;
+  font-size: 18px;
   font-weight: 800;
-  color: #fff;
+  color: var(--navy-dark);
   margin: 0;
   line-height: 1.1;
 }
 
 .brand-tagline {
-  font-size: 8.5px;
+  font-size: 9px;
   font-weight: 700;
-  color: rgba(255,255,255,0.45);
+  color: #64748b;
   letter-spacing: 0.13em;
   display: block;
 }
@@ -146,7 +161,7 @@
   display: flex;
   flex: 1;
   align-items: center;
-  justify-content: flex-end;
+  justify-content: space-between; /* Perfecting alignment with logo on left and logout on right */
   min-width: 0;
 }
 
@@ -154,23 +169,23 @@
 .header-nav-menu {
   display: flex;
   align-items: center;
-  gap: 2px;
-  flex: 1;
-  justify-content: center;
-  padding: 0 16px;
+  gap: 4px; /* Tightened from 6px */
+  justify-content: flex-start;
+  padding: 0;
+  margin-left: 16px; /* Reduced from 20px to pull closer to logo */
 }
 
 .nav-menu-link {
   text-decoration: none;
-  color: rgba(255,255,255,0.8);
-  font-weight: 500;
+  color: var(--text-gray);
+  font-weight: 600;
   font-size: 13px;
-  padding: 7px 11px;
-  border-radius: 7px;
-  transition: background 0.15s, color 0.15s;
+  padding: 6px 10px; /* More compact padding */
+  border-radius: 8px;
+  transition: all 0.2s;
   display: flex;
   align-items: center;
-  gap: 5px;
+  gap: 6px;
   white-space: nowrap;
   border: none;
   background: none;
@@ -179,20 +194,20 @@
 
 .nav-menu-link:hover,
 .nav-menu-link.active {
-  background: rgba(255,255,255,0.12);
-  color: #fff;
+  background: var(--blue-hover);
+  color: var(--blue-royal);
 }
 
 .active-btn {
-  background: rgba(255,255,255,0.16) !important;
+  background: var(--blue-royal) !important;
   color: #fff !important;
 }
 
 /* ── CHEVRON ICON ── */
 .drop-icon {
-  width: 11px;
-  height: 11px;
-  opacity: 0.55;
+  width: 10px;
+  height: 10px;
+  opacity: 0.7;
   transition: transform 0.2s ease;
   flex-shrink: 0;
 }
@@ -210,7 +225,7 @@
 }
 
 /* FIXED: both hover AND .open class trigger the menu */
-.nav-dropdown:hover .mega-menu,
+/* MEGA MENU — CLICK CONTROLLED ONLY */
 .mega-menu.open {
   opacity: 1;
   visibility: visible;
@@ -226,12 +241,10 @@
   background: #fff;
   border: 1px solid rgba(0,0,0,0.06);
   border-radius: 24px;
-  padding: 40px;
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 30px;
+  padding: 40px 60px;
+  display: flex; /* Switched to flex for dynamic column support */
+  gap: 60px; /* Generous gap between columns */
   width: max-content;
-  min-width: 850px;
   box-shadow: 0 35px 80px rgba(0,0,0,0.15);
   z-index: 2000;
   opacity: 0;
@@ -353,21 +366,22 @@
   display: flex;
   flex-direction: column;
   align-items: flex-end;
-  line-height: 1.2;
+  line-height: 1.1; /* Tighter line height */
 }
 
 .nav-user-role {
-  font-size: 9px;
-  font-weight: 700;
-  color: rgba(255,255,255,0.45);
-  letter-spacing: 0.07em;
+  font-size: 8.5px; /* Slightly smaller for density */
+  font-weight: 800;
+  color: #64748b;
+  letter-spacing: 0.05em;
   text-transform: uppercase;
 }
 
 .nav-user-id {
-  font-size: 11px;
-  font-weight: 600;
-  color: rgba(255,255,255,0.9);
+  font-size: 10px; /* Slightly smaller for density */
+  font-weight: 700;
+  color: var(--navy-dark);
+  opacity: 0.8;
 }
 
 .nav-avatar {
@@ -387,21 +401,24 @@
 .nav-logout-btn {
   display: flex;
   align-items: center;
-  gap: 6px;
-  background: rgba(255,255,255,0.12);
-  color: #fff;
-  border: 1px solid rgba(255,255,255,0.2);
-  padding: 7px 14px;
-  border-radius: 7px;
-  font-weight: 600;
+  gap: 4px;
+  background: #f8fafc;
+  color: var(--blue-royal);
+  border: 1px solid #e2e8f0;
+  padding: 6px 12px; /* Precision padding for small screens */
+  border-radius: 8px;
+  font-weight: 700;
   cursor: pointer;
-  font-size: 12px;
-  transition: background 0.15s;
+  font-size: 11.5px;
+  transition: all 0.2s;
   white-space: nowrap;
+  margin-right: 4px; /* Safety margin from edge */
 }
 
 .nav-logout-btn:hover {
-  background: rgba(255,255,255,0.2);
+  background: #fee2e2;
+  color: #dc2626;
+  border-color: #fecaca;
 }
 
 /* ── CONTENT ── */

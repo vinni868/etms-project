@@ -29,7 +29,7 @@
 }
 
 .adm-hub {
-  padding: 50px; /* Increased padding */
+  padding: 24px 40px; /* Reduced from 50px */
   max-width: 1640px; /* Wider Desktop View */
   margin: 0 auto;
   min-height: 100vh;
@@ -45,7 +45,7 @@
 
 /* ── HEADER ── */
 .adm-hub__header {
-  margin-bottom: 60px;
+  margin-bottom: 32px; /* Reduced from 60px */
   display: flex;
   justify-content: space-between;
   align-items: flex-end;
@@ -115,8 +115,8 @@
 .hub-stats {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
-  gap: 35px;
-  margin-bottom: 60px;
+  gap: 24px; /* Reduced gap */
+  margin-bottom: 40px; /* Reduced from 60px */
 }
 
 .stat-card {

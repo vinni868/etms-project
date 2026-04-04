@@ -66,8 +66,10 @@
 }
 
 .adm-hero__inner {
-  max-width: 1700px; margin: 0 auto;
-  padding: 3rem 2.5rem 1.5rem;
+  width: 100%;
+  max-width: 100%;
+  margin: 0;
+  padding: 1.5rem 40px; /* Reduced from 3rem 5% for tighter fit */
   display: flex; align-items: flex-start;
   justify-content: space-between; gap: 1.5rem;
   flex-wrap: wrap;
@@ -215,8 +217,10 @@
 
 /* Stat pills */
 .adm-hero__stats {
-  max-width: 1700px; margin: 0 auto;
-  padding: 0 2.5rem 2rem;
+  width: 100%;
+  max-width: 100%;
+  margin: 0;
+  padding: 0 5% 2rem; /* Consistent 5% fluid padding */
   display: flex; gap: 1rem; flex-wrap: wrap;
   position: relative; z-index: 2;
 }
@@ -260,7 +264,15 @@
 /* ============================================================
    BODY AREA
    ============================================================ */
-.adm-page > *:not(.adm-hero) { padding-left: 2.5rem; padding-right: 2.5rem; }
+.adm-page > *:not(.adm-hero) { 
+  padding-left: 5%; padding-right: 5%; 
+  width: 100%;
+}
+
+/* Fix for the punch container margin */
+.adm-punch-container {
+  margin: 20px 0 10px !important;
+}
 
 /* ============================================================
    SECTION TABS
