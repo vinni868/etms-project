@@ -20,8 +20,7 @@ public class EmailServiceImpl implements EmailService {
     @Override
     public void sendOtpEmail(String toEmail, String otp) {
         System.out.println("DEBUG: [START] Preparing to send OTP to: " + toEmail);
-        System.out.println("DEBUG: [AUTH] Using Gmail account: " + fromEmail);
-        System.out.println("DEBUG: [CONFIG] Using Port 587 with STARTTLS for SMTP connection");
+        System.out.println("DEBUG: [AUTH] Authenticated Gmail User: " + fromEmail);
         try {
             MimeMessage message = mailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(message, true, "UTF-8");
