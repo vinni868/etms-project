@@ -52,8 +52,10 @@ public class EmailServiceImpl implements EmailService {
             System.err.println("👉 Please check if your Gmail App Password is still valid.");
             throw new RuntimeException("Email delivery failed: AUTHENTICATION ERROR");
         } catch (Exception e) {
-            System.err.println("❌ Critical Email Failure for " + toEmail + ": " + e.getClass().getSimpleName() + " - " + e.getMessage());
-            e.printStackTrace();
+            System.err.println("❌ ERROR: Email delivery failed for: " + toEmail);
+            System.err.println("❌ SENDER: " + fromEmail);
+            System.err.println("❌ CAUSE: " + e.getMessage());
+            e.printStackTrace(); // Print full stack trace for cloud deployment debugging
             throw new RuntimeException("Email delivery failed: " + e.getMessage());
         }
     }
