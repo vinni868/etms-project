@@ -23,11 +23,17 @@ public class EmailServiceImpl implements EmailService {
         System.out.println("DEBUG: [API] Using HTTPS Port 443 (Firewall Bypass)");
         
         try {
+            System.out.println("DEBUG: API Key Loaded (Length: " + (brevoApiKey != null ? brevoApiKey.length() : 0) + ")");
+            
             URL url = new URL("https://api.brevo.com/v3/smtp/email");
             HttpURLConnection conn = (HttpURLConnection) url.openConnection();
             conn.setRequestMethod("POST");
             conn.setRequestProperty("Content-Type", "application/json");
+            
+            // Using BOTH standard Brevo headers for maximum compatibility
             conn.setRequestProperty("api-key", brevoApiKey);
+            conn.setRequestProperty("x-sib-api-key", brevoApiKey);
+            
             conn.setDoOutput(true);
 
             String htmlContent = 
