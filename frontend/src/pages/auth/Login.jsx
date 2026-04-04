@@ -99,7 +99,7 @@ function Login() {
         </form>
 
         <div className="login-footer">
-          <p>New to EtMS? <Link to="/register">Create an account</Link></p>
+          <p>New to EtMS? <Link to="/signup">Create an account</Link></p>
         </div>
       </div>
     </div>

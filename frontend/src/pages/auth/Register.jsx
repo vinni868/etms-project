@@ -27,12 +27,18 @@ function Register() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
 
-  // If user lands on /register without going through Google, redirect them
-  // to the signup chooser page (/signup) so the flow is enforced.
-  // Remove this block if you want to keep manual email registration too.
+  // ── 1. Security Redirect: Enforce verified flow ──
   useEffect(() => {
-    // Sync data if state changes (e.g. back navigation)
+    if (!isVerified) {
+      // If user tries to access /register directly, send them back to /signup
+      navigate("/signup", { replace: true });
+    }
+  }, [isVerified, navigate]);
+
+  // ── 2. Sync initial data ──
+  useEffect(() => {
     if (isVerified) {
       setData((prev) => ({
         ...prev,
@@ -48,12 +54,18 @@ function Register() {
     setError("");
     setSuccess("");
 
+    if (data.phone.length < 10) {
+      setError("Please enter a valid 10-digit phone number.");
+      setLoading(false);
+      return;
+    }
+
     try {
       await api.post("/auth/register", {
         ...data,
         role: "STUDENT",
       });
-      setSuccess("Account created successfully. Redirecting...");
+      setSuccess("Account created successfully. Redirecting to login...");
       setTimeout(() => navigate("/login"), 2000);
     } catch (err) {
       setError(err.response?.data?.message || "Registration failed. Please try again.");
@@ -62,13 +74,15 @@ function Register() {
     }
   };
 
+  if (!isVerified) return null; // Prevent flicker before redirect
+
   return (
     <div className="etms-register-container">
       <div className="etms-register-card">
         <div className="etms-register-header">
           <img src={LOGO_URL} alt="EtMS Logo" />
-          <h1>Create Account</h1>
-          <p>Start your journey with EtMS</p>
+          <h1>Complete Profile</h1>
+          <p>Provide a few more details to get started</p>
         </div>
 
         {/* Verified Badges */}
@@ -88,8 +102,8 @@ function Register() {
           </div>
         )}
         {manuallyVerified && (
-          <div className="etms-google-badge" style={{ background: 'linear-gradient(135deg, #eff6ff, #dbeafe)', borderColor: '#93c5fd', color: '#1e40af' }}>
-            <svg viewBox="0 0 24 24" className="etms-google-badge-icon" fill="none" stroke="currentColor" strokeWidth="2">
+          <div className="etms-manual-badge">
+            <svg viewBox="0 0 24 24" className="etms-google-badge-icon" fill="none" stroke="currentColor" strokeWidth="2.5">
               <path d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
             </svg>
             <span>Email Verified Successfully</span>
@@ -130,10 +144,6 @@ function Register() {
                 placeholder="name@email.com"
                 required
                 value={data.email}
-                onChange={(e) => {
-                  // Only allow changes if NOT verified
-                  if (!isVerified) setData({ ...data, email: e.target.value });
-                }}
                 readOnly={isVerified}
                 className={isVerified ? "etms-email-locked" : ""}
               />
@@ -145,7 +155,7 @@ function Register() {
             </div>
             {isVerified && (
               <p className="etms-email-hint">
-                This email was verified and cannot be changed.
+                Verified email is locked for security.
               </p>
             )}
           </div>
@@ -163,21 +173,30 @@ function Register() {
               }
             />
             {data.phone && data.phone.length < 10 && (
-              <p style={{ color: "#ef4444", fontSize: "12px", fontWeight: "600", marginTop: "5px" }}>
+              <p className="etms-validation-error">
                 ⚠️ Exactly 10 digits required
               </p>
             )}
           </div>
 
           <div className="etms-input-group">
-            <label>Password</label>
-            <input
-              type="password"
-              placeholder="Create a password"
-              required
-              value={data.password}
-              onChange={(e) => setData({ ...data, password: e.target.value })}
-            />
+            <label>Create Password</label>
+            <div className="etms-password-wrapper">
+              <input
+                type={showPassword ? "text" : "password"}
+                placeholder="••••••••"
+                required
+                value={data.password}
+                onChange={(e) => setData({ ...data, password: e.target.value })}
+              />
+              <button 
+                type="button" 
+                onClick={() => setShowPassword(!showPassword)}
+                className="etms-password-toggle"
+              >
+                {showPassword ? "Hide" : "Show"}
+              </button>
+            </div>
           </div>
 
           <button type="submit" className="etms-submit-btn" disabled={loading || (data.phone && data.phone.length < 10)}>
@@ -186,7 +205,7 @@ function Register() {
         </form>
 
         <div className="etms-register-footer">
-          Already have an account? <Link to="/login">Sign in</Link>
+          Changed your mind? <Link to="/login">Back to Sign in</Link>
         </div>
       </div>
     </div>

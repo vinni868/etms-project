@@ -216,16 +216,16 @@ function GoogleSignup() {
           </p>
         </div>
 
-        {error && <div style={{background: '#fee2e2', color: '#991b1b', padding: '10px', borderRadius: '8px', marginBottom: '15px', fontSize: '13px', textAlign: 'center'}}>{error}</div>}
-        {success && <div style={{background: '#dcfce7', color: '#166534', padding: '10px', borderRadius: '8px', marginBottom: '15px', fontSize: '13px', textAlign: 'center'}}>{success}</div>}
+        {error && <div style={{background: '#fee2e2', color: '#991b1b', padding: '12px', borderRadius: '12px', marginBottom: '20px', fontSize: '13px', textAlign: 'center', border: '1px solid #fee2e2'}}>{error}</div>}
+        {success && <div style={{background: '#dcfce7', color: '#166534', padding: '12px', borderRadius: '12px', marginBottom: '20px', fontSize: '13px', textAlign: 'center', border: '1px solid #dcfce7'}}>{success}</div>}
 
         <div className="gs-options">
           
           {/* STEP 1: CHOOSER */}
           {step === 'CHOOSER' && (
             <>
-              <div style={{ display: 'flex', justifyContent: 'center', width: '100%', marginBottom: '6px' }}>
-                <div ref={googleBtnRef} style={{ width: '100%', minHeight: '40px', display: 'flex', justifyContent: 'center' }} />
+              <div id="google-btn-container">
+                <div ref={googleBtnRef} />
               </div>
 
               <div className="gs-divider">
@@ -233,7 +233,7 @@ function GoogleSignup() {
               </div>
 
               <button className="gs-email-btn" onClick={() => setStep('EMAIL_INPUT')}>
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" />
                   <polyline points="22,6 12,12 2,6" />
                 </svg>
@@ -244,27 +244,25 @@ function GoogleSignup() {
 
           {/* STEP 2: EMAIL INPUT (OTP Request) */}
           {step === 'EMAIL_INPUT' && (
-            <form onSubmit={handleSendOtp} style={{display: 'flex', flexDirection: 'column', gap: '15px'}}>
-              <div style={{display: 'flex', flexDirection: 'column', gap: '5px'}}>
-                <label style={{fontSize: '14px', fontWeight: '600', color: '#1e293b'}}>Gmail Address</label>
+            <form onSubmit={handleSendOtp} style={{display: 'flex', flexDirection: 'column', gap: '20px'}}>
+              <div className="gs-form-group">
+                <label className="gs-form-label">Gmail Address</label>
                 <input 
                   type="email" 
                   autoFocus
                   placeholder="name@gmail.com" 
+                  className="gs-input"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
-                  style={{padding: '12px 14px', border: '1px solid #cbd5e1', borderRadius: '8px', fontSize: '14px', outline: 'none', transition: '0.2s'}}
-                  onFocus={(e) => e.target.style.borderColor = '#2563eb'}
-                  onBlur={(e) => e.target.style.borderColor = '#cbd5e1'}
                 />
               </div>
 
-              <div style={{display: 'flex', gap: '10px', marginTop: '5px'}}>
-                <button type="button" onClick={() => {setStep('CHOOSER'); setError("");}} style={{flex: 1, padding: '12px', background: '#f1f5f9', border: 'none', borderRadius: '8px', color: '#475569', fontWeight: '600', cursor: 'pointer'}}>
+              <div style={{display: 'flex', gap: '12px'}}>
+                <button type="button" onClick={() => {setStep('CHOOSER'); setError("");}} style={{flex: 1, padding: '14px', background: '#f1f5f9', border: 'none', borderRadius: '12px', color: '#475569', fontWeight: '700', cursor: 'pointer', transition: '0.2s'}}>
                   Back
                 </button>
-                <button type="submit" disabled={loading} style={{flex: 2, padding: '12px', background: '#2563eb', border: 'none', borderRadius: '8px', color: 'white', fontWeight: '600', cursor: loading ? 'not-allowed' : 'pointer', opacity: loading ? 0.7 : 1}}>
+                <button type="submit" disabled={loading} className="gs-email-btn" style={{flex: 2}}>
                   {loading ? 'Sending...' : 'Send OTP'}
                 </button>
               </div>
@@ -273,42 +271,41 @@ function GoogleSignup() {
 
           {/* STEP 3: OTP VERIFICATION */}
           {step === 'OTP_INPUT' && (
-            <div style={{display: 'flex', flexDirection: 'column', gap: '15px'}}>
-              <form onSubmit={handleVerifyOtp} style={{display: 'flex', flexDirection: 'column', gap: '15px'}}>
-                <div style={{fontSize: '13px', color: '#64748b', textAlign: 'center', marginBottom: '5px'}}>
-                  We sent a 6-digit code to <strong>{email}</strong>
+            <div style={{display: 'flex', flexDirection: 'column', gap: '20px'}}>
+              <form onSubmit={handleVerifyOtp} style={{display: 'flex', flexDirection: 'column', gap: '20px'}}>
+                <div style={{fontSize: '14px', color: '#64748b', textAlign: 'center', lineHeight: '1.6'}}>
+                  We sent a 6-digit code to <br/><strong style={{color: '#0f172a'}}>{email}</strong>
                 </div>
 
-                <div style={{display: 'flex', flexDirection: 'column', gap: '5px'}}>
-                  <label style={{fontSize: '14px', fontWeight: '600', color: '#1e293b'}}>Verification Code</label>
+                <div className="gs-form-group">
+                  <label className="gs-form-label">Verification Code</label>
                   <input 
                     type="text" 
                     autoFocus
-                    placeholder="Enter 6-digit OTP" 
+                    placeholder="000000" 
+                    className="gs-input"
+                    style={{letterSpacing: '8px', textAlign: 'center', fontSize: '20px', fontWeight: '800'}}
                     value={otp}
                     onChange={(e) => setOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
                     required
-                    style={{padding: '12px 14px', border: '1px solid #cbd5e1', borderRadius: '8px', fontSize: '16px', letterSpacing: '4px', textAlign: 'center', outline: 'none', transition: '0.2s', fontWeight: 'bold'}}
-                    onFocus={(e) => e.target.style.borderColor = '#2563eb'}
-                    onBlur={(e) => e.target.style.borderColor = '#cbd5e1'}
                   />
                 </div>
 
-                <div style={{display: 'flex', gap: '10px', marginTop: '5px'}}>
-                  <button type="button" onClick={() => {setStep('EMAIL_INPUT'); setOtp(""); setError(""); setSuccess("");}} style={{flex: 1, padding: '12px', background: '#f1f5f9', border: 'none', borderRadius: '8px', color: '#475569', fontWeight: '600', cursor: 'pointer'}}>
+                <div style={{display: 'flex', gap: '12px'}}>
+                  <button type="button" onClick={() => {setStep('EMAIL_INPUT'); setOtp(""); setError(""); setSuccess("");}} style={{flex: 1, padding: '14px', background: '#f1f5f9', border: 'none', borderRadius: '12px', color: '#475569', fontWeight: '700', cursor: 'pointer', transition: '0.2s'}}>
                     Back
                   </button>
-                  <button type="submit" disabled={loading} style={{flex: 2, padding: '12px', background: '#22c55e', border: 'none', borderRadius: '8px', color: 'white', fontWeight: '600', cursor: loading ? 'not-allowed' : 'pointer', opacity: loading ? 0.7 : 1}}>
+                  <button type="submit" disabled={loading} className="gs-email-btn" style={{flex: 2, background: 'linear-gradient(135deg, #059669, #10b981)'}}>
                     {loading ? 'Verifying...' : 'Verify OTP'}
                   </button>
                 </div>
               </form>
               
-              <div style={{textAlign: 'center', marginTop: '10px', padding: '10px', borderTop: '1px solid #f1f5f9'}}>
-                <p style={{fontSize: '13px', color: '#64748b'}}>
+              <div style={{textAlign: 'center', paddingTop: '10px', borderTop: '1px solid #f1f5f9'}}>
+                <p style={{fontSize: '14px', color: '#64748b'}}>
                   Didn't receive the code?{' '}
                   {resendTimer > 0 ? (
-                    <span style={{color: '#1e293b', fontWeight: '600'}}>Resend in {resendTimer}s</span>
+                    <span style={{color: '#0f172a', fontWeight: '700'}}>Resend in {resendTimer}s</span>
                   ) : (
                     <button 
                       onClick={handleResendOtp} 
@@ -317,10 +314,11 @@ function GoogleSignup() {
                         background: 'none', 
                         border: 'none', 
                         color: '#2563eb', 
-                        textDecoration: 'underline', 
                         cursor: loading ? 'not-allowed' : 'pointer', 
-                        fontWeight: '600',
-                        fontSize: '13px'
+                        fontWeight: '700',
+                        fontSize: '14px',
+                        padding: '0 4px',
+                        textDecoration: 'underline'
                       }}
                     >
                       Resend Code
@@ -334,7 +332,7 @@ function GoogleSignup() {
         </div>
 
         <div className="gs-footer">
-          Already have an account?{" "}
+          Already have an account?
           <Link to="/login" className="gs-link">
             Sign in
           </Link>
