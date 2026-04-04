@@ -19,10 +19,10 @@ public class MailConfig {
 
     @Bean
     public JavaMailSender javaMailSender() {
-        System.out.println("LMS_INIT: Hard-Coding SMTP Configuration to Port 587 (STARTTLS)");
+        System.out.println("LMS_INIT: Hard-Coding SMTP Configuration to [googlemail.com] Port 587 (RELAXED 60s)");
         
         JavaMailSenderImpl mailSender = new JavaMailSenderImpl();
-        mailSender.setHost("smtp.gmail.com");
+        mailSender.setHost("smtp.googlemail.com");
         mailSender.setPort(587); // STRICT PORT 587
         
         mailSender.setUsername(mailUsername);
@@ -35,10 +35,10 @@ public class MailConfig {
         props.put("mail.smtp.starttls.required", "true");
         props.put("mail.debug", "false");
         
-        // Render network tuning
-        props.put("mail.smtp.connectiontimeout", "15000");
-        props.put("mail.smtp.timeout", "15000");
-        props.put("mail.smtp.writetimeout", "15000");
+        // Render network tuning - Relaxed Timeout
+        props.put("mail.smtp.connectiontimeout", "60000");
+        props.put("mail.smtp.timeout", "60000");
+        props.put("mail.smtp.writetimeout", "60000");
         
         // Force IPv4 if IPv6 is causing SocketTimeoutException
         System.setProperty("java.net.preferIPv4Stack", "true");
