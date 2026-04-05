@@ -3,8 +3,8 @@ import api from "../../api/axiosConfig";
 import "./SuperAdminProfile.css";
 import { 
   FaUserShield, FaEnvelope, FaPhone, FaMapMarkerAlt, 
-  FaInfoCircle, FaEdit, FaSave, FaTimes, FaCamera, FaMedal, FaCrown,
-  FaExclamationTriangle, FaSync, FaIdCard, FaGlobe, FaCogs, FaCheckCircle
+  FaEdit, FaSave, FaTimes, FaGlobe, FaShieldAlt, 
+  FaFingerprint, FaClock, FaIdBadge, FaCrown
 } from "react-icons/fa";
 
 function SuperAdminProfile() {
@@ -42,17 +42,6 @@ function SuperAdminProfile() {
     }
   };
 
-  const calculateStrength = (p) => {
-    if (!p) return 0;
-    let score = 0;
-    if (p.bio) score += 20;
-    if (p.phone) score += 20;
-    if (p.profilePicture) score += 20;
-    if (p.address) score += 20;
-    if (p.emergencyContact) score += 20;
-    return score;
-  };
-
   const handleEdit = () => {
     setSnapshot({ ...profile });
     setIsEditing(true);
@@ -69,7 +58,7 @@ function SuperAdminProfile() {
       await api.put("/superadmin/update-profile", profile);
       setIsEditing(false);
       setSnapshot(null);
-      alert("Profile updated successfully ✅");
+      // alert("Profile updated successfully ✅");
     } catch (err) {
       alert(`Update failed: ${err.message} ❌`);
     } finally {
@@ -78,206 +67,224 @@ function SuperAdminProfile() {
   };
 
   if (loading) return (
-    <div className="sap-loader">
-      <div className="sap-spinner"></div>
-      <p>Loading Profile...</p>
+    <div className="sa-loader-container">
+      <div className="sa-spin"></div>
+      <p>Initializing Executive Profile...</p>
     </div>
   );
 
   if (error || !profile) return (
-    <div className="sap-loader sa-error-state">
-      <FaExclamationTriangle size={50} color="#ef4444" />
-      <h2>Error Loading Profile</h2>
-      <p>{error || "Profile data is not available."}</p>
-      <button className="sa-retry-btn" onClick={fetchProfile}>
-        <FaSync /> Retry
-      </button>
+    <div className="sa-error-state">
+      <div className="sa-error-box">
+        <FaShieldAlt size={50} color="#ef4444" />
+        <h2>Access Denied</h2>
+        <p>{error || "Profile data is not available."}</p>
+        <button className="sa-retry-btn" onClick={fetchProfile}>Attempt Reconnection</button>
+      </div>
     </div>
   );
 
-  const strength = calculateStrength(profile);
-
   return (
-    <div className="sa-page">
-      <div className="sa-wrapper">
+    <div className="sa-profile-page">
+      <div className="sa-profile-container">
         
-        {/* ── TOP STATS ── */}
-        <div className="sap-stats-rectangle">
-          <div className="sap-stat-card">
-            <div className="sap-stat-icon"><FaMedal /></div>
-            <div className="sap-stat-info">
-              <span className="sap-stat-val">{strength}%</span>
-              <span className="sap-stat-lbl">Profile Progress</span>
-            </div>
+        {/* ── HEADER PANEL ── */}
+        <div className="sa-executive-header">
+          <div className="header-text-block">
+            <div className="header-pill"><FaCrown /> EXECUTIVE COMMAND CENTER</div>
+            <h1>Super Admin Profile</h1>
+            <p>Manage your central administrative identity and security preferences.</p>
           </div>
-          <div className="sap-stat-divider" />
-          <div className="sap-stat-card">
-            <div className="sap-stat-icon"><FaUserShield /></div>
-            <div className="sap-stat-info">
-              <span className="sap-stat-val">Full Access</span>
-              <span className="sap-stat-lbl">Permission Level</span>
-            </div>
-          </div>
-          <div className="sap-stat-divider" />
-          <div className="sap-stat-card">
-            <div className="sap-stat-icon">
-              <FaCheckCircle color="#10b981" />
-            </div>
-            <div className="sap-stat-info">
-              <span className="sap-stat-val">ACTIVE</span>
-              <span className="sap-stat-lbl">Account Status</span>
-            </div>
-          </div>
-          <div className="sap-stat-divider" />
-          <div className="sap-stat-card">
-            <div className="sap-stat-info">
-              <span className="sap-stat-val" style={{fontSize: '0.9rem'}}>{profile.portalId || profile.studentId || "ROOT-001"}</span>
-              <span className="sap-stat-lbl">Portal ID</span>
-            </div>
+          <div className="header-action-block">
+            {!isEditing ? (
+              <button className="sa-action-btn edit-mode" onClick={handleEdit}>
+                <FaEdit /> Modify Configuration
+              </button>
+            ) : (
+              <div className="sa-action-group">
+                <button className="sa-action-btn cancel-btn" onClick={handleCancel}><FaTimes /> Cancel</button>
+                <button className="sa-action-btn save-btn" onClick={handleSave} disabled={saving}>
+                  {saving ? <span className="sa-spin-small"></span> : <FaSave />} {saving ? "Applying..." : "Apply Changes"}
+                </button>
+              </div>
+            )}
           </div>
         </div>
 
-        <div className="sap-content-panel">
-          {/* Header Section */}
-          <div className="sap-hub-header">
-            <div className="sap-hh-left">
-              <h2>Super Admin Profile</h2>
-              <p>Manage your account information and settings</p>
-            </div>
-            <div className="sap-hh-right">
-              {!isEditing ? (
-                <button className="sap-btn-action edit" onClick={handleEdit}>
-                  <FaEdit /> Edit Profile
-                </button>
-              ) : (
-                <div className="sap-btn-group">
-                  <button className="sap-btn-action cancel" onClick={handleCancel}><FaTimes /> Cancel</button>
-                  <button className="sap-btn-action save" onClick={handleSave} disabled={saving}>
-                    <FaSave /> {saving ? "Saving..." : "Save Changes"}
-                  </button>
+        <div className="sa-content-layout">
+          {/* LEFT COLUMN: IDENTITY CARD */}
+          <div className="sa-identity-column">
+            <div className="sa-identity-matrix">
+              <div className="matrix-bg"></div>
+              <div className="avatar-wrapper">
+                <div className="hex-avatar">
+                   <img src={profile.profilePicture || "https://cdn-icons-png.flaticon.com/512/3135/3135715.png"} alt="SA" />
                 </div>
-              )}
+              </div>
+              <div className="identity-text">
+                <h2>{profile.name}</h2>
+                <span className="matrix-role">{profile.adminTitle || "System Architect"}</span>
+                <div className="matrix-email"><FaEnvelope /> {profile.email}</div>
+              </div>
+              
+              <div className="matrix-stats">
+                <div className="matrix-stat-item">
+                  <span className="stat-value">ROOT</span>
+                  <span className="stat-label">Access Level</span>
+                </div>
+                <div className="matrix-stat-item">
+                  <span className="stat-value text-green">ACTIVE</span>
+                  <span className="stat-label">System Status</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="sa-side-card">
+              <h3><FaShieldAlt /> System Security</h3>
+              <p className="side-card-desc">Your account has ultra-level clearance. Keep mechanisms secure.</p>
+              
+              <div className="security-item">
+                <div className="sec-icon"><FaFingerprint /></div>
+                <div className="sec-details">
+                  <h4>MFA Status</h4>
+                  <span>Authentication Enforced</span>
+                </div>
+              </div>
             </div>
           </div>
 
-          {/* Hero Banner Section */}
-          <div className="sap-banner-complex">
-             <div className="sap-banner-gradient"></div>
-             <div className="sap-banner-mesh"></div>
-             
-             <div className="sap-identity-card">
-                <div className="sap-ic-left">
-                   <div className="sap-avatar-frame">
-                      <img src={profile.profilePicture || "https://cdn-icons-png.flaticon.com/512/3135/3135715.png"} alt="SA" />
-                   </div>
-                   <div className="sap-ic-info">
-                      <div className="sap-role-pill"><FaCrown /> Super Admin</div>
-                      <h1 className="sap-name-display">{profile.name}</h1>
-                      <p className="sap-email-display">{profile.email}</p>
-                   </div>
-                </div>
-                <div className="sap-ic-right">
-                   <div className="sap-strength-ring">
-                      <svg viewBox="0 0 36 36" className="sap-circular-chart">
-                        <path className="circle-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
-                        <path className="circle" strokeDasharray={`${strength}, 100`} d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
-                      </svg>
-                      <div className="sap-strength-text">
-                        <span className="sap-st-val">{strength}%</span>
-                        <span className="sap-st-lbl">Progress</span>
-                      </div>
-                   </div>
-                </div>
-             </div>
-          </div>
-
-          <div className="sap-form-grid">
-            {/* Personal Information */}
-            <div className="sap-form-card">
-               <h3 className="sap-form-title"><FaUserShield /> Personal Information</h3>
-               <div className="sap-form-row">
-                  <div className="sap-group">
-                     <label>Full Name</label>
-                     <input 
-                       value={profile.name || ""} 
-                       readOnly={!isEditing} 
-                       onChange={(e) => setProfile({...profile, name: e.target.value})}
-                     />
-                  </div>
-                  <div className="sap-group">
-                     <label>Email Address</label>
-                     <input value={profile.email || ""} readOnly className="locked" />
-                  </div>
-               </div>
-               <div className="sap-form-row">
-                  <div className="sap-group">
-                     <label>Phone Number</label>
-                     <input 
-                       value={profile.phone || ""} 
-                       readOnly={!isEditing} 
-                       onChange={(e) => setProfile({...profile, phone: e.target.value})}
-                     />
-                  </div>
-                  <div className="sap-group">
-                     <label>Gender</label>
-                     <select value={profile.gender || ""} disabled={!isEditing} onChange={(e) => setProfile({...profile, gender: e.target.value})}>
-                        <option value="">Select Gender</option>
-                        <option value="MALE">MALE</option>
-                        <option value="FEMALE">FEMALE</option>
-                     </select>
-                  </div>
-               </div>
-            </div>
-
-            {/* About Me */}
-            <div className="sap-form-card">
-               <h3 className="sap-form-title"><FaInfoCircle /> About Me</h3>
-               <textarea 
-                 className="sap-textarea"
-                 value={profile.bio || ""} 
-                 readOnly={!isEditing} 
-                 placeholder="Tell us about yourself..."
-                 onChange={(e) => setProfile({...profile, bio: e.target.value})}
-               />
-            </div>
-
-            {/* Location Details */}
-            <div className="sap-form-card">
-               <h3 className="sap-form-title"><FaGlobe /> Location Details</h3>
-               <div className="sap-form-row">
-                  <div className="sap-group">
-                     <label>City</label>
-                     <input value={profile.city || ""} readOnly={!isEditing} onChange={(e) => setProfile({...profile, city: e.target.value})} />
-                  </div>
-                  <div className="sap-group">
-                     <label>Street Address</label>
-                     <input value={profile.address || ""} readOnly={!isEditing} onChange={(e) => setProfile({...profile, address: e.target.value})} />
-                  </div>
-               </div>
-               <div className="sap-form-row">
-                  <div className="sap-group">
-                     <label>State</label>
-                     <input value={profile.state || ""} readOnly={!isEditing} onChange={(e) => setProfile({...profile, state: e.target.value})} />
-                  </div>
-                  <div className="sap-group">
-                     <label>Pincode / Zip</label>
-                     <input value={profile.pincode || ""} readOnly={!isEditing} onChange={(e) => setProfile({...profile, pincode: e.target.value})} />
-                  </div>
-               </div>
-            </div>
-
-            {/* Support Contact */}
-            <div className="sap-form-card">
-               <h3 className="sap-form-title"><FaPhone /> Emergency Contact</h3>
-               <div className="sap-group">
-                  <label>Emergency Contact Name/Relation</label>
+          {/* RIGHT COLUMN: CONFIGURATION MANAGER */}
+          <div className="sa-config-column">
+            
+            <div className="sa-config-group">
+              <div className="config-group-header">
+                <h3><FaIdBadge /> Executive Identity</h3>
+                <span>Core identification metrics</span>
+              </div>
+              <div className="config-grid">
+                <div className="config-field">
+                  <label>Full Legal Name</label>
                   <input 
-                    value={profile.emergencyContact || ""} 
+                    type="text" 
+                    value={profile.name || ""} 
                     readOnly={!isEditing} 
-                    onChange={(e) => setProfile({...profile, emergencyContact: e.target.value})} 
+                    onChange={(e) => setProfile({...profile, name: e.target.value})}
+                    className={!isEditing ? "locked" : "editable"}
                   />
-               </div>
+                </div>
+                <div className="config-field">
+                  <label>Administrative Title</label>
+                  <input 
+                    type="text" 
+                    value={profile.adminTitle || ""} 
+                    readOnly={!isEditing} 
+                    placeholder="e.g. Chief Operations Officer"
+                    onChange={(e) => setProfile({...profile, adminTitle: e.target.value})}
+                    className={!isEditing ? "locked" : "editable"}
+                  />
+                </div>
+                <div className="config-field full-width">
+                  <label>Professional Biography (System Log Profile)</label>
+                  <textarea 
+                    value={profile.bio || ""} 
+                    readOnly={!isEditing}
+                    placeholder="Describe your role and expertise..."
+                    onChange={(e) => setProfile({...profile, bio: e.target.value})}
+                    className={`bio-text ${!isEditing ? "locked" : "editable"}`}
+                  />
+                </div>
+              </div>
             </div>
+
+            <div className="sa-config-group">
+              <div className="config-group-header">
+                <h3><FaCrown /> Security & Communications</h3>
+                <span>Critical contact arrays</span>
+              </div>
+              <div className="config-grid">
+                <div className="config-field">
+                  <label>Primary System Email</label>
+                  <input type="text" value={profile.email || ""} disabled className="system-locked" />
+                </div>
+                <div className="config-field">
+                  <label>Recovery Email (Critical)</label>
+                  <input 
+                    type="email" 
+                    value={profile.recoveryEmail || ""} 
+                    readOnly={!isEditing} 
+                    placeholder="backup@domain.com"
+                    onChange={(e) => setProfile({...profile, recoveryEmail: e.target.value})}
+                    className={!isEditing ? "locked" : "editable"}
+                  />
+                </div>
+                <div className="config-field">
+                  <label><FaPhone className="input-icon"/> Phone Contact</label>
+                  <input 
+                    type="text" 
+                    value={profile.phone || ""} 
+                    readOnly={!isEditing} 
+                    onChange={(e) => setProfile({...profile, phone: e.target.value})}
+                    className={!isEditing ? "locked" : "editable"}
+                  />
+                </div>
+              </div>
+            </div>
+
+            <div className="sa-config-group">
+              <div className="config-group-header">
+                <h3><FaGlobe /> Environment & Location</h3>
+                <span>Regional settings for logging</span>
+              </div>
+              <div className="config-grid">
+                <div className="config-field">
+                  <label><FaClock className="input-icon"/> Operational Timezone</label>
+                  <select 
+                    value={profile.timezone || ""} 
+                    disabled={!isEditing} 
+                    onChange={(e) => setProfile({...profile, timezone: e.target.value})}
+                    className={!isEditing ? "locked" : "editable"}
+                  >
+                    <option value="">Select Timezone</option>
+                    <option value="Asia/Kolkata">Asia/Kolkata (IST)</option>
+                    <option value="America/New_York">America/New_York (EST)</option>
+                    <option value="Europe/London">Europe/London (GMT)</option>
+                    <option value="Australia/Sydney">Australia/Sydney (AEST)</option>
+                    <option value="UTC">Universal Time Coordinated (UTC)</option>
+                  </select>
+                </div>
+                <div className="config-field">
+                  <label><FaMapMarkerAlt className="input-icon"/> Base City</label>
+                  <input 
+                    type="text" 
+                    value={profile.city || ""} 
+                    readOnly={!isEditing} 
+                    onChange={(e) => setProfile({...profile, city: e.target.value})}
+                    className={!isEditing ? "locked" : "editable"}
+                  />
+                </div>
+                <div className="config-field">
+                  <label>State / Region</label>
+                  <input 
+                    type="text" 
+                    value={profile.state || ""} 
+                    readOnly={!isEditing} 
+                    onChange={(e) => setProfile({...profile, state: e.target.value})}
+                    className={!isEditing ? "locked" : "editable"}
+                  />
+                </div>
+                <div className="config-field">
+                  <label>Regional Pincode</label>
+                  <input 
+                    type="text" 
+                    value={profile.pincode || ""} 
+                    readOnly={!isEditing} 
+                    onChange={(e) => setProfile({...profile, pincode: e.target.value})}
+                    className={!isEditing ? "locked" : "editable"}
+                  />
+                </div>
+              </div>
+            </div>
+
           </div>
         </div>
       </div>

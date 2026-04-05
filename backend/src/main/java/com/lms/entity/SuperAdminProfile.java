@@ -18,8 +18,6 @@ public class SuperAdminProfile {
     private String email;
 
     private String phone;
-    private String gender;
-    
     @Column(columnDefinition = "TEXT")
     private String bio;
 
@@ -33,5 +31,6 @@ public class SuperAdminProfile {
     
     // Administrative fields
     private String adminTitle;
-    private String emergencyContact;
+    private String recoveryEmail;
+    private String timezone;
 }

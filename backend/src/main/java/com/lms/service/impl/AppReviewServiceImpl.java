@@ -56,7 +56,7 @@ public class AppReviewServiceImpl implements AppReviewService {
         dto.setUserId(review.getUser().getId());
         dto.setUserName(review.getUser().getName());
         dto.setUserEmail(review.getUser().getEmail());
-        dto.setUserRole(review.getUser().getRole().name());
+        dto.setUserRole(review.getUser().getRole().getRoleName());
         dto.setRating(review.getRating());
         dto.setFeedback(review.getFeedback());
         dto.setCreatedAt(review.getCreatedAt());
