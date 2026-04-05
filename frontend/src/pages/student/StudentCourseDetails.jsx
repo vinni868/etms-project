@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import api from "../../api/axiosConfig";
+import api, { handleViewFile } from "../../api/axiosConfig";
 import "./StudentCourseDetails.css";
 
 function StudentCourseDetails() {
@@ -69,7 +69,12 @@ function StudentCourseDetails() {
           {course.syllabusFileName ? (
              <div className="syllabus-download">
                 <p>Curriculum file: {course.syllabusFileName}</p>
-                <button className="download-btn">View Full Syllabus</button>
+                <button 
+                  className="download-btn"
+                  onClick={() => handleViewFile(`/student/courses/download/${course.id}?mode=view`)}
+                >
+                  View Full Syllabus
+                </button>
              </div>
           ) : (
             <ul>

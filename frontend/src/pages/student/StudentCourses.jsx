@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import api from "../../api/axiosConfig";
+import api, { handleViewFile } from "../../api/axiosConfig";
 import {
   FaBook, FaDownload, FaClock, FaLink, FaCalendarAlt,
   FaExclamationCircle, FaGraduationCap, FaLayerGroup,
@@ -100,17 +100,7 @@ function StudentCourses() {
   };
 
   const handleViewSyllabus = async (courseId) => {
-    try {
-      const response = await api.get(`/student/courses/download/${courseId}?mode=view`, {
-        responseType: 'blob'
-      });
-      const file = new Blob([response.data], { type: 'application/pdf' });
-      const fileURL = URL.createObjectURL(file);
-      window.open(fileURL, '_blank');
-    } catch (err) {
-      console.error("Error viewing syllabus", err);
-      setError("Failed to open syllabus. Please try again.");
-    }
+    await handleViewFile(`/student/courses/download/${courseId}?mode=view`);
   };
 
   if (loading) return (

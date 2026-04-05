@@ -1,7 +1,7 @@
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { useEffect, useState, useRef } from "react";
 import { createPortal } from "react-dom";
-import api from "../../api/axiosConfig";
+import api, { handleViewFile } from "../../api/axiosConfig";
 import {
   FaArrowLeft, FaUserGraduate, FaEnvelope, FaSearch,
   FaUsers, FaRegCalendarAlt, FaPhoneAlt, FaChevronLeft,
@@ -730,17 +730,7 @@ function CourseDetails() {
   };
 
   const handleViewSyllabus = async (courseId) => {
-    try {
-      const response = await api.get(`/admin/courses/${courseId}/syllabus?mode=view`, {
-        responseType: 'blob'
-      });
-      const file = new Blob([response.data], { type: 'application/pdf' });
-      const fileURL = URL.createObjectURL(file);
-      window.open(fileURL, '_blank');
-    } catch (err) {
-      console.error("Error viewing syllabus", err);
-      showToast("error", "Failed to open syllabus. Please try again.");
-    }
+    await handleViewFile(`/admin/courses/${courseId}/syllabus?mode=view`);
   };
 
   const handleMappingSaved = () => {

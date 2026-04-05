@@ -35,7 +35,7 @@ const NotificationDropdown = ({ isOpen, onToggle }) => {
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
-        setIsOpen(false);
+        if (isOpen && onToggle) onToggle();
       }
     };
     document.addEventListener("mousedown", handleClickOutside);

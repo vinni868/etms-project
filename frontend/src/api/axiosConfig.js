@@ -29,9 +29,10 @@ api.interceptors.request.use(
 export const handleViewFile = async (endpoint) => {
   try {
     const response = await api.get(endpoint, { responseType: 'blob' });
+    const contentType = response.headers['content-type'];
     
     // Check if the response is actually JSON (Cloudinary URL)
-    if (response.data.size < 2000) {
+    if (contentType && contentType.includes('application/json')) {
       const text = await response.data.text();
       try {
         const json = JSON.parse(text);
@@ -39,13 +40,11 @@ export const handleViewFile = async (endpoint) => {
           window.open(json.url, '_blank');
           return;
         }
-      } catch (e) {
-        // Not JSON
-      }
+      } catch (e) { /* Not valid JSON */ }
     }
 
-    const contentType = response.headers['content-type'] || 'application/pdf';
-    const url = window.URL.createObjectURL(new Blob([response.data], { type: contentType }));
+    const blobType = contentType || 'application/pdf';
+    const url = window.URL.createObjectURL(new Blob([response.data], { type: blobType }));
     window.open(url, '_blank');
   } catch (err) {
     console.error("View error:", err);
@@ -56,9 +55,10 @@ export const handleViewFile = async (endpoint) => {
 export const handleDownload = async (endpoint, fileName) => {
   try {
     const response = await api.get(endpoint, { responseType: 'blob' });
+    const contentType = response.headers['content-type'];
     
     // Check if the response is actually JSON (Cloudinary URL)
-    if (response.data.size < 2000) {
+    if (contentType && contentType.includes('application/json')) {
       const text = await response.data.text();
       try {
         const json = JSON.parse(text);
@@ -66,9 +66,7 @@ export const handleDownload = async (endpoint, fileName) => {
           window.open(json.url, '_blank');
           return;
         }
-      } catch (e) {
-        // Not JSON
-      }
+      } catch (e) { /* Not valid JSON */ }
     }
 
     const url = window.URL.createObjectURL(new Blob([response.data]));
