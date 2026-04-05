@@ -179,6 +179,25 @@ const Navbar = () => {
         </header>
       </div>
       <div className="nav-spacer"></div>
+
+      {/* 📱 MOBILE TAB BAR (Fixed Bottom) */}
+      <nav className="public-mobile-tab-bar">
+        <NavLink to="/" end className="tab-item">
+          <span>🏠</span><label>Home</label>
+        </NavLink>
+        <div className="tab-item" onClick={() => handleMobileDrop('it-courses')}>
+          <span>📚</span><label>Courses</label>
+        </div>
+        <div className="tab-item" onClick={() => handleMobileDrop('jobs')}>
+          <span>💼</span><label>Jobs</label>
+        </div>
+        <NavLink to="/login" className="tab-item">
+          <span>🔑</span><label>Login</label>
+        </NavLink>
+        <div className="tab-item" onClick={toggleMenu}>
+          <span>☰</span><label>Menu</label>
+        </div>
+      </nav>
     </>
   );
 };

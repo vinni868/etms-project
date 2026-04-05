@@ -472,15 +472,91 @@ function DashboardLayout() {
             <NavLink to={`/${rolePath}/dashboard`} className="tab-item">
               <span>🏠</span><label>Home</label>
             </NavLink>
-            <NavLink to="/learning-hub" className="tab-item">
-              <span>📚</span><label>Learn</label>
-            </NavLink>
-            <NavLink to="/career-hub" className="tab-item">
-              <span>🚀</span><label>Career</label>
-            </NavLink>
-            <NavLink to={`/${rolePath}/performance`} className="tab-item">
-              <span>📊</span><label>Results</label>
-            </NavLink>
+
+            {user?.role === "STUDENT" && (
+              <>
+                <NavLink to="/learning-hub" className="tab-item">
+                  <span>📚</span><label>Learn</label>
+                </NavLink>
+                <NavLink to="/career-hub" className="tab-item">
+                  <span>🚀</span><label>Career</label>
+                </NavLink>
+                <NavLink to="/student/performance" className="tab-item">
+                  <span>📊</span><label>Results</label>
+                </NavLink>
+              </>
+            )}
+
+            {user?.role === "SUPERADMIN" && (
+              <>
+                <NavLink to="/superadmin/accounts" className="tab-item">
+                  <span>👥</span><label>Accounts</label>
+                </NavLink>
+                <NavLink to="/superadmin/performance" className="tab-item">
+                  <span>📈</span><label>Analytics</label>
+                </NavLink>
+                <NavLink to="/superadmin/attendance-report" className="tab-item">
+                  <span>⚙️</span><label>Ops</label>
+                </NavLink>
+              </>
+            )}
+
+            {user?.role === "ADMIN" && (
+              <>
+                <NavLink to="/admin/manage-users" className="tab-item">
+                  <span>👨‍💻</span><label>Users</label>
+                </NavLink>
+                <NavLink to="/admin/manage-batches" className="tab-item">
+                  <span>🏢</span><label>Batches</label>
+                </NavLink>
+                <NavLink to="/admin/announcements" className="tab-item">
+                  <span>📢</span><label>Comms</label>
+                </NavLink>
+              </>
+            )}
+
+            {user?.role === "TRAINER" && (
+              <>
+                <NavLink to="/trainer/batches" className="tab-item">
+                  <span>📅</span><label>Batches</label>
+                </NavLink>
+                <NavLink to="/trainer/students" className="tab-item">
+                  <span>👨‍🎓</span><label>Students</label>
+                </NavLink>
+                <NavLink to="/trainer/leave" className="tab-item">
+                  <span>🗓</span><label>Leave</label>
+                </NavLink>
+              </>
+            )}
+
+            {user?.role === "COUNSELOR" && (
+              <>
+                <NavLink to="/counselor/enrollments" className="tab-item">
+                  <span>🎓</span><label>Enroll</label>
+                </NavLink>
+                <NavLink to="/counselor/queries" className="tab-item">
+                  <span>💬</span><label>Queries</label>
+                </NavLink>
+                <NavLink to="/counselor/reports" className="tab-item">
+                  <span>📊</span><label>Reports</label>
+                </NavLink>
+              </>
+            )}
+
+            {user?.role === "MARKETER" && (
+              <>
+                <NavLink to="/marketer/campaigns" className="tab-item">
+                  <span>📢</span><label>Campaigns</label>
+                </NavLink>
+                <NavLink to="/marketer/leads" className="tab-item">
+                  <span>🔗</span><label>Leads</label>
+                </NavLink>
+                <NavLink to="/marketer/social-metrics" className="tab-item">
+                  <span>📊</span><label>Metrics</label>
+                </NavLink>
+              </>
+            )}
+
             <div className="tab-item" onClick={() => setIsMobileMenuOpen(true)}>
               <span>☰</span><label>More</label>
             </div>

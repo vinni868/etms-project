@@ -204,6 +204,7 @@
 /* Responsive */
 @media (max-width: 1024px) {
   .footer-container { grid-template-columns: 1fr 1fr; }
+  .main-footer { display: none !important; }
 }
 
 @media (max-width: 600px) {

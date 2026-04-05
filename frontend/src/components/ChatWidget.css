@@ -648,7 +648,7 @@
 /* 📱 MOBILE ADJUSTMENTS — Move above the tab bar */
 @media (max-width: 768px) {
     .etms-chat-wrapper {
-        bottom: 90px;
+        bottom: 110px;
         right: 15px;
     }
     .chat-badge-label {

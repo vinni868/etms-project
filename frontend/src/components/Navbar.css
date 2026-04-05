@@ -158,7 +158,7 @@
     display: flex !important;
     flex-direction: column !important;
     gap: 0 !important;
-    padding: 0 !important;
+    padding: 0 0 90px 0 !important; /* Fixed padding so it scrolls past tab bar */
     list-style: none !important;
     -webkit-overflow-scrolling: touch;
   }
@@ -202,6 +202,87 @@
 
   .mob-login { background: #f8fafc; color: var(--royal-blue); }
   .mob-reg { background: var(--royal-blue); color: white; }
+
+  /* 📱 Drawer Accordion Mega Menu */
+  .has-mega-menu {
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+  }
+
+  .nav-link-anchor {
+    justify-content: space-between; /* push chevron to right edge */
+  }
+
+  .mega-menu-panel {
+    position: static !important;
+    box-shadow: none !important;
+    border: none !important;
+    background: #fdfdfd !important;
+    padding: 0 25px !important;
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.4s ease, padding 0.4s ease, opacity 0.3s ease;
+    opacity: 0;
+    visibility: hidden;
+    transform: none !important;
+    border-radius: 0;
+  }
+
+  .has-mega-menu.mob-active .mega-menu-panel {
+    max-height: 600px;
+    padding: 10px 25px 20px 25px !important;
+    opacity: 1;
+    visibility: visible;
+  }
+  
+  .mega-grid-wrapper {
+    grid-template-columns: 1fr; /* Stack mega menu columns on mobile */
+  }
+}
+
+/* 📱 MOBILE TAB BAR FOR PUBLIC SITE */
+.public-mobile-tab-bar {
+  display: none !important;
+}
+
+@media (max-width: 1024px) {
+  .public-mobile-tab-bar {
+    display: flex !important;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: #ffffff;
+    border-top: 1px solid #e2e8f0;
+    height: 70px;
+    z-index: 180000;
+  }
+  .public-mobile-tab-bar .tab-item {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    color: #64748b;
+    text-decoration: none;
+    border: none;
+    background: none;
+    cursor: pointer;
+  }
+  .public-mobile-tab-bar .tab-item span {
+    font-size: 20px;
+  }
+  .public-mobile-tab-bar .tab-item label {
+    font-size: 10px;
+    font-weight: 700;
+    cursor: pointer;
+  }
+  .public-mobile-tab-bar .tab-item.active,
+  .public-mobile-tab-bar .tab-item:hover {
+    color: var(--royal-blue);
+  }
 }
 
 @media (max-width: 480px) {

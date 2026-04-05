@@ -260,12 +260,12 @@
 
   .search-inner {
     flex-direction: column;
-    gap: 12px;
+    gap: 8px; /* Compressed gap */
   }
 
   .search-inner input {
     width: 100%;
-    padding: 12px 15px;
+    padding: 10px 15px; /* Thinner padding */
     background: #ffffff;
     border: none;
     border-radius: 10px;
@@ -276,7 +276,7 @@
 
   .btn-search {
     width: 100%;
-    padding: 14px;
+    padding: 12px; /* Thinner padding */
     border-radius: 10px;
     font-size: 15px;
     background: var(--royal-blue);
@@ -340,7 +340,7 @@
 
 @media (max-width: 480px) {
   .hero-title {
-    font-size: 26px;
+    font-size: 24px;
   }
   
   .container {
