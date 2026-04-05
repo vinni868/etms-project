@@ -420,7 +420,7 @@ ul { list-style: none; }
    HERO BANNER
 ═══════════════════════════ */
 .sa-hero {
-  background: linear-gradient(125deg, #1a3499 0%, #2347c5 42%, #3d6ee8 75%, #4f84ff 100%);
+  background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 55%, #1e40af 100%);
   border-radius: 20px;
   padding: 3rem 2.5rem; /* Increased padding */
   display: flex;

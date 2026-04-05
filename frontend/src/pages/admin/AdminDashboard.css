@@ -43,7 +43,10 @@
 .adm-hero {
   background: linear-gradient(135deg, #0f172a 0%, #1e3a8a 55%, #1e40af 100%);
   position: relative;
-  overflow: hidden;   /* clip orbs — dropdown escapes via Portal */
+  overflow: hidden;
+  border-radius: 20px;
+  margin: 1.5rem 5% 1.5rem;
+  box-shadow: 0 10px 40px rgba(15, 23, 42, 0.25);
 }
 
 .adm-hero__orb {
@@ -69,8 +72,8 @@
   width: 100%;
   max-width: 100%;
   margin: 0;
-  padding: 1.5rem 40px; /* Reduced from 3rem 5% for tighter fit */
-  display: flex; align-items: flex-start;
+  padding: 2.5rem 2.5rem 1.5rem;
+  display: flex; align-items: center;
   justify-content: space-between; gap: 1.5rem;
   flex-wrap: wrap;
   position: relative; z-index: 2;
@@ -86,6 +89,7 @@
 .adm-hero__name {
   font-size: 2.2rem; font-weight: 900; color: #fff;
   letter-spacing: -.04em; line-height: 1.15; margin-bottom: 6px;
+  text-transform: capitalize;
 }
 .adm-hero__role { font-size: .9rem; color: #64748b; font-weight: 500; }
 .adm-hero__id-badge {
@@ -98,6 +102,16 @@
 }
 
 .adm-hero__right { display: flex; align-items: center; gap: 1rem; }
+
+.adm-hero__right-box {
+  background: rgba(255, 255, 255, 0.12);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 16px;
+  padding: 1.25rem 1.75rem;
+  display: flex; align-items: center; gap: 1.5rem;
+}
 
 .adm-live-clock { text-align: right; }
 .adm-clock__time {
@@ -220,27 +234,29 @@
   width: 100%;
   max-width: 100%;
   margin: 0;
-  padding: 0 5% 2rem; /* Consistent 5% fluid padding */
+  padding: 0 2.5rem 2.5rem; /* Inner padding inside the boxed hero */
   display: flex; gap: 1rem; flex-wrap: wrap;
   position: relative; z-index: 2;
 }
 
 .adm-stat-pill {
-  flex: 1; min-width: 190px;
+  flex: 1;
+  min-width: 140px;
   background: rgba(255,255,255,.07);
   border: 1px solid rgba(255,255,255,.1);
   -webkit-backdrop-filter: blur(12px);
   backdrop-filter: blur(12px);
-  border-radius: 14px; padding: 1.1rem 1.4rem;
-  display: flex; align-items: center; gap: 1rem;
+  border-radius: 14px;
+  padding: 1rem 1rem;
+  display: flex; align-items: center; gap: 0.85rem;
   transition: background .2s, transform .2s;
   animation: adm-fadein .5s ease both;
 }
 .adm-stat-pill:hover { background: rgba(255,255,255,.12); transform: translateY(-2px); }
 
 .adm-stat-pill__icon {
-  width: 46px; height: 46px; border-radius: 12px; flex-shrink: 0;
-  display: flex; align-items: center; justify-content: center; font-size: 1.1rem;
+  width: 42px; height: 42px; border-radius: 12px; flex-shrink: 0;
+  display: flex; align-items: center; justify-content: center; font-size: 1.05rem;
 }
 .adm-sc--blue   .adm-stat-pill__icon { background: rgba(37,99,235,.2);  color: #93c5fd; border: 1px solid rgba(37,99,235,.3); }
 .adm-sc--purple .adm-stat-pill__icon { background: rgba(124,58,237,.2); color: #c4b5fd; border: 1px solid rgba(124,58,237,.3); }
@@ -248,12 +264,13 @@
 .adm-sc--amber  .adm-stat-pill__icon { background: rgba(245,158,11,.2); color: #fcd34d; border: 1px solid rgba(245,158,11,.3); }
 
 .adm-stat-pill__val {
-  display: block; font-size: 1.6rem; font-weight: 900;
+  display: block; font-size: 1.5rem; font-weight: 900;
   color: #fff; letter-spacing: -.03em; line-height: 1;
 }
 .adm-stat-pill__lbl {
-  display: block; font-size: .7rem; font-weight: 600;
-  color: #64748b; text-transform: uppercase; letter-spacing: .5px; margin-top: 3px;
+  display: block; font-size: 0.68rem; font-weight: 600;
+  color: #94a3b8; text-transform: uppercase; letter-spacing: .5px; margin-top: 4px;
+  line-height: 1.2;
 }
 
 @keyframes adm-fadein {

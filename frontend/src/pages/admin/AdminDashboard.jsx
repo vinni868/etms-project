@@ -276,18 +276,20 @@ function AdminDashboard() {
           </div>
 
           <div className="adm-hero__right">
-            <div className="adm-live-clock">
-              <div className="adm-clock__time">
-                {nowTime.toLocaleTimeString('en-US', { hour:"2-digit", minute:"2-digit", hour12:true }).toUpperCase()}
+            <div className="adm-hero__right-box">
+              <div className="adm-live-clock">
+                <div className="adm-clock__time">
+                  {nowTime.toLocaleTimeString('en-US', { hour:"2-digit", minute:"2-digit", hour12:true }).toUpperCase()}
+                </div>
+                <div className="adm-clock__date">
+                  {nowTime.toLocaleDateString("en-US", { weekday:"long", month:"long", day:"numeric" })}
+                </div>
               </div>
-              <div className="adm-clock__date">
-                {nowTime.toLocaleDateString("en-US", { weekday:"long", month:"long", day:"numeric" })}
-              </div>
-            </div>
 
-            <button className="adm-refresh-btn" onClick={handleRefresh} title="Refresh">
-              <FaSync />
-            </button>
+              <button className="adm-refresh-btn" onClick={handleRefresh} title="Refresh">
+                <FaSync />
+              </button>
+            </div>
           </div>
         </div>
 

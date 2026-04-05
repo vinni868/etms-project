@@ -57,18 +57,21 @@ const QuickPunch = ({ variant = 'card' }) => {
             const logs = res.data.logs || [];
 
             // Reliable punch detection: find any log with loginTime but no logoutTime
-            const today     = new Date().toDateString();
-            const todayLogs = logs.filter(l => new Date(l.date).toDateString() === today);
+            // Use date string directly to avoid UTC shift (log.date is "YYYY-MM-DD")
+            const todayKey  = new Date().toLocaleDateString('en-CA'); // "YYYY-MM-DD" in local time
+            const todayLogs = logs.filter(l => (l.date || '').split('T')[0] === todayKey);
             const active    = todayLogs.find(l => l.loginTime && !l.logoutTime);
             setIsPunchedIn(!!active);
 
-            // Total minutes today
-            const mins = todayLogs.reduce((s, l) => s + (l.totalMinutes || 0), 0);
+            // Total minutes today — only count completed sessions
+            const mins = todayLogs
+                .filter(l => l.logoutTime && l.totalMinutes > 0)
+                .reduce((s, l) => s + (l.totalMinutes || 0), 0);
             setTodayMinutes(mins);
 
             // Latest log (for "last punch" display)
             if (todayLogs.length > 0) {
-                const sorted = [...todayLogs].sort((a, b) => new Date(b.loginTime) - new Date(a.loginTime));
+                const sorted = [...todayLogs].sort((a, b) => (b.loginTime || '').localeCompare(a.loginTime || ''));
                 setLastLog(sorted[0]);
             }
         } catch (err) {
@@ -161,10 +164,17 @@ const QuickPunch = ({ variant = 'card' }) => {
         setTimeout(() => setMessage(null), 3000);
     };
 
+    // Java LocalDateTime → "2026-04-05T12:31:00" (no 'Z') — must NOT use new Date() which treats as UTC.
     const fmtTime = (d) => {
         if (!d) return '—';
         try {
-            return new Date(d).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true }).toUpperCase();
+            const timePart = d.includes('T') ? d.split('T')[1] : d;
+            const [hStr, mStr] = timePart.split(':');
+            const h = parseInt(hStr, 10), m = parseInt(mStr, 10);
+            if (isNaN(h) || isNaN(m)) return '—';
+            const period = h >= 12 ? 'PM' : 'AM';
+            const h12 = h === 0 ? 12 : h > 12 ? h - 12 : h;
+            return `${String(h12).padStart(2, '0')}:${String(m).padStart(2, '0')} ${period}`;
         } catch { return '—'; }
     };
 

@@ -136,6 +136,7 @@ public class QrAttendanceService {
                 dto.put("portalId", String.valueOf(t.getUserId()));
             }
 
+            dto.put("userId",        t.getUserId());   // ← needed for frontend grouping
             dto.put("id",            t.getId());
             dto.put("date",          t.getDate().toString());
             dto.put("loginTime",     t.getLoginTime().toString());
@@ -152,6 +153,55 @@ public class QrAttendanceService {
         }
         return logDtos;
     }
+
+    /**
+     * Get all sessions for a specific user on a specific date.
+     * Used by Admin / SuperAdmin detail modal to show accurate session timeline.
+     */
+    public Map<String, Object> getUserSessionsForDate(Long userId, LocalDate date) {
+        List<TimeTracking> sessions = trackingRepo
+                .findByUserIdAndDateOrderByLoginTimeDesc(userId, date);
+
+        User user = userRepo.findById(userId).orElse(null);
+
+        // Calculate total minutes from completed sessions only
+        int totalMinutes = sessions.stream()
+                .filter(t -> t.getTotalMinutes() != null && t.getTotalMinutes() > 0)
+                .mapToInt(TimeTracking::getTotalMinutes)
+                .sum();
+
+        boolean isActiveNow = sessions.stream().anyMatch(t -> t.getLogoutTime() == null);
+
+        List<Map<String, Object>> sessionDtos = new ArrayList<>();
+        for (int i = 0; i < sessions.size(); i++) {
+            TimeTracking t = sessions.get(i);
+            Map<String, Object> dto = new HashMap<>();
+            dto.put("id",             t.getId());
+            dto.put("sessionNumber",  sessions.size() - i); // 1 = oldest
+            dto.put("loginTime",      t.getLoginTime().toString());
+            dto.put("logoutTime",     t.getLogoutTime() != null ? t.getLogoutTime().toString() : null);
+            dto.put("totalMinutes",   t.getTotalMinutes());
+            dto.put("punchMethod",    t.getPunchMethod());
+            dto.put("checkoutReason", t.getCheckoutReason());
+            dto.put("distanceIn",     t.getDistanceFromOffice());
+            dto.put("distanceOut",    t.getDistanceOut());
+            dto.put("isOpen",         t.getLogoutTime() == null);
+            sessionDtos.add(dto);
+        }
+
+        Map<String, Object> result = new HashMap<>();
+        result.put("userId",       userId);
+        result.put("userName",     user != null ? user.getName() : "Unknown");
+        result.put("role",         user != null && user.getRole() != null ? user.getRole().getRoleName() : "UNKNOWN");
+        result.put("portalId",     user != null && user.getStudentId() != null ? user.getStudentId() : String.valueOf(userId));
+        result.put("date",         date.toString());
+        result.put("sessions",     sessionDtos);
+        result.put("totalMinutes", totalMinutes);
+        result.put("isActiveNow",  isActiveNow);
+        result.put("sessionCount", sessions.size());
+        return result;
+    }
+
 
     // ─── QR Scan (Core Logic) ────────────────────────────────────────────────
 
@@ -189,18 +239,22 @@ public class QrAttendanceService {
         double distance = calculateDistance(request.getLatitude(), request.getLongitude());
         validateLocation(request.getLatitude(), request.getLongitude());
 
-        // 5. Punch In / Out Toggle
+        // 5. Punch In / Out Toggle — use findOpenSessionsForToday as single source of truth
+        //    This ensures cross-method pairings work: Quick Punch IN → QR Scan OUT and vice versa.
         LocalDate today = LocalDate.now();
-        List<TimeTracking> todayRecords = trackingRepo
-                .findByUserIdAndDateOrderByLoginTimeDesc(userId, today);
-
-        TimeTracking latest  = todayRecords.isEmpty() ? null : todayRecords.get(0);
-        LocalDateTime now    = LocalDateTime.now();
+        LocalDateTime now = LocalDateTime.now();
         String message;
         Map<String, Object> sessionInfo = new HashMap<>();
 
-        if (latest == null || latest.getLogoutTime() != null) {
-            // ─ CASE A: Punch In ─
+        // Fetch ALL today's records for session numbering
+        List<TimeTracking> todayRecords = trackingRepo
+                .findByUserIdAndDateOrderByLoginTimeDesc(userId, today);
+
+        // Fetch ONLY open sessions (no logoutTime) to determine punch direction
+        List<TimeTracking> openSessions = trackingRepo.findOpenSessionsForToday(userId, today);
+
+        if (openSessions.isEmpty()) {
+            // ─ CASE A: No open session → Punch In ─
             int sessionNumber = todayRecords.size() + 1;
 
             TimeTracking record = new TimeTracking();
@@ -224,10 +278,15 @@ public class QrAttendanceService {
             sessionInfo.put("sessionNumber", sessionNumber);
 
         } else {
-            // ─ CASE B: Punch Out ─
-            int sessionNumber = todayRecords.size();
+            // ─ CASE B: Open session exists → Punch Out (regardless of how they punched in) ─
+            TimeTracking latest = openSessions.get(0); // most recent open session
+            int sessionNumber = todayRecords.indexOf(latest) >= 0
+                    ? todayRecords.size() - todayRecords.indexOf(latest)
+                    : todayRecords.size();
+
             latest.setLogoutTime(now);
             latest.setCheckoutReason("MANUAL");
+            latest.setDistanceOut(distance); // track exit distance
 
             long diffMinutes = java.time.Duration.between(latest.getLoginTime(), now).toMinutes();
             latest.setTotalMinutes((int) diffMinutes);
@@ -237,7 +296,7 @@ public class QrAttendanceService {
             long mins  = diffMinutes % 60;
             String duration = hours > 0
                     ? String.format("%dh %dm", hours, mins)
-                    : String.format("%dm", mins);
+                    : (mins > 0 ? String.format("%dm", mins) : "< 1m");
 
             message = String.format("Punch Out successful! Session #%d — Duration: %s.", sessionNumber, duration);
             sessionInfo.put("punchType",    "OUT");
@@ -250,6 +309,7 @@ public class QrAttendanceService {
             sessionInfo.put("role",         roleName);
             sessionInfo.put("studentId",    user.getStudentId() != null ? user.getStudentId() : String.valueOf(userId));
             sessionInfo.put("sessionNumber",sessionNumber);
+            sessionInfo.put("punchInMethod", latest.getPunchMethod()); // show original punch-in method
         }
 
         return new QrScanResponse("success", message, sessionInfo);
@@ -327,6 +387,10 @@ public class QrAttendanceService {
         record.setLogoutTime(now);
         record.setCheckoutReason("MANUAL");
         
+        // Track exit distance
+        double exitDistance = calculateDistance(latitude, longitude);
+        record.setDistanceOut(exitDistance);
+        
         long diffMinutes = 0;
         if (record.getLoginTime() != null) {
             diffMinutes = java.time.Duration.between(record.getLoginTime(), now).toMinutes();
@@ -335,14 +399,17 @@ public class QrAttendanceService {
         
         long hours = diffMinutes / 60;
         long mins  = diffMinutes % 60;
-        String duration = hours > 0 ? String.format("%dh %dm", hours, mins) : String.format("%dm", mins);
+        String duration = hours > 0
+                ? String.format("%dh %dm", hours, mins)
+                : (mins > 0 ? String.format("%dm", mins) : "< 1m");
 
         trackingRepo.save(record);
 
         return Map.of(
                 "status", "SUCCESS",
                 "message", String.format("Punched Out successful! Duration: %s", duration),
-                "duration", duration
+                "duration", duration,
+                "punchInMethod", record.getPunchMethod() != null ? record.getPunchMethod() : "UNKNOWN"
         );
     }
 

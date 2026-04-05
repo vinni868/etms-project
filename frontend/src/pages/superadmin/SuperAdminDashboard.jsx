@@ -168,36 +168,6 @@ export default function SuperAdminDashboard() {
       {/* ══════════ MAIN AREA ══════════ */}
       <div className="sa-main">
 
-        {/* TOP BAR */}
-        <header className="sa-topbar">
-          <div className="sa-topbar-left">
-            <div className="sa-topbar-icon-box">⊞</div>
-            <div>
-              <h1 className="sa-page-title">Command Center</h1>
-              <p className="sa-page-sub">
-                Welcome back, <strong>{user?.name || "Commander"}</strong>
-                {(user?.portalId || user?.studentId) && (
-                  <span className="sa-topbar-id"> [ID: {user.portalId || user.studentId}]</span>
-                )}
-                 — All systems nominal
-              </p>
-            </div>
-          </div>
-          <div className="sa-topbar-right">
-            <div className="sa-date-pill">
-              <span>📅</span>
-              {new Date().toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}
-            </div>
-            <button className="sa-notif-btn" onClick={() => navigate("/superadmin/messages")}>
-              📩
-              {(dashboard.unreadMessages || 0) > 0 && (
-                <span className="sa-notif-dot">{dashboard.unreadMessages}</span>
-              )}
-            </button>
-            <div className="sa-topbar-av">{user?.name?.charAt(0) || "A"}</div>
-          </div>
-        </header>
-
         {/* CONTENT */}
         <div className="sa-content">
 

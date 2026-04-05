@@ -140,8 +140,9 @@ export default function UserTimeTracking() {
       setTimeLogs(logs);
       setStats(stats);
 
-      const today     = new Date().toDateString();
-      const todayList = logs.filter(l => new Date(l.date).toDateString() === today);
+      // Use date string key directly — avoids UTC shift (log.date is "YYYY-MM-DD")
+      const todayKey = new Date().toLocaleDateString('en-CA'); // "YYYY-MM-DD" local
+      const todayList = logs.filter(l => (l.date || '').split('T')[0] === todayKey);
       setTodaySessions(todayList);
 
       const active = todayList.find(l => l.loginTime && !l.logoutTime);
@@ -149,10 +150,10 @@ export default function UserTimeTracking() {
       setIsPunchedIn(punchedIn);
 
       // ── Group past logs by date ──────────────────────────────────────────
-      const pastLogs = logs.filter(l => new Date(l.date).toDateString() !== today);
+      const pastLogs = logs.filter(l => (l.date || '').split('T')[0] !== todayKey);
       const groups = {};
       pastLogs.forEach(log => {
-        const dateKey = new Date(log.date).toISOString().split('T')[0];
+        const dateKey = (log.date || '').split('T')[0]; // stable YYYY-MM-DD
         if (!groups[dateKey]) {
           groups[dateKey] = {
             dateKey,
@@ -162,14 +163,16 @@ export default function UserTimeTracking() {
           };
         }
         groups[dateKey].sessions.push(log);
-        groups[dateKey].totalMinutes += (log.totalMinutes || 0);
+        if (log.logoutTime && log.totalMinutes > 0) {
+          groups[dateKey].totalMinutes += (log.totalMinutes || 0);
+        }
       });
-      // Sort sessions within each group newest first
+      // Sort sessions within each group oldest first (ascending loginTime)
       Object.values(groups).forEach(g => {
-        g.sessions.sort((a, b) => new Date(b.loginTime) - new Date(a.loginTime));
+        g.sessions.sort((a, b) => (a.loginTime || '').localeCompare(b.loginTime || ''));
       });
       // Sort groups newest date first
-      const sorted = Object.values(groups).sort((a, b) => new Date(b.date) - new Date(a.date));
+      const sorted = Object.values(groups).sort((a, b) => b.dateKey.localeCompare(a.dateKey));
       setGroupedHistory(sorted);
 
       // ── On-load geofence check ───────────────────────────────────────────
@@ -295,23 +298,35 @@ export default function UserTimeTracking() {
   };
 
   /* ─── Formatters ─────────────────────────────────────────────────────── */
+  // Java LocalDateTime → "2026-04-05T12:31:00" (no timezone suffix)
+  // new Date(str) would interpret it as UTC → off by +5:30 in IST.
+  // Fix: extract hour/minute directly from the string.
   const fmtTime = (d) => {
     if (!d) return '—';
     try {
-      const dt = new Date(d);
-      if (isNaN(dt.getTime())) return '—';
-      return dt.toLocaleTimeString('en-US', {
-        hour: '2-digit', minute: '2-digit', hour12: true
-      }).toUpperCase();
-    } catch (e) { return '—'; }
+      const timePart = d.includes('T') ? d.split('T')[1] : d;
+      const [hStr, mStr] = timePart.split(':');
+      const h = parseInt(hStr, 10), m = parseInt(mStr, 10);
+      if (isNaN(h) || isNaN(m)) return '—';
+      const period = h >= 12 ? 'PM' : 'AM';
+      const h12 = h === 0 ? 12 : h > 12 ? h - 12 : h;
+      return `${String(h12).padStart(2, '0')}:${String(m).padStart(2, '0')} ${period}`;
+    } catch { return '—'; }
   };
 
-  const fmtDate = (d) =>
-    new Date(d).toLocaleDateString('en-IN', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' });
+  const fmtDate = (d) => {
+    if (!d) return '—';
+    try {
+      const dateStr = d.includes('T') ? d.split('T')[0] : d;
+      const [y, mo, day] = dateStr.split('-').map(Number);
+      const dt = new Date(y, mo - 1, day); // local date — no timezone shift
+      return dt.toLocaleDateString('en-IN', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' });
+    } catch { return d; }
+  };
 
   const fmtDuration = (m) => {
     if (m === undefined || m === null) return '—';
-    if (m === 0) return '< 1m';
+    if (m <= 0) return '< 1m';
     return m >= 60 ? `${Math.floor(m / 60)}h ${m % 60}m` : `${m}m`;
   };
 

@@ -108,6 +108,17 @@ public class QrAttendanceController {
         return ResponseEntity.ok(qrService.getAllTimeLogs());
     }
 
+    // ─── Get sessions for a specific user on a specific date (Admin / SuperAdmin) ─
+    @GetMapping("/user-sessions/{userId}")
+    public ResponseEntity<?> getUserSessions(
+            @PathVariable Long userId,
+            @RequestParam(required = false) String date) {
+        java.time.LocalDate targetDate = date != null && !date.isEmpty()
+                ? java.time.LocalDate.parse(date)
+                : java.time.LocalDate.now();
+        return ResponseEntity.ok(qrService.getUserSessionsForDate(userId, targetDate));
+    }
+
     // ─── Punch Settings — Get (Admin) ────────────────────────────────────────
     @GetMapping("/punch-settings")
     public ResponseEntity<?> getPunchSettings() {

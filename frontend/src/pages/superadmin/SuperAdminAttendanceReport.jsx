@@ -8,8 +8,10 @@ export default function SuperAdminAttendanceReport() {
   const [searchTerm, setSearchTerm] = useState('');
   const [dateFilter, setDateFilter] = useState('');
   
-  // State for the detail modal
-  const [selectedReport, setSelectedReport] = useState(null);
+  // Modal state — stores { userId, dateKey } for fresh fetch
+  const [modalTarget, setModalTarget] = useState(null);
+  const [modalData, setModalData] = useState(null);
+  const [modalLoading, setModalLoading] = useState(false);
 
   useEffect(() => {
     fetchLogs();
@@ -27,39 +29,59 @@ export default function SuperAdminAttendanceReport() {
     }
   };
 
-  const fmtTime = (dateStr) =>
-    dateStr
-      ? new Date(dateStr).toLocaleTimeString('en-US', {
-          hour: '2-digit',
-          minute: '2-digit',
-          hour12: true
-        }).toUpperCase()
-      : "—";
-
-  const fmtDate = (dateStr) =>
-    new Date(dateStr).toLocaleDateString('en-IN', {
-      weekday: 'short', month: 'short', day: 'numeric', year: 'numeric'
-    });
-
-  const fmtDuration = (mins) => {
-    if (!mins && mins !== 0) return '0h 0m';
-    return `${Math.floor(mins / 60)}h ${mins % 60}m`;
+  // ── Time Formatting ──────────────────────────────────────────────────────
+  // Java LocalDateTime returns "2026-04-05T12:31:00" — NO timezone suffix.
+  // new Date("2026-04-05T12:31:00") interprets it as UTC → wrong by +5:30 in IST.
+  // Fix: parse time directly from the string without using Date object for time.
+  const fmtTime = (dateStr) => {
+    if (!dateStr) return '—';
+    try {
+      // Extract HH:MM from "2026-04-05T12:31:00" or "2026-04-05T12:31:00.123"
+      const timePart = dateStr.includes('T') ? dateStr.split('T')[1] : dateStr;
+      const [hourStr, minStr] = timePart.split(':');
+      const h = parseInt(hourStr, 10);
+      const m = parseInt(minStr, 10);
+      if (isNaN(h) || isNaN(m)) return '—';
+      const period = h >= 12 ? 'PM' : 'AM';
+      const h12 = h === 0 ? 12 : h > 12 ? h - 12 : h;
+      return `${String(h12).padStart(2, '0')}:${String(m).padStart(2, '0')} ${period}`;
+    } catch { return '—'; }
   };
 
-  // ── GROUPING LOGIC ──────────────────────────────────────
-  // We want to group by (userId + date) to show one row per user per day.
+  const fmtDate = (dateStr) => {
+    if (!dateStr) return '—';
+    try {
+      // Parse date string directly to avoid timezone shifting
+      const [year, month, day] = (dateStr.includes('T') ? dateStr.split('T')[0] : dateStr).split('-').map(Number);
+      const d = new Date(year, month - 1, day); // local date construction
+      return d.toLocaleDateString('en-IN', { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' });
+    } catch { return dateStr; }
+  };
+
+  const fmtDuration = (mins) => {
+    if (mins == null) return '—';
+    if (mins <= 0) return '< 1m';
+    const h = Math.floor(mins / 60);
+    const m = mins % 60;
+    if (h === 0) return `${m}m`;
+    return `${h}h ${m}m`;
+  };
+
+  // ── GROUPING LOGIC ──────────────────────────────────────────────────────
+  // Group by (userId + date) → one row per user per day in the table.
   const getGroupedReports = () => {
     const groups = {};
 
     logs.forEach(log => {
-      // Create a unique key for the user + day
-      const dateKey = new Date(log.date).toISOString().split('T')[0];
-      const groupKey = `${log.userId}-${dateKey}`;
+      const dateKey = log.date ? log.date.split('T')[0] : '';
+      // Use userId from DTO (now included) for reliable grouping
+      const uid = log.userId != null ? log.userId : log.portalId;
+      const groupKey = `${uid}-${dateKey}`;
 
       if (!groups[groupKey]) {
         groups[groupKey] = {
           id: groupKey,
-          userId: log.userId,
+          userId: log.userId,           // numeric id for API calls
           userName: log.userName || 'Unknown User',
           portalId: log.portalId || 'N/A',
           role: log.role || 'USER',
@@ -67,32 +89,37 @@ export default function SuperAdminAttendanceReport() {
           dateKey: dateKey,
           totalMinutes: 0,
           isActiveNow: false,
-          sessions: [],
+          sessionCount: 0,
+          firstDistanceIn: null,
         };
       }
 
       const g = groups[groupKey];
-      g.sessions.push(log);
-      g.totalMinutes += (log.totalMinutes || 0);
+      g.sessionCount += 1;
+      // Sum only completed sessions (sessions with logoutTime)
+      if (log.logoutTime && log.totalMinutes != null && log.totalMinutes > 0) {
+        g.totalMinutes += log.totalMinutes;
+      }
+      if (g.firstDistanceIn == null && log.distanceIn != null) {
+        g.firstDistanceIn = log.distanceIn;
+      }
 
-      // If the log has no logout time and it's from today, they are currently in the institute
-      if (!log.logoutTime && new Date(log.date).toDateString() === new Date().toDateString()) {
+      // Active if there's any open session today
+      const today = new Date().toISOString().split('T')[0];
+      if (!log.logoutTime && dateKey === today) {
         g.isActiveNow = true;
       }
     });
 
-    // Sort sessions inside each group (newest first)
-    Object.values(groups).forEach(g => {
-      g.sessions.sort((a, b) => new Date(b.loginTime) - new Date(a.loginTime));
+    return Object.values(groups).sort((a, b) => {
+      if (b.dateKey !== a.dateKey) return b.dateKey.localeCompare(a.dateKey);
+      return a.userName.localeCompare(b.userName);
     });
-
-    // Convert to array and sort by date descending
-    return Object.values(groups).sort((a, b) => new Date(b.date) - new Date(a.date));
   };
 
   const allReports = getGroupedReports();
 
-  // ── FILTERING ───────────────────────────────────────────
+  // ── FILTERING ───────────────────────────────────────────────────────────
   const filteredReports = allReports.filter((report) => {
     const term = searchTerm.toLowerCase();
     const matchSearch =
@@ -100,16 +127,35 @@ export default function SuperAdminAttendanceReport() {
       report.portalId.toLowerCase().includes(term) ||
       report.role.toLowerCase().includes(term);
     
-    if (dateFilter) {
-      return matchSearch && report.dateKey === dateFilter;
-    }
+    if (dateFilter) return matchSearch && report.dateKey === dateFilter;
     return matchSearch;
   });
 
-  // ── STATS ───────────────────────────────────────────────
+  // ── STATS ───────────────────────────────────────────────────────────────
   const activeNowCount = allReports.filter(r => r.isActiveNow).length;
   const todayDateStr = new Date().toISOString().split('T')[0];
   const uniqueUsersToday = allReports.filter(r => r.dateKey === todayDateStr).length;
+
+  // ── OPEN MODAL — fetch fresh session detail ─────────────────────────────
+  const openModal = async (report) => {
+    setModalTarget(report);
+    setModalData(null);
+    setModalLoading(true);
+    try {
+      const res = await api.get(`/qr/user-sessions/${report.userId}?date=${report.dateKey}`);
+      setModalData(res.data);
+    } catch (err) {
+      console.error('Failed to load session detail:', err);
+      setModalData(null);
+    } finally {
+      setModalLoading(false);
+    }
+  };
+
+  const closeModal = () => {
+    setModalTarget(null);
+    setModalData(null);
+  };
 
   return (
     <div className="sa-attendance-page">
@@ -155,9 +201,7 @@ export default function SuperAdminAttendanceReport() {
             value={dateFilter}
             onChange={(e) => setDateFilter(e.target.value)}
           />
-          <button className="sa-btn" onClick={fetchLogs}>
-            ↻ Refresh
-          </button>
+          <button className="sa-btn" onClick={fetchLogs}>↻ Refresh</button>
         </div>
 
         {loading ? (
@@ -172,7 +216,7 @@ export default function SuperAdminAttendanceReport() {
                   <th>User / ID</th>
                   <th>Role</th>
                   <th>Date</th>
-                  <th>Distance (In)</th>
+                  <th>Sessions</th>
                   <th>Total Hours Today</th>
                   <th>Status</th>
                   <th>Action</th>
@@ -183,7 +227,7 @@ export default function SuperAdminAttendanceReport() {
                   <tr 
                     key={report.id} 
                     className="sa-clickable-row"
-                    onClick={() => setSelectedReport(report)}
+                    onClick={() => openModal(report)}
                   >
                     <td>
                       <div><strong>{report.userName}</strong></div>
@@ -195,15 +239,15 @@ export default function SuperAdminAttendanceReport() {
                       </span>
                     </td>
                     <td>{fmtDate(report.date)}</td>
-                    <td style={{ fontSize: '0.85rem', color: '#64748b' }}>
-                        {report.distanceIn ? `${Math.round(report.distanceIn)}m` : '—'}
+                    <td style={{ fontSize: '0.85rem', color: '#64748b', textAlign: 'center' }}>
+                      {report.sessionCount}
                     </td>
                     <td style={{ fontWeight: 700, color: '#1e293b' }}>
                       {fmtDuration(report.totalMinutes)}
                     </td>
                     <td>
                       {report.isActiveNow ? (
-                        <span className="sa-time-active">🟢 Active in Institute</span>
+                        <span className="sa-time-active">🟢 Active Now</span>
                       ) : (
                         <span style={{ color: '#64748b', fontWeight: 600, fontSize: '0.85rem' }}>Checked Out</span>
                       )}
@@ -211,9 +255,9 @@ export default function SuperAdminAttendanceReport() {
                     <td>
                       <button 
                         className="sa-view-btn"
-                        onClick={(e) => { e.stopPropagation(); setSelectedReport(report); }}
+                        onClick={(e) => { e.stopPropagation(); openModal(report); }}
                       >
-                        View Scans ({report.sessions.length})
+                        View Sessions ({report.sessionCount})
                       </button>
                     </td>
                   </tr>
@@ -225,93 +269,131 @@ export default function SuperAdminAttendanceReport() {
       </div>
 
       {/* ── DETAIL MODAL ── */}
-      {selectedReport && (
-        <div className="sa-att-modal-overlay" onClick={() => setSelectedReport(null)}>
+      {modalTarget && (
+        <div className="sa-att-modal-overlay" onClick={closeModal}>
           <div className="sa-att-modal" onClick={e => e.stopPropagation()}>
             
             <div className="sa-att-modal-header">
               <div>
-                <h2>{selectedReport.userName}'s Scans</h2>
-                <p>{fmtDate(selectedReport.date)} • {selectedReport.role}</p>
+                <h2>{modalTarget.userName}'s Sessions</h2>
+                <p>{fmtDate(modalTarget.dateKey)} • {modalTarget.role}</p>
               </div>
-              <button className="sa-modal-close" onClick={() => setSelectedReport(null)}>×</button>
+              <button className="sa-modal-close" onClick={closeModal}>×</button>
             </div>
 
             <div className="sa-att-modal-body">
-              <div className="sa-modal-summary">
-                <div className="sa-sum-box">
-                  <span>Total Time in Institute</span>
-                  <strong>{fmtDuration(selectedReport.totalMinutes)}</strong>
+              {modalLoading ? (
+                <div style={{ textAlign: 'center', padding: '2rem', color: '#64748b' }}>
+                  Loading session details...
                 </div>
-                <div className="sa-sum-box">
-                  <span>Total Scans Today</span>
-                  <strong>{selectedReport.sessions.length}</strong>
+              ) : !modalData ? (
+                <div style={{ textAlign: 'center', padding: '2rem', color: '#ef4444' }}>
+                  Failed to load session details. Please try again.
                 </div>
-              </div>
-
-              <h4 className="sa-modal-subtitle">Detailed Session Timeline</h4>
-              
-              <div className="sa-timeline">
-                {selectedReport.sessions.map((session, idx) => (
-                  <div key={session.id} className="sa-timeline-item">
-                    <div className="sa-tl-dot"></div>
-                    <div className="sa-tl-content">
-                      <div className="sa-tl-row">
-                        <strong>Session {selectedReport.sessions.length - idx}</strong>
-                        <span className="sa-tl-dur">{fmtDuration(session.totalMinutes)}</span>
-                      </div>
-                      <div className="sa-tl-grid">
-                        <div className="sa-tl-time">
-                          <span className="in-icon">📥</span>
-                          <div>
-                            <small>Punch In</small>
-                            <div>{fmtTime(session.loginTime)}</div>
-                            {/* Field is always rendered now to prove existence */}
-                            <div style={{ fontSize: '0.75rem', marginTop: '4px', color: '#64748b' }}>
-                                Method: {!session.punchMethod ? 'Unknown (Legacy Record)' : 
-                                          session.punchMethod === 'QR_SCAN' ? '📷 QR' : '⚡ Quick'}
-                            </div>
-                            
-                            {session.distanceIn != null && (
-                                <div style={{ 
-                                    fontSize: '0.75rem', 
-                                    color: session.distanceIn > 180 ? '#ea580c' : '#64748b' 
-                                }}>
-                                    Distance: {Math.round(session.distanceIn)}m
-                                </div>
-                            )}
-                          </div>
-                        </div>
-                        <div className="sa-tl-time">
-                          <span className="out-icon">📤</span>
-                          <div>
-                            <small>Punch Out</small>
-                            <div>
-                              {session.logoutTime ? fmtTime(session.logoutTime) : (
-                                <span className="sa-time-active">Active Now</span>
-                              )}
-                            </div>
-                            
-                            {/* Always show reason if checked out */}
-                            {session.logoutTime && (
-                                <div style={{ 
-                                    fontSize: '0.75rem', marginTop: '4px',
-                                    fontWeight: 700,
-                                    color: (session.checkoutReason === 'System Closed' || session.checkoutReason === 'MIDNIGHT_AUTO_CLOSE' || session.checkoutReason === 'GEOFENCE_EXIT') ? '#ea580c' : '#10b981' 
-                                }}>
-                                    Reason: {!session.checkoutReason ? 'Manual / Unknown' : 
-                                             session.checkoutReason === 'MIDNIGHT_AUTO_CLOSE' ? 'System Cleanup: Midnight Auto-Logout (Violation: No manual punch-out)' :
-                                             session.checkoutReason === 'GEOFENCE_EXIT' ? `Auto Logout: User exited institute boundary (~${Math.round(session.distanceOut || 0)}m away)` :
-                                             session.checkoutReason}
-                                </div>
-                            )}
-                          </div>
-                        </div>
-                      </div>
+              ) : (
+                <>
+                  <div className="sa-modal-summary">
+                    <div className="sa-sum-box">
+                      <span>Total Time in Institute</span>
+                      <strong>{fmtDuration(modalData.totalMinutes)}</strong>
+                    </div>
+                    <div className="sa-sum-box">
+                      <span>Total Sessions Today</span>
+                      <strong>{modalData.sessionCount}</strong>
+                    </div>
+                    <div className="sa-sum-box">
+                      <span>Current Status</span>
+                      <strong style={{ color: modalData.isActiveNow ? '#16a34a' : '#64748b' }}>
+                        {modalData.isActiveNow ? '🟢 Active Now' : '✓ Checked Out'}
+                      </strong>
                     </div>
                   </div>
-                ))}
-              </div>
+
+                  <h4 className="sa-modal-subtitle">Detailed Session Timeline</h4>
+                  
+                  <div className="sa-timeline">
+                    {(modalData.sessions || []).map((session) => (
+                      <div key={session.id} className="sa-timeline-item">
+                        <div className="sa-tl-dot"></div>
+                        <div className="sa-tl-content">
+                          <div className="sa-tl-row">
+                            <strong>Session {session.sessionNumber}</strong>
+                            <span className="sa-tl-dur">
+                              {session.isOpen
+                                ? <span style={{ color: '#16a34a', fontWeight: 700 }}>🟢 Active</span>
+                                : fmtDuration(session.totalMinutes)}
+                            </span>
+                          </div>
+                          <div className="sa-tl-grid">
+                            {/* Punch In */}
+                            <div className="sa-tl-time">
+                              <span className="in-icon">📥</span>
+                              <div>
+                                <small>Punch In</small>
+                                <div style={{ fontWeight: 700 }}>{fmtTime(session.loginTime)}</div>
+                                <div style={{ fontSize: '0.75rem', marginTop: '4px', color: '#64748b' }}>
+                                  Method: {
+                                    !session.punchMethod ? 'Unknown' :
+                                    session.punchMethod === 'QR_SCAN' ? '📷 QR Scan' :
+                                    session.punchMethod === 'QUICK_PUNCH' ? '⚡ Quick Punch' :
+                                    session.punchMethod
+                                  }
+                                </div>
+                                {session.distanceIn != null && (
+                                  <div style={{ 
+                                    fontSize: '0.75rem', 
+                                    color: session.distanceIn > 180 ? '#ea580c' : '#64748b'
+                                  }}>
+                                    Distance: {Math.round(session.distanceIn)}m
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                            {/* Punch Out */}
+                            <div className="sa-tl-time">
+                              <span className="out-icon">📤</span>
+                              <div>
+                                <small>Punch Out</small>
+                                <div style={{ fontWeight: 700 }}>
+                                  {session.logoutTime
+                                    ? fmtTime(session.logoutTime)
+                                    : <span style={{ color: '#16a34a' }}>Active Now</span>}
+                                </div>
+                                {session.logoutTime && (
+                                  <>
+                                    <div style={{ 
+                                      fontSize: '0.75rem', marginTop: '4px',
+                                      fontWeight: 700,
+                                      color: (
+                                        session.checkoutReason === 'MIDNIGHT_AUTO_CLOSE' ||
+                                        session.checkoutReason === 'GEOFENCE_EXIT'
+                                      ) ? '#ea580c' : '#10b981'
+                                    }}>
+                                      {!session.checkoutReason ? 'Manual Punch Out' :
+                                       session.checkoutReason === 'MIDNIGHT_AUTO_CLOSE'
+                                         ? '⚠ System Auto-Logout (Midnight)'
+                                         : session.checkoutReason === 'GEOFENCE_EXIT'
+                                         ? `⚠ Auto-Logout: Left institute boundary (~${Math.round(session.distanceOut || 0)}m)`
+                                         : session.checkoutReason === 'MANUAL'
+                                         ? '✓ Manual Punch Out'
+                                         : session.checkoutReason}
+                                    </div>
+                                    {session.distanceOut != null && session.distanceOut > 0 && (
+                                      <div style={{ fontSize: '0.75rem', color: '#64748b' }}>
+                                        Exit Distance: {Math.round(session.distanceOut)}m
+                                      </div>
+                                    )}
+                                  </>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </>
+              )}
             </div>
 
           </div>
