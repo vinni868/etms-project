@@ -46,7 +46,6 @@ public class SuperAdminProfileController {
 
         existing.setName(profile.getName());
         existing.setPhone(profile.getPhone());
-        existing.setGender(profile.getGender());
         existing.setBio(profile.getBio());
         existing.setProfilePic(profile.getProfilePic());
         existing.setAddress(profile.getAddress());
@@ -54,7 +53,8 @@ public class SuperAdminProfileController {
         existing.setState(profile.getState());
         existing.setPincode(profile.getPincode());
         existing.setAdminTitle(profile.getAdminTitle());
-        existing.setEmergencyContact(profile.getEmergencyContact());
+        existing.setRecoveryEmail(profile.getRecoveryEmail());
+        existing.setTimezone(profile.getTimezone());
 
         SuperAdminProfile saved = superAdminProfileRepository.save(existing);
 
