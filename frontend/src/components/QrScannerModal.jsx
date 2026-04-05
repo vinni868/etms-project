@@ -180,14 +180,28 @@ export default function QrScannerModal({ isOpen, onClose, onSuccess }) {
             <div className="qr-session-details">
               <div className="qr-session-row">
                 <span>Arrival</span>
-                <span>{new Date(si.loginTime).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true }).toUpperCase()}</span>
+                <span>{(() => {
+                  const timePart = si.loginTime.includes('T') ? si.loginTime.split('T')[1] : si.loginTime;
+                  const [hStr, mStr] = timePart.split(':');
+                  const h = parseInt(hStr, 10), m = parseInt(mStr, 10);
+                  const period = h >= 12 ? 'PM' : 'AM';
+                  const h12 = h === 0 ? 12 : h > 12 ? h - 12 : h;
+                  return `${String(h12).padStart(2, '0')}:${String(m).padStart(2, '0')} ${period}`;
+                })()}</span>
               </div>
 
               {si.logoutTime && (
                 <>
                   <div className="qr-session-row">
                     <span>Departure</span>
-                    <span>{new Date(si.logoutTime).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true }).toUpperCase()}</span>
+                    <span>{(() => {
+                      const timePart = si.logoutTime.includes('T') ? si.logoutTime.split('T')[1] : si.logoutTime;
+                      const [hStr, mStr] = timePart.split(':');
+                      const h = parseInt(hStr, 10), m = parseInt(mStr, 10);
+                      const period = h >= 12 ? 'PM' : 'AM';
+                      const h12 = h === 0 ? 12 : h > 12 ? h - 12 : h;
+                      return `${String(h12).padStart(2, '0')}:${String(m).padStart(2, '0')} ${period}`;
+                    })()}</span>
                   </div>
                   <div className="qr-divider" />
                   <div className="qr-session-row">
