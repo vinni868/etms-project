@@ -284,4 +284,5 @@
 @media (max-width: 768px) {
   .cr-hero__inner { flex-direction: column; align-items: flex-start; gap: 20px; }
   .cr-live-clock { text-align: left; }
+  .cr-content { padding-bottom: 120px !important; }
 }

@@ -40,6 +40,11 @@ function StudentAnnouncements() {
               <p className="ann-content">{ann.content}</p>
               <div className="ann-footer">
                 <span className="ann-author">Posted by: {ann.createdByName || "System"}</span>
+                {ann.link && (
+                  <a href={ann.link} target="_blank" rel="noopener noreferrer" className="ann-link-btn">
+                    Open Resource
+                  </a>
+                )}
               </div>
             </div>
           ))

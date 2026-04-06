@@ -256,7 +256,7 @@ function UserManagement() {
                 <p>Scanning global registry...</p>
               </div>
             ) : (
-              <table className="um-table">
+              <table className="um-table responsive-card-table">
                 <thead>
                   <tr>
                     <th>Role</th>

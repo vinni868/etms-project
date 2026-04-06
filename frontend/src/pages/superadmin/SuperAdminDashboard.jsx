@@ -176,7 +176,7 @@ export default function SuperAdminDashboard() {
             <div className="sa-hero-left">
               <p className="sa-hero-eyebrow">🚀 Super Admin Dashboard</p>
               <h2 className="sa-hero-heading">
-                Good {getTimeOfDay()}, {user?.name?.split(" ")[0] || "Commander"}
+                Good {getTimeOfDay()}, {user?.name || "Super Admin"}
               </h2>
               <p className="sa-hero-desc">Here's what's happening across your platform today.</p>
               <div className="sa-hero-chips">
@@ -261,7 +261,7 @@ export default function SuperAdminDashboard() {
                 <div className="sa-card-ic">📊</div>
                 <h3>Platform Overview</h3>
               </div>
-              <div className="sa-ov-grid" style={{gridTemplateColumns: 'repeat(4, 1fr)'}}>
+              <div className="sa-ov-grid">
                 <OvTile icon="📚" value={dashboard.totalCourses  || 0} label="Courses"  color="blue" />
                 <OvTile icon="🎓" value={dashboard.totalBatches  || 0} label="Batches"  color="gold" />
                 <OvTile icon="👨‍🏫" value={dashboard.totalTrainers || 0} label="Trainers" color="green" />

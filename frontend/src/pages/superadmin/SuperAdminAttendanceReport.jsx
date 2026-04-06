@@ -210,7 +210,7 @@ export default function SuperAdminAttendanceReport() {
           <div className="sa-att-empty">No records found matching your filters.</div>
         ) : (
           <div className="sa-att-table-wrap">
-            <table className="sa-att-table">
+            <table className="sa-att-table responsive-card-table">
               <thead>
                 <tr>
                   <th>User / ID</th>
@@ -229,30 +229,30 @@ export default function SuperAdminAttendanceReport() {
                     className="sa-clickable-row"
                     onClick={() => openModal(report)}
                   >
-                    <td>
+                    <td data-label="User / ID">
                       <div><strong>{report.userName}</strong></div>
                       <div style={{ fontSize: '0.8rem', color: '#64748b' }}>{report.portalId}</div>
                     </td>
-                    <td>
+                    <td data-label="Role">
                       <span className={`sa-badge-role ${report.role.toLowerCase()}`}>
                         {report.role}
                       </span>
                     </td>
-                    <td>{fmtDate(report.date)}</td>
-                    <td style={{ fontSize: '0.85rem', color: '#64748b', textAlign: 'center' }}>
+                    <td data-label="Date">{fmtDate(report.date)}</td>
+                    <td data-label="Sessions" style={{ fontSize: '0.85rem', color: '#64748b', textAlign: 'center' }}>
                       {report.sessionCount}
                     </td>
-                    <td style={{ fontWeight: 700, color: '#1e293b' }}>
+                    <td data-label="Total Hours Today" style={{ fontWeight: 700, color: '#1e293b' }}>
                       {fmtDuration(report.totalMinutes)}
                     </td>
-                    <td>
+                    <td data-label="Status">
                       {report.isActiveNow ? (
                         <span className="sa-time-active">🟢 Active Now</span>
                       ) : (
                         <span style={{ color: '#64748b', fontWeight: 600, fontSize: '0.85rem' }}>Checked Out</span>
                       )}
                     </td>
-                    <td>
+                    <td data-label="Action">
                       <button 
                         className="sa-view-btn"
                         onClick={(e) => { e.stopPropagation(); openModal(report); }}

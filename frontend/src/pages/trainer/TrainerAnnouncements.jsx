@@ -49,6 +49,16 @@ function TrainerAnnouncements() {
                   <span className="date">{a.date}</span>
                 </div>
                 <p className="content">{a.content}</p>
+                {a.link && (
+                  <div style={{marginTop: '10px'}}>
+                    <a href={a.link} target="_blank" rel="noopener noreferrer" style={{
+                      display: 'inline-block', padding: '5px 12px', backgroundColor: '#014aa2', color: 'white',
+                      textDecoration: 'none', borderRadius: '4px', fontSize: '13px'
+                    }}>
+                      Open Link
+                    </a>
+                  </div>
+                )}
               </li>
             ))}
           </ul>
@@ -67,6 +77,16 @@ function TrainerAnnouncements() {
                   <span className="date">{a.date}</span>
                 </div>
                 <p className="content">{a.content}</p>
+                {a.link && (
+                  <div style={{marginTop: '10px'}}>
+                    <a href={a.link} target="_blank" rel="noopener noreferrer" style={{
+                      display: 'inline-block', padding: '5px 12px', backgroundColor: '#014aa2', color: 'white',
+                      textDecoration: 'none', borderRadius: '4px', fontSize: '13px'
+                    }}>
+                      Open Link
+                    </a>
+                  </div>
+                )}
               </li>
             ))}
           </ul>

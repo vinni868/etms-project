@@ -566,4 +566,5 @@
   .td-hero__stats { flex-direction: column; }
   .td-stat { min-width: unset; }
   .td-actions-grid { grid-template-columns: repeat(2, 1fr); }
+  .td-body { padding-bottom: 120px !important; }
 }

@@ -740,8 +740,20 @@ ul { list-style: none; }
 /* ── Platform Overview ─── */
 .sa-ov-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(4, 1fr);
   gap: 0.75rem;
+}
+
+@media (max-width: 992px) {
+  .sa-ov-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 480px) {
+  .sa-stats {
+    grid-template-columns: 1fr;
+  }
 }
 
 .sa-ov-tile {

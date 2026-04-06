@@ -116,14 +116,37 @@ function AdminScheduleClass() {
 
     try {
       setLoading(true);
+      
+      if (!formData.batchId) {
+        setErrorMsg("Please select a batch first.");
+        setLoading(false);
+        return;
+      }
+
       const selectedBatch = batches.find(b => b.id === Number(formData.batchId));
+      if (!selectedBatch?.trainer?.id) {
+        setErrorMsg("The selected batch has no assigned trainer. Please assign a trainer before scheduling classes.");
+        setLoading(false);
+        return;
+      }
+
+      const startFull = convertTo24Hour(formData.startTime, formData.startPeriod);
+      const endFull = convertTo24Hour(formData.endTime, formData.endPeriod);
+
+      // Simple time comparison within the same day
+      if (formData.startDate === formData.endDate && endFull <= startFull) {
+        setErrorMsg("End time must be after start time for the same date.");
+        setLoading(false);
+        return;
+      }
+
       const payload = {
         batchId:   formData.batchId,
-        trainerId: selectedBatch?.trainer?.id || "",
+        trainerId: selectedBatch.trainer.id,
         startDate: formData.startDate,
         endDate:   formData.endDate,
-        startTime: convertTo24Hour(formData.startTime, formData.startPeriod),
-        endTime:   convertTo24Hour(formData.endTime,   formData.endPeriod),
+        startTime: startFull,
+        endTime:   endFull,
         status:    formData.status
       };
 

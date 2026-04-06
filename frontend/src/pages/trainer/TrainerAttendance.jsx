@@ -331,7 +331,7 @@ function TrainerAttendance() {
             )}
 
             <div className="ta-table-container">
-              <table className="ta-table">
+              <table className="ta-table responsive-card-table">
                 <thead>
                   {viewMode === "MARK" ? (
                     <tr>

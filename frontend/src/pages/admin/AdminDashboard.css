@@ -35,6 +35,13 @@
   background: var(--adm-bg);
   font-family: 'Outfit', -apple-system, sans-serif;
   color: var(--adm-text);
+  padding-top: 1px; /* Baseline padding */
+}
+
+@media (max-width: 768px) {
+  .adm-page {
+    padding-top: 15px; /* BUFFER FOR STICKY HEADER */
+  }
 }
 
 /* ============================================================
@@ -679,6 +686,17 @@
 /* ============================================================
    RESPONSIVE
    ============================================================ */
+@media (max-width: 768px) {
+  .adm-page {
+    padding-bottom: 120px !important;
+  }
+  .adm-table {
+    table-layout: auto !important;
+    min-width: unset !important;
+    display: block !important;
+  }
+}
+
 @media (max-width: 1200px) {
   .adm-page > *:not(.adm-hero) { padding-left: 1.5rem; padding-right: 1.5rem; }
   .adm-hero__inner { padding: 2rem 1.5rem 1.25rem; }
@@ -689,8 +707,8 @@
   .adm-hero__inner { flex-direction: column; align-items: stretch; gap: 1.5rem; }
   .adm-hero__right { justify-content: space-between; width: 100%; }
   .adm-live-clock { text-align: left; }
-  .adm-hero__stats { gap: 0.75rem; }
-  .adm-stat-pill { min-width: 100%; }
+  .adm-hero__stats { gap: 0.75rem; padding: 0 1.5rem 1.75rem; }
+  .adm-stat-pill { min-width: 100%; flex: none; }
   .adm-tab-stats { display: none; }
   .adm-section-tabs { gap: 5px; }
   .adm-sec-tab { padding: 8px 12px; font-size: 12px; }

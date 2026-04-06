@@ -499,8 +499,17 @@
     align-items: stretch;
     gap: 1rem;
   }
-  .um-filters {
+  .um-stats-rectangle {
     flex-direction: column;
+    padding: 1.5rem;
+    gap: 1rem;
+    align-items: stretch;
+  }
+  .um-stat-divider {
+    display: none;
+  }
+  .um-stat-card {
+    justify-content: space-between;
   }
 }
 

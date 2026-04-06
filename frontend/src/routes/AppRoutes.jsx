@@ -22,7 +22,6 @@ import AboutUs from "../pages/AboutUs";
 
 /* ================= SUPER ADMIN ================= */
 import SuperAdminDashboard from "../pages/superadmin/SuperAdminDashboard";
-import CreateAdmin from "../pages/superadmin/CreateAdmin";
 import FinanceManagement from "../pages/superadmin/FinanceManagement";
 import MessagingHub from "../pages/superadmin/MessagingHub";
 import SuperAdminProfile from "../pages/superadmin/SuperAdminProfile";
@@ -172,7 +171,6 @@ export default function AppRoutes() {
         }
       >
         <Route path="dashboard"         element={<SuperAdminDashboard />} />
-        <Route path="create-admin"      element={<CreateAdmin />} />
         <Route path="finance"           element={<FinanceManagement />} />
         <Route path="messages"          element={<MessagingHub />} />
         <Route path="profile"           element={<SuperAdminProfile />} />

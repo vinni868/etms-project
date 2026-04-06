@@ -501,6 +501,11 @@ public class AdminController {
             LocalTime startTime = LocalTime.parse(payload.get("startTime").toString());
             LocalTime endTime = LocalTime.parse(payload.get("endTime").toString());
 
+            // ✅ LOGICAL TIME VALIDATION
+            if (!endTime.isAfter(startTime)) {
+                return ResponseEntity.badRequest().body("Validation Error: End Time must be strictly after Start Time.");
+            }
+
             // ✅ Check conflict using batchId only
             List<ScheduledClass> existingSchedules =
                     scheduledClassRepository.findByBatchId(batchId);
@@ -1142,8 +1147,18 @@ public ResponseEntity<?> scheduleClass(@RequestBody Map<String, String> payload)
 
     try {
 
-        Long batchId = Long.parseLong(payload.get("batchId"));
-        Long trainerId = Long.parseLong(payload.get("trainerId"));
+        String rawBatchId = payload.get("batchId");
+        String rawTrainerId = payload.get("trainerId");
+
+        if (rawBatchId == null || rawBatchId.trim().isEmpty()) {
+            return ResponseEntity.badRequest().body("Batch ID is required for scheduling.");
+        }
+        if (rawTrainerId == null || rawTrainerId.trim().isEmpty()) {
+            return ResponseEntity.badRequest().body("A Batch must have an assigned trainer before scheduling classes.");
+        }
+
+        Long batchId = Long.parseLong(rawBatchId);
+        Long trainerId = Long.parseLong(rawTrainerId);
 
         Batches batch = batchRepository.findById(batchId)
                 .orElseThrow(() -> new RuntimeException("Batch not found"));
@@ -1158,6 +1173,11 @@ public ResponseEntity<?> scheduleClass(@RequestBody Map<String, String> payload)
 
         LocalTime startTime = LocalTime.parse(payload.get("startTime"));
         LocalTime endTime = LocalTime.parse(payload.get("endTime"));
+
+        // ✅ LOGICAL TIME VALIDATION
+        if (!endTime.isAfter(startTime)) {
+            return ResponseEntity.badRequest().body("Validation Error: End Time must be strictly after Start Time.");
+        }
 
         List<ScheduledClass> existingSchedules =
                 scheduledClassRepository.findByBatchId(batchId);

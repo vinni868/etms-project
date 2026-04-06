@@ -70,3 +70,43 @@ table td {
   background: #4f46e5;
   border-radius: 10px;
 }
+
+/* Announcements */
+.announcement-card .ann-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.announcement-card .ann-content {
+  color: #475569;
+  line-height: 1.6;
+  margin-bottom: 15px;
+}
+
+.announcement-card .ann-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-top: 1px solid #f1f5f9;
+  padding-top: 12px;
+  font-size: 0.9rem;
+  color: #64748b;
+}
+
+.ann-link-btn {
+  display: inline-block;
+  padding: 6px 16px;
+  background-color: #014aa2;
+  color: white !important;
+  text-decoration: none;
+  border-radius: 6px;
+  font-weight: 500;
+  transition: all 0.2s;
+}
+
+.ann-link-btn:hover {
+  background-color: #003377;
+  transform: translateY(-1px);
+}

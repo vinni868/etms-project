@@ -4,6 +4,8 @@ import com.lms.entity.Announcement;
 import com.lms.entity.User;
 import com.lms.repository.AnnouncementRepository;
 import com.lms.repository.UserRepository;
+import com.lms.repository.BatchRepository;
+import com.lms.repository.StudentBatchesRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -18,6 +20,8 @@ public class AnnouncementController {
 
     private final AnnouncementRepository announcementRepo;
     private final UserRepository userRepo;
+    private final StudentBatchesRepository studentBatchesRepo;
+    private final BatchRepository batchRepo;
 
     /** GET /api/announcements — all active (for authenticated user) */
     @GetMapping("/api/announcements")
@@ -25,18 +29,36 @@ public class AnnouncementController {
         User user = getUser(auth);
         List<Announcement> all = announcementRepo.findActiveAnnouncements();
         String role = user.getRole() != null ? user.getRole().getRoleName().toUpperCase() : "";
+        
+        // Fetch student's current batches if they are a student
+        List<Long> studentBatchIds = new ArrayList<>();
+        if ("STUDENT".equals(role)) {
+            studentBatchesRepo.findByStudent_Id(user.getId()).forEach(sb -> {
+                if (sb.getBatch() != null) studentBatchIds.add(sb.getBatch().getId());
+            });
+        }
+
         List<Map<String, Object>> result = new ArrayList<>();
         for (Announcement a : all) {
-            if (a.getTargetRoles() == null) {
-                result.add(toDto(a));
-                continue;
-            }
-            
-            String tr = a.getTargetRoles();
+            boolean isTargeted = false;
+            String tr = a.getTargetRoles() != null ? a.getTargetRoles() : "[]";
+
+            // 1. Role / User targeting
             if (tr.contains("\"ALL\"") || tr.contains("ALL")
                 || tr.contains("\"ROLE_" + role + "\"")
                 || tr.contains("\"USER_" + user.getId() + "\"")
-                || tr.contains("\"" + role + "\"")) { // legacy fallback
+                || tr.contains("\"" + role + "\"")) {
+                isTargeted = true;
+            }
+
+            // 2. Batch targeting (Students only)
+            if (!isTargeted && "STUDENT".equals(role) && a.getBatchId() != null) {
+                if (studentBatchIds.contains(a.getBatchId())) {
+                    isTargeted = true;
+                }
+            }
+
+            if (isTargeted) {
                 result.add(toDto(a));
             }
         }
@@ -61,7 +83,10 @@ public class AnnouncementController {
         a.setContent(str(body, "content"));
         a.setTargetRoles(body.get("targetRoles") != null ? body.get("targetRoles").toString() : null);
         a.setIsPopup(body.get("isPopup") != null && Boolean.parseBoolean(body.get("isPopup").toString()));
-        if (body.get("batchId") != null) a.setBatchId(Long.parseLong(body.get("batchId").toString()));
+        if (body.get("batchId") != null && !body.get("batchId").toString().isEmpty()) {
+            a.setBatchId(Long.parseLong(body.get("batchId").toString()));
+        }
+        if (body.get("link") != null) a.setLink(body.get("link").toString());
         if (body.get("expiresAt") != null) a.setExpiresAt(LocalDateTime.parse(body.get("expiresAt").toString()));
         a.setCreatedBy(user.getId());
         announcementRepo.save(a);
@@ -75,6 +100,8 @@ public class AnnouncementController {
         if (body.containsKey("title"))      a.setTitle(str(body, "title"));
         if (body.containsKey("content"))    a.setContent(str(body, "content"));
         if (body.containsKey("targetRoles")) a.setTargetRoles(body.get("targetRoles").toString());
+        if (body.containsKey("batchId"))     a.setBatchId(body.get("batchId") != null ? Long.parseLong(body.get("batchId").toString()) : null);
+        if (body.containsKey("link"))        a.setLink(body.get("link") != null ? body.get("link").toString() : null);
         if (body.containsKey("isPopup"))    a.setIsPopup(Boolean.parseBoolean(body.get("isPopup").toString()));
         announcementRepo.save(a);
         return ResponseEntity.ok(Map.of("status", "success", "message", "Updated."));
@@ -94,7 +121,11 @@ public class AnnouncementController {
         dto.put("content",     a.getContent());
         dto.put("targetRoles", a.getTargetRoles());
         dto.put("batchId",     a.getBatchId());
+        dto.put("link",        a.getLink());
         dto.put("isPopup",     a.getIsPopup());
+        if (a.getBatchId() != null) {
+            batchRepo.findById(a.getBatchId()).ifPresent(b -> dto.put("batchName", b.getBatchName()));
+        }
         dto.put("createdAt",   a.getCreatedAt());
         dto.put("expiresAt",   a.getExpiresAt());
         userRepo.findById(a.getCreatedBy() != null ? a.getCreatedBy() : 0L)

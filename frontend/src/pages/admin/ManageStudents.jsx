@@ -396,7 +396,7 @@ function ManageStudents() {
 
       {/* Main Data Table */}
       <div className="hub-table-container">
-        <table className="hub-table">
+        <table className="hub-table responsive-card-table">
           <thead>
             <tr>
               <th>Member Identity</th>
@@ -427,7 +427,7 @@ function ManageStudents() {
 
               return (
                 <tr key={stu.id}>
-                  <td>
+                  <td data-label="Member Identity">
                     <div className="stu-cell">
                       <div className="avatar-box">
                         {stu.name?.charAt(0).toUpperCase()}
@@ -440,13 +440,13 @@ function ManageStudents() {
                       </div>
                     </div>
                   </td>
-                  <td>
+                  <td data-label="Contact Info">
                     <div className="contact-cell">
                       <div className="contact-item"><FaEnvelope /> {stu.email}</div>
                       <div className="contact-item"><FaPhoneAlt /> {stu.phone || "---"}</div>
                     </div>
                   </td>
-                  <td>
+                  <td data-label="Member Since">
                     <div className="contact-cell">
                        <span style={{fontSize:'13px', fontWeight:700, color:'#1e293b'}}>
                          {stu.createdAt ? new Date(stu.createdAt).toLocaleDateString('en-GB', { day:'2-digit', month:'short', year:'numeric'}) : "---"}
@@ -456,7 +456,7 @@ function ManageStudents() {
                        </span>
                     </div>
                   </td>
-                  <td>
+                  <td data-label="Course Enrollments">
                     <div className="enrollment-stack">
                       {enrollments.length === 0 ? (
                         <span style={{color: '#94a3b8', fontSize: '12px', fontWeight: 700}}>No Courses Linked</span>
@@ -479,7 +479,7 @@ function ManageStudents() {
                       )}
                     </div>
                   </td>
-                  <td>
+                  <td data-label="Assigned Batches">
                     <div className="batch-chips">
                       {batches.length === 0 ? (
                         <span style={{color: '#94a3b8', fontSize: '12px', fontWeight: 700}}>Unassigned</span>
@@ -493,12 +493,12 @@ function ManageStudents() {
                       )}
                     </div>
                   </td>
-                  <td>
+                  <td data-label="System Status">
                      <span className={`status-pill status-pill--${statusStr.toLowerCase()}`}>
                        <FaCircle size={6} /> {statusStr}
                      </span>
                   </td>
-                  <td>
+                  <td data-label="Actions">
                     <div className="hub-action-btns">
                       <button 
                         className="action-btn" 

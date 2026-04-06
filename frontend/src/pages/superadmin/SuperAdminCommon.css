@@ -64,6 +64,12 @@
   font-family: var(--font-body);
 }
 
+@media (max-width: 768px) {
+  .sa-page {
+    padding-top: 15px; /* BUFFER FOR TOP STICKY HEADER */
+  }
+}
+
 .sa-wrapper {
   display: grid;
   grid-template-columns: 300px 1fr;

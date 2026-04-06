@@ -19,6 +19,9 @@ export default function AdminAnnouncements() {
   const [selectedRoles, setSelectedRoles] = useState(['ALL']);
   const [selectedUsers, setSelectedUsers] = useState([]);
   const [userSearchText, setUserSearchText] = useState('');
+  const [link, setLink] = useState('');
+  const [batchId, setBatchId] = useState('');
+  const [batches, setBatches] = useState([]);
 
   const rolesOptions = [
     { id: 'ALL', label: 'All Users (Everyone)' },
@@ -51,9 +54,19 @@ export default function AdminAnnouncements() {
     }
   };
 
+  const fetchBatches = async () => {
+    try {
+      const res = await api.get('/admin/batches');
+      setBatches(res.data || []);
+    } catch (err) {
+      console.error('Failed to fetch batches', err);
+    }
+  };
+
   useEffect(() => { 
     fetchAnnouncements(); 
     fetchUsers();
+    fetchBatches();
   }, []);
 
   const handleRoleToggle = (roleId) => {
@@ -92,6 +105,8 @@ export default function AdminAnnouncements() {
         title,
         content,
         isPopup,
+        link,
+        batchId: batchId || null,
         targetRoles: JSON.stringify(targetingArray)
       };
       if (expiresAt) {
@@ -127,6 +142,8 @@ export default function AdminAnnouncements() {
     setTitle(a.title);
     setContent(a.content);
     setIsPopup(a.isPopup);
+    setLink(a.link || '');
+    setBatchId(a.batchId || '');
     setExpiresAt(a.expiresAt ? new Date(a.expiresAt).toISOString().slice(0,16) : '');
     
     try {
@@ -149,6 +166,8 @@ export default function AdminAnnouncements() {
     setTitle('');
     setContent('');
     setIsPopup(false);
+    setLink('');
+    setBatchId('');
     setExpiresAt('');
     setSelectedRoles(['ALL']);
     setSelectedUsers([]);
@@ -190,6 +209,7 @@ export default function AdminAnnouncements() {
              <p className="acard-content">{a.content}</p>
              <div className="acard-meta">
                <span><strong>Targets:</strong> {(() => {
+                  if (a.batchId) return `Students in Batch: ${a.batchName || a.batchId}`;
                   try {
                     const parsed = JSON.parse(a.targetRoles || '["ALL"]');
                     const rolesStr = parsed.filter(t => !t.startsWith('USER_')).map(r => r.replace('ROLE_', '')).join(', ');
@@ -198,6 +218,7 @@ export default function AdminAnnouncements() {
                   } catch(e) { return a.targetRoles; }
                })()}</span>
                <span><strong>Expires:</strong> {a.expiresAt ? new Date(a.expiresAt).toLocaleDateString() : 'Never'}</span>
+               {a.link && <span className="acard-link"><strong>Link:</strong> <a href={a.link} target="_blank" rel="noreferrer">Open Resource</a></span>}
              </div>
              <div className="acard-actions">
                <button className="action-btn" onClick={() => openEdit(a)}><FaEdit /> Edit</button>
@@ -226,6 +247,10 @@ export default function AdminAnnouncements() {
                   <label>Message Content*</label>
                   <textarea required rows="4" value={content} onChange={e => setContent(e.target.value)}></textarea>
                 </div>
+                <div className="form-group">
+                  <label>External Action Link (Optional)</label>
+                  <input type="url" placeholder="https://example.com" value={link} onChange={e => setLink(e.target.value)} />
+                </div>
               </div>
 
               {msg && msg.type === 'err' && (
@@ -252,6 +277,21 @@ export default function AdminAnnouncements() {
                       </label>
                     ))}
                   </div>
+                </div>
+
+                <div className="form-group" style={{marginTop:'15px'}}>
+                  <label style={{marginBottom:'8px'}}>Target Specific Batch (Only for Students):</label>
+                  <select 
+                    value={batchId} 
+                    onChange={e => setBatchId(e.target.value)}
+                    style={{padding:'10px', borderRadius:'6px', border:'1px solid #e2e8f0'}}
+                  >
+                    <option value="">-- No Specific Batch --</option>
+                    {batches.map(b => (
+                      <option key={b.id} value={b.id}>{b.batchName} ({b.batchId})</option>
+                    ))}
+                  </select>
+                  <p style={{fontSize:'12px', color:'#64748b', marginTop:'5px'}}>If selected, only students in this batch will see the announcement.</p>
                 </div>
 
                 <div className="form-group" style={{marginTop:'15px'}}>

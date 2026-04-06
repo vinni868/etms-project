@@ -35,6 +35,9 @@ public class Announcement {
     @Column(name = "expires_at")
     private LocalDateTime expiresAt;
 
+    @Column(name = "link", columnDefinition = "TEXT")
+    private String link;
+
     // ─── Getters & Setters ────────────────────────────────────────
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
@@ -54,4 +57,6 @@ public class Announcement {
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
     public LocalDateTime getExpiresAt() { return expiresAt; }
     public void setExpiresAt(LocalDateTime expiresAt) { this.expiresAt = expiresAt; }
+    public String getLink() { return link; }
+    public void setLink(String link) { this.link = link; }
 }

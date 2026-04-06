@@ -580,8 +580,8 @@ a.sd-join-btn--outline:hover { color:var(--indigo); }
   .sd-hero__right { width:100%; justify-content:flex-end; }
   .sd-tabs   { overflow-x:auto; width:100%; }
 }
-@media (max-width:600px) {
-  .sd-page     { padding:16px; }
+@media (max-width: 600px) {
+  .sd-page     { padding: 15px 16px 120px !important; }
   .sd-hero     { padding:20px 18px; }
   .sd-hero__name { font-size:22px; }
   .sd-stats    { grid-template-columns:1fr; gap:12px; }

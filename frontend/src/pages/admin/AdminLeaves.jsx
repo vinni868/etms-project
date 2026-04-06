@@ -185,7 +185,7 @@ export default function AdminLeaves() {
 
           <div className="table-container">
             {loading ? <div className="loading-state">Loading...</div> : 
-             <table className="data-table">
+             <table className="data-table responsive-card-table">
               <thead>
                 <tr>
                   <th>Applicant</th>
@@ -200,7 +200,7 @@ export default function AdminLeaves() {
                 {leaves.length === 0 ? <tr><td colSpan="6" className="text-center">No leave requests found.</td></tr> :
                  leaves.map(l => (
                    <tr key={l.id}>
-                     <td>
+                     <td data-label="Applicant">
                        <strong>{l.userName}</strong><br/>
                        <small className="text-muted">{l.userEmail}</small><br/>
                        <small style={{color:'#6b7280', fontSize:'0.75rem'}}>{l.userRole}</small>
@@ -215,23 +215,23 @@ export default function AdminLeaves() {
                          </div>
                        )}
                      </td>
-                     <td>
+                     <td data-label="Type / Category">
                         <div style={{ fontWeight: "600", color: l.requestType === "ONLINE" ? "#2563eb" : l.requestType === "WFH" ? "#059669" : "#d97706" }}>
                           {l.requestType === "ONLINE" ? "Online Permission" : l.requestType === "WFH" ? "Work From Home" : "Leave Request"}
                         </div>
                         {l.leaveCategory && <div style={{ fontSize: '0.7rem', color: '#64748b', textTransform: 'capitalize' }}>({l.leaveCategory.toLowerCase()})</div>}
                      </td>
-                     <td>
+                     <td data-label="Date Range">
                         {l.fromDate} {l.fromDate !== l.toDate ? `to ${l.toDate}` : ""}
                         <div style={{fontSize: '0.75rem', color: '#64748b'}}>{Math.ceil((new Date(l.toDate) - new Date(l.fromDate)) / (1000 * 60 * 60 * 24)) + 1} days</div>
                      </td>
-                     <td style={{maxWidth: '300px'}}>
+                     <td data-label="Reason & Details" style={{maxWidth: '300px'}}>
                         <div style={{fontSize: '0.85rem', fontWeight: 500}}>{l.reason}</div>
                         {l.courses && <div style={{fontSize: '0.75rem', color: '#64748b', marginTop: '4px'}}><strong>Course:</strong> {l.courses}</div>}
                         {l.batches && <div style={{fontSize: '0.75rem', color: '#64748b'}}><strong>Batch:</strong> {l.batches}</div>}
                      </td>
-                     <td><span className={`status-badge st-${l.status.toLowerCase()}`}>{l.status}</span></td>
-                     <td>
+                     <td data-label="Status"><span className={`status-badge st-${l.status.toLowerCase()}`}>{l.status}</span></td>
+                     <td data-label="Actions">
                        {l.status === 'PENDING' ? (
                          <div style={{display:'flex', gap:'8px', flexWrap: 'wrap'}}>
                            <button className="primary-btn" style={{padding:'6px 10px', fontSize:'11px'}} onClick={() => handleAction(l.id, 'approve')}>Approve</button>
@@ -258,7 +258,7 @@ export default function AdminLeaves() {
       {activeTab === 'MY_REQUESTS' && (
         <div className="table-container">
           {loadingMy ? <div className="loading-state">Loading...</div> : 
-           <table className="data-table">
+           <table className="data-table responsive-card-table">
             <thead>
               <tr>
                  <th>Type / Category</th>
@@ -274,17 +274,17 @@ export default function AdminLeaves() {
                  const days = Math.ceil((new Date(l.toDate) - new Date(l.fromDate)) / (1000 * 60 * 60 * 24)) + 1;
                  return (
                   <tr key={l.id}>
-                    <td>
+                    <td data-label="Type / Category">
                       <div style={{ fontWeight: "600", color: l.requestType === "ONLINE" ? "#2563eb" : l.requestType === "WFH" ? "#059669" : "#d97706" }}>
                         {l.requestType === "ONLINE" ? "Online Permission" : l.requestType === "WFH" ? "Work From Home" : "Leave Request"}
                       </div>
                       {l.leaveCategory && <div style={{ fontSize: '0.75rem', color: '#64748b', textTransform: 'capitalize' }}>Category: {l.leaveCategory.toLowerCase()}</div>}
                     </td>
-                    <td>
+                    <td data-label="Date Range">
                       {l.fromDate} {l.fromDate !== l.toDate ? `to ${l.toDate}` : ""}
                       <div style={{fontSize: '0.75rem', color: '#64748b'}}>{days} days</div>
                     </td>
-                    <td>
+                    <td data-label="Details">
                       <div style={{maxWidth: '300px'}}>
                         <div style={{fontSize: '0.85rem', fontWeight: 500, color: '#1e293b'}}>{l.reason}</div>
                         {l.hasDocument && (
@@ -297,11 +297,11 @@ export default function AdminLeaves() {
                         )}
                       </div>
                     </td>
-                    <td>
+                    <td data-label="Status">
                       <span className={`status-badge st-${l.status.toLowerCase()}`}>{l.status}</span>
                       {l.approvalNote && <div style={{fontSize:'11px', color:'#64748b', marginTop:'4px'}}>Note: {l.approvalNote}</div>}
                     </td>
-                    <td>
+                    <td data-label="Action">
                       {l.status === 'PENDING' && (new Date() - new Date(l.createdAt)) < (5 * 60 * 60 * 1000) && (
                         <button className="icon-btn text-error" title="Delete request" onClick={() => handleMyDelete(l.id)}>
                           <FaTrash />

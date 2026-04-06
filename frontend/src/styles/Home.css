@@ -206,6 +206,12 @@
 .suggestion-row .s-title { color: #333; font-weight: 600; font-size: 15px; }
 .suggestion-row .s-tag { font-size: 11px; background: #eef4ff; color: #014aa2; padding: 2px 8px; border-radius: 4px; font-weight: 700; text-transform: uppercase; }
 
+@media (max-width: 768px) {
+  .suggestion-row {
+    padding: 15px 20px; /* Larger touch area */
+  }
+}
+
 @media (max-width: 1024px) {
   .hero-title { font-size: 38px; }
   .grid-2 { gap: 40px; }
@@ -215,12 +221,16 @@
   /* 🏛️ Hero Optimization */
   .hero-section {
     height: auto;
-    padding: 70px 0;
-    min-height: 550px;
+    padding: 0; /* Removed padding to allow overlay to cover full area */
+    min-height: 600px;
   }
 
   .hero-overlay {
     background: linear-gradient(135deg, rgba(26, 54, 93, 0.98), rgba(43, 108, 176, 0.9));
+    padding: 80px 0; /* Padding moved here */
+    min-height: 600px;
+    display: flex;
+    align-items: center;
   }
 
   .hero-content {
@@ -233,10 +243,11 @@
   }
 
   .hero-title {
-    font-size: 30px;
-    line-height: 1.3;
-    letter-spacing: -0.5px;
-    margin-bottom: 20px;
+    font-size: 32px;
+    line-height: 1.25;
+    letter-spacing: -0.8px;
+    margin-bottom: 25px;
+    padding: 0 10px;
   }
 
   .hero-subtitle {
@@ -265,13 +276,14 @@
 
   .search-inner input {
     width: 100%;
-    padding: 10px 15px; /* Thinner padding */
+    padding: 14px 15px; /* Improved padding */
     background: #ffffff;
     border: none;
     border-radius: 10px;
     text-align: center;
-    font-size: 14px;
+    font-size: 15px;
     font-weight: 500;
+    color: var(--deep-navy);
   }
 
   .btn-search {

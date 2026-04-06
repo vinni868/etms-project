@@ -404,11 +404,11 @@ function AdminDashboard() {
                     const idx = (approvalPage-1)*PAGE_SIZE_APPROVAL + i;
                     return (
                       <tr key={u.id} className={u.status==="PENDING" ? "adm-row--pending" : ""}>
-                        <td className="adm-td--num"><span className="adm-rnum">{idx+1}</span></td>
-                        <td className="adm-td"><div className="adm-user-cell"><Avatar name={u.name} idx={idx} /><div><div className="adm-user-cell__name">{u.name}</div><div className="adm-user-cell__sub">{u.email}</div></div></div></td>
-                        <td className="adm-td"><RoleTag role={u.role?.roleName} /></td>
-                        <td className="adm-td"><StatusBadge status={u.status} /></td>
-                        <td className="adm-td--actions"><ActionBtns user={u} onApprove={approveUser} onReject={rejectUser} onDeactivate={deactivateUser} onActivate={reactivateUser} /></td>
+                        <td className="adm-td--num" data-label="#"><span className="adm-rnum">{idx+1}</span></td>
+                        <td className="adm-td" data-label="User Details"><div className="adm-user-cell"><Avatar name={u.name} idx={idx} /><div><div className="adm-user-cell__name">{u.name}</div><div className="adm-user-cell__sub">{u.email}</div></div></div></td>
+                        <td className="adm-td" data-label="Role"><RoleTag role={u.role?.roleName} /></td>
+                        <td className="adm-td" data-label="Status"><StatusBadge status={u.status} /></td>
+                        <td className="adm-td--actions" data-label="Actions"><ActionBtns user={u} onApprove={approveUser} onReject={rejectUser} onDeactivate={deactivateUser} onActivate={reactivateUser} /></td>
                       </tr>
                     );
                   })
@@ -441,12 +441,12 @@ function AdminDashboard() {
                   const idx = (userPage-1)*PAGE_SIZE_USERS + i;
                   return (
                     <tr key={u.id}>
-                      <td className="adm-td--num"><span className="adm-rnum">{idx+1}</span></td>
-                      <td className="adm-td"><div className="adm-user-cell"><Avatar name={u.name} idx={idx} /><span className="adm-user-cell__name">{u.name}</span></div></td>
-                      <td className="adm-td">{u.email}</td>
-                      {showRoleColumn && <td className="adm-td"><RoleTag role={u.role?.roleName} /></td>}
-                      <td className="adm-td"><StatusBadge status={u.status} /></td>
-                      <td className="adm-td--actions"><ActionBtns user={u} onApprove={approveUser} onReject={rejectUser} onDeactivate={deactivateUser} onActivate={reactivateUser} /></td>
+                      <td className="adm-td--num" data-label="#"><span className="adm-rnum">{idx+1}</span></td>
+                      <td className="adm-td" data-label="Name"><div className="adm-user-cell"><Avatar name={u.name} idx={idx} /><span className="adm-user-cell__name">{u.name}</span></div></td>
+                      <td className="adm-td" data-label="Email">{u.email}</td>
+                      {showRoleColumn && <td className="adm-td" data-label="Role"><RoleTag role={u.role?.roleName} /></td>}
+                      <td className="adm-td" data-label="Status"><StatusBadge status={u.status} /></td>
+                      <td className="adm-td--actions" data-label="Actions"><ActionBtns user={u} onApprove={approveUser} onReject={rejectUser} onDeactivate={deactivateUser} onActivate={reactivateUser} /></td>
                     </tr>
                   );
                 })}

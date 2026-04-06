@@ -21,6 +21,12 @@ import com.lms.repository.*;
 @RestController
 @RequestMapping("/api/student")
 public class StudentController {
+    private static final org.slf4j.Logger log = org.slf4j.LoggerFactory.getLogger(StudentController.class);
+
+    @jakarta.annotation.PostConstruct
+    public void init() {
+        System.out.println("STUDENT_CONTROLLER [v6]: Initialized and Scanning for /my-schedule");
+    }
 
     @Autowired
     private StudentBatchesRepository studentBatchRepository;
@@ -33,8 +39,13 @@ public class StudentController {
 
     @Autowired
     private JdbcTemplate jdbcTemplate;
+
     @Autowired
     private UserRepository userRepository;
+
+    @Autowired
+    private com.lms.service.CloudinaryService cloudinaryService;
+
     @Autowired
     private CertificateRepository certificateRepository;
 
@@ -52,6 +63,49 @@ public class StudentController {
         }
 
         throw new RuntimeException("User not authenticated");
+    }
+    // ----------------- STUDENT SCHEDULE (UNIFIED) -----------------
+    @GetMapping("/my-schedule")
+    public ResponseEntity<?> getMySchedule() {
+        System.out.println("API_HIT [v6]: /api/student/my-schedule Called!");
+        try {
+            Long studentId = getLoggedInStudentId();
+            
+            // SQL to join student_batches, batches, and scheduled_classes
+            String sql = 
+                "SELECT sc.id, sc.batch_id, sc.class_date, sc.start_time, sc.end_time, sc.status, " +
+                "       b.batch_name, b.meeting_link " +
+                "FROM scheduled_classes sc " +
+                "JOIN student_batches sb ON sc.batch_id = sb.batch_id " +
+                "JOIN batches b ON b.id = sc.batch_id " +
+                "WHERE sb.student_id = ? " +
+                "  AND sb.status = 'ACTIVE' " + 
+                "  AND (b.status = 'ONGOING' OR b.status = 'ACTIVE') " +
+                "  AND sc.status = 'ACTIVE' " +
+                "ORDER BY sc.class_date ASC, sc.start_time ASC";
+            
+            List<Map<String, Object>> schedule = jdbcTemplate.queryForList(sql, studentId);
+            
+            // Normalize for camelCase frontend consumption
+            List<Map<String, Object>> normalized = schedule.stream().map(row -> {
+                Map<String, Object> m = new LinkedHashMap<>();
+                m.put("id", row.get("id"));
+                m.put("batchId", row.get("batch_id")); 
+                m.put("batchName", row.get("batch_name")); 
+                m.put("meetingLink", row.get("meeting_link")); 
+                m.put("classDate", row.get("class_date") != null ? row.get("class_date").toString() : null);
+                m.put("startTime", row.get("start_time") != null ? row.get("start_time").toString() : null);
+                m.put("endTime", row.get("end_time") != null ? row.get("end_time").toString() : null);
+                m.put("status", row.get("status"));
+                return m;
+            }).collect(Collectors.toList());
+
+            return ResponseEntity.ok(normalized);
+
+        } catch (Exception e) {
+            System.err.println("MY_SCHEDULE_ERR: " + e.getMessage());
+            return ResponseEntity.status(500).body(Map.of("error", e.getMessage()));
+        }
     }
     // ----------------- STUDENT ATTENDANCE -----------------
     @GetMapping("/attendance/details/{studentId}")
@@ -279,7 +333,9 @@ public class StudentController {
         }
     }
 
+
     // ==========================================================
+
     // BATCH CLASSES — FIXED
     //
     // PROBLEM (from screenshot):
@@ -357,7 +413,8 @@ public class StudentController {
         map.put("is_today",   isToday);
         return map;
     }
- // ----------------- STUDENT PROFILE -----------------
+
+    // ----------------- STUDENT PROFILE -----------------
     @GetMapping("/profile")
     public ResponseEntity<?> getStudentProfile() {
         try {
@@ -378,6 +435,136 @@ public class StudentController {
 
         } catch (Exception e) {
             return ResponseEntity.status(500).body(Map.of("error", e.getMessage()));
+        }
+    }
+
+    @GetMapping("/profile/{email}")
+    public ResponseEntity<?> getStudentProfileByEmail(@PathVariable String email) {
+        log.info("Fetching/Syncing profile for email: {}", email);
+        
+        Optional<Student> byEmail = studentRepository.findByEmail(email);
+        if (byEmail.isPresent()) {
+            Student student = byEmail.get();
+            userRepository.findByEmail(email).ifPresent(user -> {
+                if (user.getStudentId() != null && !user.getStudentId().equals(student.getStudentId())) {
+                    student.setStudentId(user.getStudentId());
+                    studentRepository.save(student);
+                    log.info("Synced student_id for {}", email);
+                }
+            });
+            return ResponseEntity.ok(student);
+        }
+
+        Optional<User> userOpt = userRepository.findByEmail(email);
+        if (userOpt.isEmpty()) {
+            log.warn("No user found for email: {}", email);
+            return ResponseEntity.notFound().build();
+        }
+
+        User user = userOpt.get();
+        Optional<Student> byUserName = studentRepository.findTopByNameIgnoreCase(user.getName());
+
+        if (byUserName.isPresent()) {
+            Student existing = byUserName.get();
+            boolean changed = false;
+            if (!email.equals(existing.getEmail())) {
+                log.info("Healing email drift: {} → {} for student {}", existing.getEmail(), email, existing.getName());
+                existing.setEmail(email);
+                changed = true;
+            }
+            if (user.getStudentId() != null && !user.getStudentId().equals(existing.getStudentId())) {
+                existing.setStudentId(user.getStudentId());
+                changed = true;
+            }
+            if (changed) {
+                existing.setPhone(user.getPhone());
+                studentRepository.save(existing);
+            }
+            return ResponseEntity.ok(existing);
+        }
+
+        Student seeded = new Student();
+        seeded.setName(user.getName());
+        seeded.setEmail(user.getEmail());
+        seeded.setPhone(user.getPhone());
+        seeded.setStudentId(user.getStudentId());
+        Student saved = studentRepository.save(seeded);
+        log.info("Auto-seeded student profile for {}", email);
+        return ResponseEntity.ok(saved);
+    }
+
+    @PutMapping("/update-profile")
+    public ResponseEntity<?> updateProfile(@RequestBody Student updatedData) {
+        log.info("Updating student profile for {}", updatedData.getEmail());
+
+        try {
+            Student profile = studentRepository.findByEmail(updatedData.getEmail()).orElse(new Student());
+            profile.setEmail(updatedData.getEmail());
+            profile.setName(updatedData.getName());
+            profile.setPhone(updatedData.getPhone());
+            profile.setGender(updatedData.getGender());
+            profile.setQualification(updatedData.getQualification());
+            profile.setYearOfPassing(updatedData.getYearOfPassing());
+            profile.setAggregatePercentage(updatedData.getAggregatePercentage());
+            profile.setMarks10th(updatedData.getMarks10th());
+            profile.setMarks12th(updatedData.getMarks12th());
+            profile.setParentName(updatedData.getParentName());
+            profile.setParentPhone(updatedData.getParentPhone());
+            profile.setSkills(updatedData.getSkills());
+            profile.setBio(updatedData.getBio());
+            profile.setProfilePic(updatedData.getProfilePic());
+            profile.setAadharCardUrl(updatedData.getAadharCardUrl());
+            profile.setResumeUrl(updatedData.getResumeUrl());
+            profile.setMarks10thUrl(updatedData.getMarks10thUrl());
+            profile.setMarks12thUrl(updatedData.getMarks12thUrl());
+            profile.setGraduationDocUrl(updatedData.getGraduationDocUrl());
+            profile.setAddress(updatedData.getAddress());
+            profile.setCity(updatedData.getCity());
+            profile.setState(updatedData.getState());
+            profile.setPincode(updatedData.getPincode());
+
+            studentRepository.save(profile);
+
+            userRepository.findByEmail(updatedData.getEmail()).ifPresent(user -> {
+                user.setName(updatedData.getName());
+                user.setPhone(updatedData.getPhone());
+                userRepository.save(user);
+            });
+
+            return ResponseEntity.ok("Profile updated successfully ✅");
+
+        } catch (Exception e) {
+            log.error("Error updating student profile", e);
+            return ResponseEntity.internalServerError().body("Profile update failed ❌");
+        }
+    }
+
+    @PostMapping("/upload-document")
+    public ResponseEntity<?> uploadDocument(
+            @RequestParam("file") org.springframework.web.multipart.MultipartFile file,
+            @RequestParam("type") String type,
+            @RequestParam("email") String email) {
+
+        log.info("Request to upload {} for student {}", type, email);
+
+        try {
+            Optional<com.lms.entity.Student> studentOpt = studentRepository.findByEmail(email);
+            if (studentOpt.isEmpty()) {
+                return ResponseEntity.badRequest().body("Student profile not found for email: " + email);
+            }
+
+            String folder = "students/" + studentOpt.get().getStudentId();
+            String url = cloudinaryService.uploadDocument(file, folder);
+
+            return ResponseEntity.ok(java.util.Map.of(
+                "url", url,
+                "type", type,
+                "message", type + " uploaded successfully ✅"
+            ));
+
+        } catch (Exception e) {
+            log.error("Failed to upload document to Cloudinary", e);
+            return ResponseEntity.internalServerError().body("Upload failed: " + e.getMessage());
         }
     }
 

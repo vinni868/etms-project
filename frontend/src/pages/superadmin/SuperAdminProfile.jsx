@@ -56,9 +56,13 @@ function SuperAdminProfile() {
     setSaving(true);
     try {
       await api.put("/superadmin/update-profile", profile);
+      
+      // Update local storage so the dashboard and header show the new name immediately
+      const user = JSON.parse(localStorage.getItem("user") || "{}");
+      localStorage.setItem("user", JSON.stringify({ ...user, name: profile.name }));
+      
       setIsEditing(false);
       setSnapshot(null);
-      // alert("Profile updated successfully ✅");
     } catch (err) {
       alert(`Update failed: ${err.message} ❌`);
     } finally {
