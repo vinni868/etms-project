@@ -38,11 +38,52 @@ public class Student {
     @Column(name = "marks_12th")
     private String marks12th;
 
+    // ── Education Status & Boards ──────────────────────────────────────────
+    @Column(name = "currently_studying")
+    private Boolean currentlyStudying; // true = Studying, false = Graduated
+
+    @Column(name = "board_10th", length = 50)
+    private String board10th; // CBSE, ICSE, State Board, etc.
+
+    @Column(name = "board_12th", length = 50)
+    private String board12th;
+
     @Column(name = "parent_name")
     private String parentName;
 
     @Column(name = "parent_phone")
     private String parentPhone;
+
+    // ── Family Information ─────────────────────────────────────────────────
+    @Column(name = "father_name")
+    private String fatherName;
+
+    @Column(name = "father_occupation")
+    private String fatherOccupation;
+
+    @Column(name = "father_phone")
+    private String fatherPhone;
+
+    @Column(name = "mother_name")
+    private String motherName;
+
+    @Column(name = "mother_occupation")
+    private String motherOccupation;
+
+    @Column(name = "mother_phone")
+    private String motherPhone;
+
+    @Column(name = "has_guardian")
+    private Boolean hasGuardian;
+
+    @Column(name = "guardian_name")
+    private String guardianName;
+
+    @Column(name = "guardian_phone")
+    private String guardianPhone;
+
+    @Column(name = "guardian_relationship")
+    private String guardianRelationship;
 
     private String skills;
 
@@ -94,4 +135,7 @@ public class Student {
 
     @Column(name = "bank_account_type", length = 20)
     private String bankAccountType; // SAVINGS / CURRENT
+
+    @Column(name = "bank_passbook_url", columnDefinition = "TEXT")
+    private String bankPassbookUrl; // Passbook first page for verification
 }
