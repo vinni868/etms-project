@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import { FaBell, FaUserPlus, FaCalendarTimes, FaCheck, FaInfoCircle, FaClock } from "react-icons/fa";
+import { FaBell, FaUserPlus, FaCalendarTimes, FaCheck, FaInfoCircle, FaClock, FaBullhorn } from "react-icons/fa";
 import api from "../api/axiosConfig";
 import "./NotificationDropdown.css";
 
@@ -55,10 +55,11 @@ const NotificationDropdown = ({ isOpen, onToggle }) => {
 
   const getIcon = (type) => {
     switch (type) {
-      case "LEAVE": return <FaCalendarTimes className="notif-icon le" />;
+      case "LEAVE":         return <FaCalendarTimes className="notif-icon le" />;
       case "USER_CREATION": return <FaUserPlus className="notif-icon us" />;
-      case "QUERY": return <FaInfoCircle className="notif-icon qu" />;
-      default: return <FaInfoCircle className="notif-icon sy" />;
+      case "QUERY":         return <FaInfoCircle className="notif-icon qu" />;
+      case "ANNOUNCEMENT":  return <FaBullhorn className="notif-icon an" />;
+      default:              return <FaInfoCircle className="notif-icon sy" />;
     }
   };
 

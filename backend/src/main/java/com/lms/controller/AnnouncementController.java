@@ -7,6 +7,7 @@ import com.lms.repository.AnnouncementRepository;
 import com.lms.repository.UserRepository;
 import com.lms.repository.BatchRepository;
 import com.lms.repository.StudentBatchesRepository;
+import com.lms.service.NotificationService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -25,6 +26,7 @@ public class AnnouncementController {
     private final UserRepository userRepo;
     private final StudentBatchesRepository studentBatchesRepo;
     private final BatchRepository batchRepo;
+    private final NotificationService notificationService;
 
     /** GET /api/announcements — active announcements for the authenticated user */
     @GetMapping("/api/announcements")
@@ -109,6 +111,9 @@ public class AnnouncementController {
         a.setCreatedBy(user.getId());
         announcementRepo.save(a);
 
+        // Fire notifications to all targeted recipients
+        fireAnnouncementNotifications(a);
+
         Map<String, Object> recipients = buildRecipientSummary(a.getTargetRoles());
         return ResponseEntity.ok(Map.of(
                 "status", "success",
@@ -147,6 +152,65 @@ public class AnnouncementController {
     }
 
     // ─── Helpers ─────────────────────────────────────────────────────────────
+
+    /**
+     * Creates notification records for every recipient targeted by this announcement.
+     * Role-wide targets → one notification per role.
+     * BATCH_X targets   → one STUDENT notification (if not already created by role).
+     * USER_X targets    → one per-user notification (only if not already covered by role).
+     */
+    private void fireAnnouncementNotifications(Announcement a) {
+        String tr = a.getTargetRoles();
+        if (tr == null || tr.isEmpty()) return;
+
+        String notifMsg = "📢 New Announcement: " + a.getTitle();
+        Long annId = a.getId();
+        Set<String> notifiedRoles = new HashSet<>();
+
+        // 1. ALL roles
+        if (tr.contains("\"ALL\"")) {
+            for (String r : new String[]{"STUDENT", "TRAINER", "COUNSELOR", "MARKETER", "ADMIN", "SUPERADMIN"}) {
+                notificationService.createNotification(notifMsg, "ANNOUNCEMENT", r, annId);
+            }
+            return;
+        }
+
+        // 2. Specific roles
+        String[][] roleMap = {
+            {"ROLE_STUDENT",    "STUDENT"},
+            {"ROLE_TRAINER",    "TRAINER"},
+            {"ROLE_COUNSELOR",  "COUNSELOR"},
+            {"ROLE_MARKETER",   "MARKETER"},
+            {"ROLE_ADMIN",      "ADMIN"},
+            {"ROLE_SUPERADMIN", "SUPERADMIN"}
+        };
+        for (String[] rm : roleMap) {
+            if (tr.contains("\"" + rm[0] + "\"") || tr.contains("\"" + rm[1] + "\"")) {
+                notificationService.createNotification(notifMsg, "ANNOUNCEMENT", rm[1], annId);
+                notifiedRoles.add(rm[1]);
+            }
+        }
+
+        // 3. Batch targets → student-role notification (if student not already notified)
+        Pattern batchPat = Pattern.compile("\"BATCH_(\\d+)\"");
+        if (batchPat.matcher(tr).find() && !notifiedRoles.contains("STUDENT")) {
+            notificationService.createNotification(notifMsg, "ANNOUNCEMENT", "STUDENT", annId);
+            notifiedRoles.add("STUDENT");
+        }
+
+        // 4. Individual USER_X → per-user notification (only if their role isn't already covered)
+        Pattern userPat = Pattern.compile("\"USER_(\\d+)\"");
+        Matcher userMatcher = userPat.matcher(tr);
+        while (userMatcher.find()) {
+            Long userId = Long.parseLong(userMatcher.group(1));
+            userRepo.findById(userId).ifPresent(u -> {
+                String userRole = u.getRole() != null ? u.getRole().getRoleName().toUpperCase() : "STUDENT";
+                if (!notifiedRoles.contains(userRole)) {
+                    notificationService.createNotificationForUser(notifMsg, "ANNOUNCEMENT", userRole, userId, annId);
+                }
+            });
+        }
+    }
 
     /** Builds a recipient count breakdown from a targetRoles JSON string. */
     private Map<String, Object> buildRecipientSummary(String targetRolesStr) {

@@ -25,7 +25,11 @@ public class Notification {
     private String recipientRole; // ADMIN, SUPERADMIN, STUDENT
 
     @Column(name = "related_id")
-    private Long relatedId; // e.g., LeaveRequest ID
+    private Long relatedId; // e.g., LeaveRequest ID or Announcement ID
+
+    /** When non-null, this notification is for one specific user only (individual targeting). */
+    @Column(name = "recipient_user_id")
+    private Long recipientUserId;
 
     @Column(name = "created_at")
     private LocalDateTime createdAt = LocalDateTime.now();
@@ -45,6 +49,15 @@ public class Notification {
         this.relatedId = relatedId;
     }
 
+    /** Constructor for user-specific notifications (individual targeting). */
+    public Notification(String message, String type, String recipientRole, Long recipientUserId, Long relatedId) {
+        this.message = message;
+        this.type = type;
+        this.recipientRole = recipientRole;
+        this.recipientUserId = recipientUserId;
+        this.relatedId = relatedId;
+    }
+
     // Getters and Setters
     public Long getId() { return id; }
     public void setId(Long id) { this.id = id; }
@@ -58,6 +71,8 @@ public class Notification {
     public void setRecipientRole(String recipientRole) { this.recipientRole = recipientRole; }
     public Long getRelatedId() { return relatedId; }
     public void setRelatedId(Long relatedId) { this.relatedId = relatedId; }
+    public Long getRecipientUserId() { return recipientUserId; }
+    public void setRecipientUserId(Long recipientUserId) { this.recipientUserId = recipientUserId; }
     public LocalDateTime getCreatedAt() { return createdAt; }
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
 }

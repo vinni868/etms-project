@@ -270,6 +270,14 @@
 .np-icon.us { color: #10b981; background: #ecfdf5; }
 .np-icon.qu { color: #0ea5e9; background: #e0f2fe; }
 .np-icon.sy { color: #64748b; background: #f1f5f9; }
+.np-icon.an { color: #7c3aed; background: #ede9fe; }
+
+.np-stat-card.announce {
+    background: linear-gradient(135deg, #f5f3ff 0%, #ede9fe 100%);
+    border-left: 4px solid #7c3aed;
+}
+.np-stat-card.announce .np-stat-val { color: #7c3aed; }
+.np-stat-card.announce .np-stat-lbl { color: #6d28d9; }
 
 .np-item-body {
     flex: 1;
