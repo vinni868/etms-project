@@ -12,8 +12,14 @@ function SuperAdminProfile() {
   const [isEditing, setIsEditing] = useState(false);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [snapshot, setSnapshot] = useState(null); 
+  const [snapshot, setSnapshot] = useState(null);
   const [error, setError] = useState(null);
+  const [toast, setToast] = useState({ type: "", text: "" });
+
+  const showToast = (type, text) => {
+    setToast({ type, text });
+    setTimeout(() => setToast({ type: "", text: "" }), 3500);
+  };
 
   useEffect(() => {
     fetchProfile();
@@ -56,15 +62,16 @@ function SuperAdminProfile() {
     setSaving(true);
     try {
       await api.put("/superadmin/update-profile", profile);
-      
+
       // Update local storage so the dashboard and header show the new name immediately
       const user = JSON.parse(localStorage.getItem("user") || "{}");
       localStorage.setItem("user", JSON.stringify({ ...user, name: profile.name }));
-      
+
       setIsEditing(false);
       setSnapshot(null);
+      showToast("success", "Profile updated successfully ✅");
     } catch (err) {
-      alert(`Update failed: ${err.message} ❌`);
+      showToast("error", `Update failed: ${err.message} ❌`);
     } finally {
       setSaving(false);
     }
@@ -90,6 +97,7 @@ function SuperAdminProfile() {
 
   return (
     <div className="sa-profile-page">
+      {toast.text && <div className={`sa-toast sa-toast--${toast.type}`}>{toast.text}</div>}
       <div className="sa-profile-container">
         
         {/* ── HEADER PANEL ── */}

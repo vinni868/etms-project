@@ -1,19 +1,18 @@
 package com.lms.entity;
+
 import jakarta.persistence.*;
 import lombok.Data;
 
 @Entity
-@Table(name = "trainers")
-@Data // Using Lombok to handle Getters/Setters
-public class Trainer {
+@Table(name = "counselor_profiles")
+@Data
+public class CounselorProfile {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
- 
-    @Column(name = "student_id", unique = true, length = 30)
-    private String studentId;
 
+    @Column(nullable = false)
     private String name;
 
     @Column(unique = true, nullable = false)
@@ -21,24 +20,29 @@ public class Trainer {
 
     private String phone;
     private String gender;
-    private String specialization;
-    private String experience;
-    private String qualification;
 
     @Column(columnDefinition = "TEXT")
     private String bio;
 
     @Column(columnDefinition = "LONGTEXT")
-    private String profilePic; // Matches 'profilePic' in React state
+    private String profilePic;
 
     private String address;
     private String city;
     private String state;
     private String pincode;
 
-    @Column(columnDefinition = "TEXT")
-    private String certifications; // Comma-separated or free text
+    // Counselor-specific fields
+    private String specialization; // e.g., Career Counseling, Mental Health, Academic
 
-    @Column(name = "emergency_contact")
-    private String emergencyContact;
+    @Column(name = "years_of_experience")
+    private String yearsOfExperience;
+
+    @Column(columnDefinition = "TEXT")
+    private String certifications; // e.g., NLP, CBT, Career Counseling
+
+    @Column(columnDefinition = "TEXT")
+    private String availability; // Availability info (days/hours)
+
+    private String studentId; // Portal ID mapping
 }

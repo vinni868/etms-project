@@ -216,6 +216,20 @@
 }
 @keyframes ap-spin { to { transform: rotate(360deg); } }
 
+/* ── TOAST ── */
+.ap-toast {
+  position: fixed; top: 20px; right: 20px;
+  padding: 14px 20px; border-radius: 10px;
+  font-size: 14px; font-weight: 600;
+  color: white; z-index: 9999;
+  animation: ap-slide-in 0.3s ease-out, ap-slide-out 0.3s ease-out 3.2s forwards;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+.ap-toast--success { background: #10b981; }
+.ap-toast--error { background: #ef4444; }
+@keyframes ap-slide-in { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+@keyframes ap-slide-out { from { transform: translateX(0); opacity: 1; } to { transform: translateX(100%); opacity: 0; } }
+
 /* ── RESPONSIVE ── */
 @media (max-width: 968px) {
   .ap-grid { grid-template-columns: 1fr; }

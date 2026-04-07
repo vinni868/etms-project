@@ -1,8 +1,8 @@
 package com.lms.controller;
 
-import com.lms.entity.Trainer;
+import com.lms.entity.MarketerProfile;
 import com.lms.entity.User;
-import com.lms.repository.TrainerRepository;
+import com.lms.repository.MarketerProfileRepository;
 import com.lms.repository.UserRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -12,38 +12,38 @@ import org.springframework.web.bind.annotation.*;
 import java.util.Optional;
 
 @RestController
-@RequestMapping("/api/trainer")
+@RequestMapping("/api/marketer")
 @Slf4j
-public class TrainerProfileController {
+public class MarketerProfileController {
 
     @Autowired
-    private TrainerRepository trainerRepository;
+    private MarketerProfileRepository marketerProfileRepository;
 
     @Autowired
     private UserRepository userRepository;
 
     // =====================================================================
-    // GET PROFILE — same email-drift healing as StudentProfileController
+    // GET PROFILE — email-drift healing + auto-seed
     // =====================================================================
-    @GetMapping("/profile/{email}")
-    public ResponseEntity<Trainer> getProfile(@PathVariable String email) {
-        log.info("Fetching trainer profile for {}", email);
+    @GetMapping("/profile/{email:.+}")
+    public ResponseEntity<MarketerProfile> getProfile(@PathVariable String email) {
+        log.info("Fetching marketer profile for {}", email);
 
         // Step 1: Direct match
-        Optional<Trainer> byEmail = trainerRepository.findByEmail(email);
+        Optional<MarketerProfile> byEmail = marketerProfileRepository.findByEmail(email);
         if (byEmail.isPresent()) {
-            Trainer trainer = byEmail.get();
+            MarketerProfile profile = byEmail.get();
             userRepository.findByEmail(email).ifPresent(user -> {
-                if (user.getStudentId() != null && !user.getStudentId().equals(trainer.getStudentId())) {
-                    trainer.setStudentId(user.getStudentId());
-                    trainerRepository.save(trainer);
-                    log.info("Synced trainer_id for {}", email);
+                if (user.getStudentId() != null && !user.getStudentId().equals(profile.getStudentId())) {
+                    profile.setStudentId(user.getStudentId());
+                    marketerProfileRepository.save(profile);
+                    log.info("Synced marketer_id for {}", email);
                 }
             });
-            return ResponseEntity.ok(trainer);
+            return ResponseEntity.ok(profile);
         }
 
-        // Step 2: Look up user, then find trainer by name (email may have drifted)
+        // Step 2: Look up user, then find marketer by name (email may have drifted)
         Optional<User> userOpt = userRepository.findByEmail(email);
         if (userOpt.isEmpty()) {
             log.warn("No user found for email: {}", email);
@@ -52,12 +52,12 @@ public class TrainerProfileController {
 
         User user = userOpt.get();
 
-        Optional<Trainer> byName = trainerRepository.findTopByNameIgnoreCase(user.getName());
+        Optional<MarketerProfile> byName = marketerProfileRepository.findTopByNameIgnoreCase(user.getName());
         if (byName.isPresent()) {
-            Trainer existing = byName.get();
+            MarketerProfile existing = byName.get();
             boolean changed = false;
             if (!email.equals(existing.getEmail())) {
-                log.info("Healing trainer email drift: {} → {} for {}",
+                log.info("Healing marketer email drift: {} → {} for {}",
                         existing.getEmail(), email, existing.getName());
                 existing.setEmail(email);
                 changed = true;
@@ -68,19 +68,19 @@ public class TrainerProfileController {
             }
             if (changed) {
                 existing.setPhone(user.getPhone());
-                trainerRepository.save(existing);
+                marketerProfileRepository.save(existing);
             }
             return ResponseEntity.ok(existing);
         }
 
         // Step 3: Seed new row
-        Trainer seeded = new Trainer();
+        MarketerProfile seeded = new MarketerProfile();
         seeded.setName(user.getName());
         seeded.setEmail(user.getEmail());
         seeded.setPhone(user.getPhone());
-        seeded.setStudentId(user.getStudentId()); // ✅ SYNC ID
-        Trainer saved = trainerRepository.save(seeded);
-        log.info("Auto-seeded trainer profile for {}", email);
+        seeded.setStudentId(user.getStudentId());
+        MarketerProfile saved = marketerProfileRepository.save(seeded);
+        log.info("Auto-seeded marketer profile for {}", email);
         return ResponseEntity.ok(saved);
     }
 
@@ -88,30 +88,29 @@ public class TrainerProfileController {
     // UPDATE PROFILE — upsert + sync to users table
     // =====================================================================
     @PutMapping("/update-profile")
-    public ResponseEntity<?> updateProfile(@RequestBody Trainer updatedData) {
-        log.info("Updating trainer profile for {}", updatedData.getEmail());
+    public ResponseEntity<?> updateProfile(@RequestBody MarketerProfile updatedData) {
+        log.info("Updating marketer profile for {}", updatedData.getEmail());
 
         try {
-            Trainer profile = trainerRepository.findByEmail(updatedData.getEmail())
-                    .orElse(new Trainer());
+            MarketerProfile profile = marketerProfileRepository.findByEmail(updatedData.getEmail())
+                    .orElse(new MarketerProfile());
 
             profile.setEmail(updatedData.getEmail());
             profile.setName(updatedData.getName());
             profile.setPhone(updatedData.getPhone());
             profile.setGender(updatedData.getGender());
-            profile.setSpecialization(updatedData.getSpecialization());
-            profile.setExperience(updatedData.getExperience());
-            profile.setQualification(updatedData.getQualification());
             profile.setBio(updatedData.getBio());
             profile.setProfilePic(updatedData.getProfilePic());
             profile.setAddress(updatedData.getAddress());
             profile.setCity(updatedData.getCity());
             profile.setState(updatedData.getState());
             profile.setPincode(updatedData.getPincode());
-            profile.setCertifications(updatedData.getCertifications());
-            profile.setEmergencyContact(updatedData.getEmergencyContact());
+            profile.setDepartment(updatedData.getDepartment());
+            profile.setTargetRegion(updatedData.getTargetRegion());
+            profile.setMonthlyTarget(updatedData.getMonthlyTarget());
+            profile.setSkills(updatedData.getSkills());
 
-            trainerRepository.save(profile);
+            marketerProfileRepository.save(profile);
 
             userRepository.findByEmail(updatedData.getEmail()).ifPresent(user -> {
                 user.setName(updatedData.getName());
@@ -122,7 +121,7 @@ public class TrainerProfileController {
             return ResponseEntity.ok("Profile updated successfully ✅");
 
         } catch (Exception e) {
-            log.error("Error updating trainer profile", e);
+            log.error("Error updating marketer profile", e);
             return ResponseEntity.internalServerError().body("Profile update failed ❌");
         }
     }

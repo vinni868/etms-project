@@ -473,3 +473,17 @@
 @keyframes spin {
   to { transform: rotate(360deg); }
 }
+
+/* ── TOAST NOTIFICATIONS ── */
+.sa-toast {
+  position: fixed; top: 20px; right: 20px;
+  padding: 14px 20px; border-radius: 10px;
+  font-size: 14px; font-weight: 600;
+  color: white; z-index: 9999;
+  animation: sa-slide-in 0.3s ease-out, sa-slide-out 0.3s ease-out 3.2s forwards;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+.sa-toast--success { background: #10b981; }
+.sa-toast--error { background: #ef4444; }
+@keyframes sa-slide-in { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+@keyframes sa-slide-out { from { transform: translateX(0); opacity: 1; } to { transform: translateX(100%); opacity: 0; } }
