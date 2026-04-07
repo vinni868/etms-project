@@ -529,6 +529,20 @@ public class StudentController {
             profile.setBankName(updatedData.getBankName());
             profile.setBankAccountHolder(updatedData.getBankAccountHolder());
             profile.setBankAccountType(updatedData.getBankAccountType());
+            profile.setBankPassbookUrl(updatedData.getBankPassbookUrl());
+            profile.setFatherName(updatedData.getFatherName());
+            profile.setFatherOccupation(updatedData.getFatherOccupation());
+            profile.setFatherPhone(updatedData.getFatherPhone());
+            profile.setMotherName(updatedData.getMotherName());
+            profile.setMotherOccupation(updatedData.getMotherOccupation());
+            profile.setMotherPhone(updatedData.getMotherPhone());
+            profile.setHasGuardian(updatedData.getHasGuardian());
+            profile.setGuardianName(updatedData.getGuardianName());
+            profile.setGuardianPhone(updatedData.getGuardianPhone());
+            profile.setGuardianRelationship(updatedData.getGuardianRelationship());
+            profile.setCurrentlyStudying(updatedData.getCurrentlyStudying());
+            profile.setBoard10th(updatedData.getBoard10th());
+            profile.setBoard12th(updatedData.getBoard12th());
 
             studentRepository.save(profile);
 
