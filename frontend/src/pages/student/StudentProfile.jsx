@@ -18,11 +18,13 @@ function StudentProfile() {
   const [student, setStudent] = useState({
     name: "", email: userEmail, phone: "", gender: "",
     qualification: "", yearOfPassing: "", aggregatePercentage: "",
-    marks10th: "", marks12th: "", 
+    marks10th: "", marks12th: "",
     parentName: "", parentPhone: "",
-    skills: "", bio: "", profilePic: "", 
+    skills: "", bio: "", profilePic: "",
     aadharCardUrl: "", resumeUrl: "", marks10thUrl: "", marks12thUrl: "", graduationDocUrl: "",
-    address: "", city: "", state: "", pincode: "", studentId: ""
+    address: "", city: "", state: "", pincode: "", studentId: "",
+    aadharNumber: "", aadharName: "",
+    bankAccountNumber: "", bankIfscCode: "", bankName: "", bankAccountHolder: "", bankAccountType: ""
   });
 
   useEffect(() => {
@@ -139,21 +141,26 @@ function StudentProfile() {
               </div>
             </div>
             <div className="sp-user-meta">
-              <h2 className="premium-text-gradient">{student.name || "Student Name"}</h2>
+              <h2 className="premium-text-gradient">{student.aadharName || student.name || "Student Name"}</h2>
               <div className="sp-id-badge"><span className="id-tag">ID</span> {student.studentId || "---"}</div>
               <p className="sp-email-tag">{student.email} <FaCheckCircle size={12} color="#10b981" /></p>
             </div>
           </div>
 
           <div className="sp-stepper">
-            <div className={`sp-step ${step === 1 ? "active" : "completed"}`} onClick={() => setStep(1)}>
+            <div className={`sp-step ${step === 1 ? "active" : step > 1 ? "completed" : ""}`} onClick={() => setStep(1)}>
               <span className="step-num">{step > 1 ? <FaCheckCircle /> : "1"}</span>
               <span className="step-label">Personal & Academic</span>
             </div>
             <div className="step-line" />
-            <div className={`sp-step ${step === 2 ? "active" : ""}`} onClick={() => setStep(2)}>
-              <span className="step-num">2</span>
+            <div className={`sp-step ${step === 2 ? "active" : step > 2 ? "completed" : ""}`} onClick={() => setStep(2)}>
+              <span className="step-num">{step > 2 ? <FaCheckCircle /> : "2"}</span>
               <span className="step-label">Document Vault</span>
+            </div>
+            <div className="step-line" />
+            <div className={`sp-step ${step === 3 ? "active" : ""}`} onClick={() => setStep(3)}>
+              <span className="step-num">3</span>
+              <span className="step-label">Identity & Banking</span>
             </div>
           </div>
         </div>
@@ -286,14 +293,90 @@ function StudentProfile() {
               </div>
               <div className="sp-footer-actions">
                 <button className="btn-back" onClick={() => setStep(1)}>← Previous</button>
-                <button 
-                  className="btn-save" 
-                  onClick={handleSave} 
-                  disabled={saving || (student.phone && student.phone.length < 10) || (student.parentPhone && student.parentPhone.length < 10)}
-                >
-                  {saving ? <div className="sp-btn-spinner" /> : "💾 Update & Sync Profile Hub"}
-                </button>
+                <button className="btn-next" onClick={() => setStep(3)}>Next: Identity & Banking <span className="btn-icon">→</span></button>
               </div>
+            </div>
+          </div>
+        )}
+
+        {/* Step 3: Identity Verification & Banking */}
+        {step === 3 && (
+          <div className="sp-form-layout anim-slide-up">
+
+            {/* 3.1 Identity Verification */}
+            <div className="sp-card section-card">
+              <div className="card-header">
+                <div className="header-icon-box blue-bg"><FaUser /></div>
+                <h3>Identity Verification (Aadhar)</h3>
+              </div>
+              <div className="card-body">
+                <div className="sp-grid">
+                  <div className="sp-input-group">
+                    <label>Aadhar Number (12-digit)</label>
+                    <input type="text" name="aadharNumber" value={student.aadharNumber} onChange={handleChange} placeholder="Enter 12-digit Aadhar number" maxLength="12" />
+                    {student.aadharNumber && student.aadharNumber.length < 12 && (
+                      <p style={{ color: "#ef4444", fontSize: "11px", fontWeight: "700", marginTop: "4px" }}>
+                        ⚠️ 12 digits required
+                      </p>
+                    )}
+                  </div>
+                  <div className="sp-input-group">
+                    <label>Full Name (As on Aadhar)</label>
+                    <input type="text" name="aadharName" value={student.aadharName} onChange={handleChange} placeholder="Your full name as on Aadhar card" />
+                    <p style={{ color: "#64748b", fontSize: "11px", marginTop: "4px" }}>
+                      This will be used as your profile display name
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* 3.2 Bank Details */}
+            <div className="sp-card section-card">
+              <div className="card-header">
+                <div className="header-icon-box amber-bg"><FaHome /></div>
+                <h3>Bank Account Details</h3>
+              </div>
+              <div className="card-body">
+                <div className="sp-grid">
+                  <div className="sp-input-group">
+                    <label>Account Holder Name</label>
+                    <input type="text" name="bankAccountHolder" value={student.bankAccountHolder} onChange={handleChange} placeholder="Name as per bank account" />
+                  </div>
+                  <div className="sp-input-group">
+                    <label>Account Number</label>
+                    <input type="text" name="bankAccountNumber" value={student.bankAccountNumber} onChange={handleChange} placeholder="Your bank account number" />
+                  </div>
+                  <div className="sp-input-group">
+                    <label>IFSC Code</label>
+                    <input type="text" name="bankIfscCode" value={student.bankIfscCode} onChange={handleChange} placeholder="e.g., SBIN0001234" />
+                  </div>
+                  <div className="sp-input-group">
+                    <label>Bank Name</label>
+                    <input type="text" name="bankName" value={student.bankName} onChange={handleChange} placeholder="e.g., State Bank of India" />
+                  </div>
+                  <div className="sp-input-group">
+                    <label>Account Type</label>
+                    <select name="bankAccountType" value={student.bankAccountType} onChange={handleChange}>
+                      <option value="">Select Account Type</option>
+                      <option value="SAVINGS">Savings Account</option>
+                      <option value="CURRENT">Current Account</option>
+                      <option value="OTHER">Other</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="sp-footer-actions">
+              <button className="btn-back" onClick={() => setStep(2)}>← Previous</button>
+              <button
+                className="btn-save"
+                onClick={handleSave}
+                disabled={saving}
+              >
+                {saving ? <div className="sp-btn-spinner" /> : "💾 Update & Sync Profile Hub"}
+              </button>
             </div>
           </div>
         )}

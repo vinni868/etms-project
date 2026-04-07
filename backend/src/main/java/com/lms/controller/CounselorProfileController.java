@@ -1,8 +1,8 @@
 package com.lms.controller;
 
-import com.lms.entity.Trainer;
+import com.lms.entity.CounselorProfile;
 import com.lms.entity.User;
-import com.lms.repository.TrainerRepository;
+import com.lms.repository.CounselorProfileRepository;
 import com.lms.repository.UserRepository;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -12,38 +12,38 @@ import org.springframework.web.bind.annotation.*;
 import java.util.Optional;
 
 @RestController
-@RequestMapping("/api/trainer")
+@RequestMapping("/api/counselor")
 @Slf4j
-public class TrainerProfileController {
+public class CounselorProfileController {
 
     @Autowired
-    private TrainerRepository trainerRepository;
+    private CounselorProfileRepository counselorProfileRepository;
 
     @Autowired
     private UserRepository userRepository;
 
     // =====================================================================
-    // GET PROFILE — same email-drift healing as StudentProfileController
+    // GET PROFILE — email-drift healing + auto-seed
     // =====================================================================
-    @GetMapping("/profile/{email}")
-    public ResponseEntity<Trainer> getProfile(@PathVariable String email) {
-        log.info("Fetching trainer profile for {}", email);
+    @GetMapping("/profile/{email:.+}")
+    public ResponseEntity<CounselorProfile> getProfile(@PathVariable String email) {
+        log.info("Fetching counselor profile for {}", email);
 
         // Step 1: Direct match
-        Optional<Trainer> byEmail = trainerRepository.findByEmail(email);
+        Optional<CounselorProfile> byEmail = counselorProfileRepository.findByEmail(email);
         if (byEmail.isPresent()) {
-            Trainer trainer = byEmail.get();
+            CounselorProfile profile = byEmail.get();
             userRepository.findByEmail(email).ifPresent(user -> {
-                if (user.getStudentId() != null && !user.getStudentId().equals(trainer.getStudentId())) {
-                    trainer.setStudentId(user.getStudentId());
-                    trainerRepository.save(trainer);
-                    log.info("Synced trainer_id for {}", email);
+                if (user.getStudentId() != null && !user.getStudentId().equals(profile.getStudentId())) {
+                    profile.setStudentId(user.getStudentId());
+                    counselorProfileRepository.save(profile);
+                    log.info("Synced counselor_id for {}", email);
                 }
             });
-            return ResponseEntity.ok(trainer);
+            return ResponseEntity.ok(profile);
         }
 
-        // Step 2: Look up user, then find trainer by name (email may have drifted)
+        // Step 2: Look up user, then find counselor by name (email may have drifted)
         Optional<User> userOpt = userRepository.findByEmail(email);
         if (userOpt.isEmpty()) {
             log.warn("No user found for email: {}", email);
@@ -52,12 +52,12 @@ public class TrainerProfileController {
 
         User user = userOpt.get();
 
-        Optional<Trainer> byName = trainerRepository.findTopByNameIgnoreCase(user.getName());
+        Optional<CounselorProfile> byName = counselorProfileRepository.findTopByNameIgnoreCase(user.getName());
         if (byName.isPresent()) {
-            Trainer existing = byName.get();
+            CounselorProfile existing = byName.get();
             boolean changed = false;
             if (!email.equals(existing.getEmail())) {
-                log.info("Healing trainer email drift: {} → {} for {}",
+                log.info("Healing counselor email drift: {} → {} for {}",
                         existing.getEmail(), email, existing.getName());
                 existing.setEmail(email);
                 changed = true;
@@ -68,19 +68,19 @@ public class TrainerProfileController {
             }
             if (changed) {
                 existing.setPhone(user.getPhone());
-                trainerRepository.save(existing);
+                counselorProfileRepository.save(existing);
             }
             return ResponseEntity.ok(existing);
         }
 
         // Step 3: Seed new row
-        Trainer seeded = new Trainer();
+        CounselorProfile seeded = new CounselorProfile();
         seeded.setName(user.getName());
         seeded.setEmail(user.getEmail());
         seeded.setPhone(user.getPhone());
-        seeded.setStudentId(user.getStudentId()); // ✅ SYNC ID
-        Trainer saved = trainerRepository.save(seeded);
-        log.info("Auto-seeded trainer profile for {}", email);
+        seeded.setStudentId(user.getStudentId());
+        CounselorProfile saved = counselorProfileRepository.save(seeded);
+        log.info("Auto-seeded counselor profile for {}", email);
         return ResponseEntity.ok(saved);
     }
 
@@ -88,30 +88,29 @@ public class TrainerProfileController {
     // UPDATE PROFILE — upsert + sync to users table
     // =====================================================================
     @PutMapping("/update-profile")
-    public ResponseEntity<?> updateProfile(@RequestBody Trainer updatedData) {
-        log.info("Updating trainer profile for {}", updatedData.getEmail());
+    public ResponseEntity<?> updateProfile(@RequestBody CounselorProfile updatedData) {
+        log.info("Updating counselor profile for {}", updatedData.getEmail());
 
         try {
-            Trainer profile = trainerRepository.findByEmail(updatedData.getEmail())
-                    .orElse(new Trainer());
+            CounselorProfile profile = counselorProfileRepository.findByEmail(updatedData.getEmail())
+                    .orElse(new CounselorProfile());
 
             profile.setEmail(updatedData.getEmail());
             profile.setName(updatedData.getName());
             profile.setPhone(updatedData.getPhone());
             profile.setGender(updatedData.getGender());
-            profile.setSpecialization(updatedData.getSpecialization());
-            profile.setExperience(updatedData.getExperience());
-            profile.setQualification(updatedData.getQualification());
             profile.setBio(updatedData.getBio());
             profile.setProfilePic(updatedData.getProfilePic());
             profile.setAddress(updatedData.getAddress());
             profile.setCity(updatedData.getCity());
             profile.setState(updatedData.getState());
             profile.setPincode(updatedData.getPincode());
+            profile.setSpecialization(updatedData.getSpecialization());
+            profile.setYearsOfExperience(updatedData.getYearsOfExperience());
             profile.setCertifications(updatedData.getCertifications());
-            profile.setEmergencyContact(updatedData.getEmergencyContact());
+            profile.setAvailability(updatedData.getAvailability());
 
-            trainerRepository.save(profile);
+            counselorProfileRepository.save(profile);
 
             userRepository.findByEmail(updatedData.getEmail()).ifPresent(user -> {
                 user.setName(updatedData.getName());
@@ -122,7 +121,7 @@ public class TrainerProfileController {
             return ResponseEntity.ok("Profile updated successfully ✅");
 
         } catch (Exception e) {
-            log.error("Error updating trainer profile", e);
+            log.error("Error updating counselor profile", e);
             return ResponseEntity.internalServerError().body("Profile update failed ❌");
         }
     }

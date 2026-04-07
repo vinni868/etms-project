@@ -19,7 +19,7 @@ function TrainerProfile() {
     name: "", email: userEmail, phone: "", gender: "",
     specialization: "", experience: "", qualification: "", bio: "",
     profilePic: "", address: "", city: "", state: "", pincode: "",
-    studentId: ""
+    studentId: "", certifications: "", emergencyContact: ""
   });
 
   const [snapshot, setSnapshot] = useState(null);
@@ -281,6 +281,13 @@ function TrainerProfile() {
                     disabled={!isEditing}
                     placeholder="Describe your expertise, teaching style and professional background…" />
                 </div>
+                <div className="tp-field tp-field--full">
+                  <label className="tp-label">Certifications</label>
+                  <textarea className="tp-textarea" name="certifications"
+                    value={trainer.certifications} onChange={handleChange}
+                    disabled={!isEditing}
+                    placeholder="List your certifications, courses, or achievements (e.g., NLP, PMP, Oracle Certified)" />
+                </div>
               </div>
             </div>
           </div>
@@ -316,6 +323,24 @@ function TrainerProfile() {
                   <input className="tp-input" name="pincode" type="text"
                     value={trainer.pincode} onChange={handleChange}
                     disabled={!isEditing} placeholder="560001" />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Emergency Contact */}
+          <div className="tp-card">
+            <div className="tp-card__header">
+              <div className="tp-card__icon tp-card__icon--amber">📞</div>
+              <h3 className="tp-card__title">Emergency Contact</h3>
+            </div>
+            <div className="tp-card__body">
+              <div className="tp-grid tp-grid--2">
+                <div className="tp-field">
+                  <label className="tp-label">Emergency Contact Details</label>
+                  <input className="tp-input" name="emergencyContact" type="text"
+                    value={trainer.emergencyContact} onChange={handleChange}
+                    disabled={!isEditing} placeholder="Name and phone number (e.g., John - 9876543210)" />
                 </div>
               </div>
             </div>

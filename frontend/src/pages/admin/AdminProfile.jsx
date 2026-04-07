@@ -14,6 +14,12 @@ function AdminProfile() {
   const [isEditing, setIsEditing] = useState(false);
   const [error, setError] = useState(null);
   const [tempProfile, setTempProfile] = useState(null);
+  const [toast, setToast] = useState({ type: "", text: "" });
+
+  const showToast = (type, text) => {
+    setToast({ type, text });
+    setTimeout(() => setToast({ type: "", text: "" }), 3500);
+  };
 
   useEffect(() => {
     fetchProfile();
@@ -43,15 +49,15 @@ function AdminProfile() {
       await api.put("/admin/update-profile", tempProfile);
       setProfile(tempProfile);
       setIsEditing(false);
-      
+
       const user = JSON.parse(localStorage.getItem("user"));
       user.name = tempProfile.name;
       user.phone = tempProfile.phone;
       localStorage.setItem("user", JSON.stringify(user));
-      
-      alert("Profile updated successfully ✅");
+
+      showToast("success", "Profile updated successfully ✅");
     } catch (err) {
-      alert(`Update failed: ${err.message} ❌`);
+      showToast("error", `Update failed: ${err.message} ❌`);
     } finally {
       setSaving(false);
     }
@@ -88,6 +94,7 @@ function AdminProfile() {
 
   return (
     <div className="ap-container">
+      {toast.text && <div className={`ap-toast ap-toast--${toast.type}`}>{toast.text}</div>}
       {/* ── HEADER ── */}
       <div className="ap-hero">
         <div className="ap-hero-pattern"></div>

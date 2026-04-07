@@ -71,4 +71,27 @@ public class Student {
     private String city;
     private String state;
     private String pincode;
+
+    // ── Identity Verification ──────────────────────────────────────────────
+    @Column(name = "aadhar_number", length = 12)
+    private String aadharNumber;
+
+    @Column(name = "aadhar_name")
+    private String aadharName; // Full name as on Aadhar (used as profile display name)
+
+    // ── Bank Details ───────────────────────────────────────────────────────
+    @Column(name = "bank_account_number")
+    private String bankAccountNumber;
+
+    @Column(name = "bank_ifsc_code", length = 20)
+    private String bankIfscCode;
+
+    @Column(name = "bank_name")
+    private String bankName;
+
+    @Column(name = "bank_account_holder")
+    private String bankAccountHolder;
+
+    @Column(name = "bank_account_type", length = 20)
+    private String bankAccountType; // SAVINGS / CURRENT
 }

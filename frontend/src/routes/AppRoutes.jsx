@@ -90,9 +90,11 @@ import Leads from "../pages/marketer/Leads";
 /* ================= COUNSELOR ================= */
 import CounselorDashboard from "../pages/counselor/CounselorDashboard";
 import CounselorAnnouncements from "../pages/counselor/CounselorAnnouncements";
+import CounselorProfile from "../pages/counselor/CounselorProfile";
 
-/* ================= MARKETER ANNOUNCEMENTS ================= */
+/* ================= MARKETER ================= */
 import MarketerAnnouncements from "../pages/marketer/MarketerAnnouncements";
+import MarketerProfile from "../pages/marketer/MarketerProfile";
 
 export default function AppRoutes() {
   return (
@@ -246,10 +248,10 @@ export default function AppRoutes() {
         }
       >
         <Route path="dashboard"       element={<MarketerDashboard />} />
+        <Route path="profile"         element={<MarketerProfile />} />
         <Route path="leads"           element={<Leads />} />
         <Route path="time-tracking"   element={<UserTimeTracking />} />
         <Route path="performance"     element={<MarketerDashboard />} />
-        <Route path="profile"         element={<MarketerDashboard />} />
         <Route path="announcements"   element={<MarketerAnnouncements />} />
 
         {/* Marketing Hub Placeholders */}
@@ -271,6 +273,7 @@ export default function AppRoutes() {
         }
       >
         <Route path="dashboard"       element={<CounselorDashboard />} />
+        <Route path="profile"         element={<CounselorProfile />} />
         <Route path="sessions"        element={<CounselorDashboard />} />
         <Route path="time-tracking"   element={<UserTimeTracking />} />
         <Route path="messages"        element={<CounselorDashboard />} />

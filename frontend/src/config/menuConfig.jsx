@@ -200,6 +200,7 @@ export const MENU_CONFIG = {
         title: 'Support',
         icon: <FaHandHoldingHeart />,
         links: [
+          { label: 'Profile Settings', path: 'profile', icon: <FaUserShield /> },
           { label: 'Leave Request', path: 'leave', icon: <FaClipboardList /> },
           { label: 'Time Tracking', path: 'time-tracking', icon: <FaHistory /> }
         ]
@@ -223,6 +224,7 @@ export const MENU_CONFIG = {
         title: 'Support',
         icon: <FaHandHoldingHeart />,
         links: [
+          { label: 'Profile Settings', path: 'profile', icon: <FaUserShield /> },
           { label: 'Leave Request', path: 'leave', icon: <FaClipboardList /> },
           { label: 'Time Tracking', path: 'time-tracking', icon: <FaHistory /> }
         ]

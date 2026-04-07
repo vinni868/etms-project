@@ -522,6 +522,13 @@ public class StudentController {
             profile.setCity(updatedData.getCity());
             profile.setState(updatedData.getState());
             profile.setPincode(updatedData.getPincode());
+            profile.setAadharNumber(updatedData.getAadharNumber());
+            profile.setAadharName(updatedData.getAadharName());
+            profile.setBankAccountNumber(updatedData.getBankAccountNumber());
+            profile.setBankIfscCode(updatedData.getBankIfscCode());
+            profile.setBankName(updatedData.getBankName());
+            profile.setBankAccountHolder(updatedData.getBankAccountHolder());
+            profile.setBankAccountType(updatedData.getBankAccountType());
 
             studentRepository.save(profile);
 
