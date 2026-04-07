@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { FaBell, FaCalendarTimes, FaUserPlus, FaInfoCircle, FaCheck, FaTrashAlt, FaFilter, FaSearch, FaHistory } from "react-icons/fa";
+import { FaBell, FaCalendarTimes, FaUserPlus, FaInfoCircle, FaCheck, FaTrashAlt, FaFilter, FaSearch, FaHistory, FaBullhorn } from "react-icons/fa";
 import api from "../../api/axiosConfig";
 import "./NotificationsPage.css";
 
@@ -55,10 +55,11 @@ const NotificationsPage = () => {
 
     const getIcon = (type) => {
         switch (type) {
-            case "LEAVE": return <FaCalendarTimes className="np-icon le" />;
+            case "LEAVE":         return <FaCalendarTimes className="np-icon le" />;
             case "USER_CREATION": return <FaUserPlus className="np-icon us" />;
-            case "QUERY": return <FaInfoCircle className="np-icon qu" />;
-            default: return <FaInfoCircle className="np-icon sy" />;
+            case "QUERY":         return <FaInfoCircle className="np-icon qu" />;
+            case "ANNOUNCEMENT":  return <FaBullhorn className="np-icon an" />;
+            default:              return <FaInfoCircle className="np-icon sy" />;
         }
     };
 
@@ -133,6 +134,10 @@ const NotificationsPage = () => {
                     <span className="np-stat-val">{notifications.filter(n => n.type === 'LEAVE').length}</span>
                     <span className="np-stat-lbl">Lifecycle Events</span>
                 </div>
+                <div className="np-stat-card announce">
+                    <span className="np-stat-val">{notifications.filter(n => n.type === 'ANNOUNCEMENT').length}</span>
+                    <span className="np-stat-lbl">Announcements</span>
+                </div>
             </div>
 
             <div className="np-content-card">
@@ -142,6 +147,7 @@ const NotificationsPage = () => {
                         <button className={`np-filter-btn ${filter === 'UNREAD' ? 'active' : ''}`} onClick={() => setFilter("UNREAD")}>Unread</button>
                         <button className={`np-filter-btn ${filter === 'LEAVE' ? 'active' : ''}`} onClick={() => setFilter("LEAVE")}>Events</button>
                         <button className={`np-filter-btn ${filter === 'USER_CREATION' ? 'active' : ''}`} onClick={() => setFilter("USER_CREATION")}>System</button>
+                        <button className={`np-filter-btn ${filter === 'ANNOUNCEMENT' ? 'active' : ''}`} onClick={() => setFilter("ANNOUNCEMENT")}>Bulletins</button>
                     </div>
                     <div className="np-search-box">
                         <FaSearch className="np-search-ico" />

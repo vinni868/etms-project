@@ -128,6 +128,7 @@
 .notif-icon.us { background: #ecfdf5; color: #10b981; }
 .notif-icon.qu { background: #e0f2fe; color: #0ea5e9; }
 .notif-icon.sy { background: #f1f5f9; color: #64748b; }
+.notif-icon.an { background: #ede9fe; color: #7c3aed; }
 
 .notif-content {
   flex: 1;
@@ -204,4 +205,36 @@
   font-size: 13px;
   margin: 0;
   font-weight: 500;
+}
+
+/* ── Mobile Responsive ─────────────────────────────────────────────────── */
+@media (max-width: 520px) {
+  .notif-glass-dropdown {
+    position: fixed;
+    top: 64px;
+    left: 8px;
+    right: 8px;
+    width: auto;
+    max-width: none;
+    max-height: 72vh;
+    overflow-y: auto;
+    border-radius: 14px;
+    margin-top: 0;
+  }
+
+  .notif-drop-body {
+    max-height: calc(72vh - 110px);
+  }
+
+  .notif-msg {
+    font-size: 12px;
+  }
+
+  .notif-row-item {
+    padding: 11px 12px;
+  }
+
+  .notif-check-btn {
+    opacity: 1; /* Always visible on touch devices */
+  }
 }
