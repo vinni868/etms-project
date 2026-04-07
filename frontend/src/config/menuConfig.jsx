@@ -192,7 +192,8 @@ export const MENU_CONFIG = {
         links: [
           { label: 'Engagement', path: 'dashboard', icon: <FaChartBar /> },
           { label: 'Lead CRM', path: 'leads', icon: <FaUsers /> },
-          { label: 'Campaigns', path: 'campaigns', icon: <FaBullhorn /> }
+          { label: 'Campaigns', path: 'campaigns', icon: <FaBullhorn /> },
+          { label: 'Bulletins', path: 'announcements', icon: <FaBullhorn /> }
         ]
       },
       {
@@ -214,7 +215,8 @@ export const MENU_CONFIG = {
         links: [
           { label: 'Case Load', path: 'dashboard', icon: <FaChartBar /> },
           { label: 'Schedules', path: 'sessions', icon: <FaCalendarAlt /> },
-          { label: 'Student Logs', path: 'messages', icon: <FaBullhorn /> }
+          { label: 'Student Logs', path: 'messages', icon: <FaBullhorn /> },
+          { label: 'Bulletins', path: 'announcements', icon: <FaBullhorn /> }
         ]
       },
       {

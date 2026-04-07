@@ -14,7 +14,7 @@ export default function GlobalAnnouncementPopup() {
       .then(res => {
         const data = res.data || [];
         // Filter for announcements marked as popup banners
-        const activePopups = data.filter(a => a.isPopup === true);
+        const activePopups = data.filter(a => !!a.isPopup);
         
         // check against sessionStorage so we don't spam the user every single page load
         // they can dismiss it, and it will stay hidden for the rest of their session.
