@@ -1,10 +1,28 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { FaFingerprint, FaMapMarkerAlt, FaSignOutAlt, FaSignInAlt, FaClock, FaQrcode, FaExternalLinkAlt, FaSync } from 'react-icons/fa';
 import api from '../../api/axiosConfig';
 import QrScannerModal from '../QrScannerModal';
 import './QuickPunch.css';
 import useGeofenceWatcher from '../../hooks/useGeofenceWatcher';
+
+// ── Settings cache helpers (5-minute TTL) ──────────────────────────────────
+const SETTINGS_CACHE_KEY = 'qp_punch_settings';
+const SETTINGS_TTL_MS    = 5 * 60 * 1000; // 5 minutes
+
+function getCachedSettings() {
+    try {
+        const raw = localStorage.getItem(SETTINGS_CACHE_KEY);
+        if (!raw) return null;
+        const { data, ts } = JSON.parse(raw);
+        if (Date.now() - ts > SETTINGS_TTL_MS) { localStorage.removeItem(SETTINGS_CACHE_KEY); return null; }
+        return data;
+    } catch { return null; }
+}
+
+function setCachedSettings(data) {
+    try { localStorage.setItem(SETTINGS_CACHE_KEY, JSON.stringify({ data, ts: Date.now() })); } catch {}
+}
 
 /**
  * QuickPunch — Dashboard attendance widget
@@ -14,8 +32,11 @@ import useGeofenceWatcher from '../../hooks/useGeofenceWatcher';
  *   1. QR Scan   — opens camera scanner (with location verification)
  *   2. Quick GPS — direct API call with GPS coords (fallback: calls without GPS if denied)
  *
- * State is synced with backend on every action — navigating to /time-tracking
- * will always reflect the latest punch state.
+ * Speed optimisations:
+ *   • GPS pre-warmed on mount via watchPosition — position ready instantly on button click
+ *   • Office settings cached in localStorage (5-min TTL) — no extra round-trip per punch
+ *   • Optimistic UI — state flips immediately; reverts if API fails
+ *   • Status + settings fetched in parallel on mount
  */
 const QuickPunch = ({ variant = 'card' }) => {
     const [isPunchedIn,   setIsPunchedIn]   = useState(false);
@@ -26,6 +47,10 @@ const QuickPunch = ({ variant = 'card' }) => {
     const [lastLog,       setLastLog]       = useState(null);
     const [todayMinutes,  setTodayMinutes]  = useState(0);
     const [scannerOpen,   setScannerOpen]   = useState(false);
+
+    // Pre-warmed GPS position — updated by watchPosition silently in background
+    const lastPositionRef = useRef(null);
+    const gpsWatchIdRef   = useRef(null);
 
     // Derive the time-tracking link based on user role
     const user = JSON.parse(localStorage.getItem('user') || '{}');
@@ -41,35 +66,52 @@ const QuickPunch = ({ variant = 'card' }) => {
         }
     );
 
-    useEffect(() => { 
-        fetchStatus(); 
-        
+    useEffect(() => {
+        // Parallel fetch: status + prefetch settings cache at the same time
+        Promise.all([fetchStatus(), prefetchSettings()]);
+
+        // GPS pre-warming — keep the latest position in a ref silently
+        if (navigator.geolocation) {
+            gpsWatchIdRef.current = navigator.geolocation.watchPosition(
+                (pos) => { lastPositionRef.current = pos; },
+                () => {},
+                { enableHighAccuracy: true, timeout: 20000, maximumAge: 10000 }
+            );
+        }
+
         // Background polling (every 30s) to keep multi-device portals in sync
         const poll = setInterval(fetchStatus, 30000);
-        return () => clearInterval(poll);
+        return () => {
+            clearInterval(poll);
+            if (gpsWatchIdRef.current != null) navigator.geolocation.clearWatch(gpsWatchIdRef.current);
+        };
     }, []);
+
+    /* ── Pre-fetch and cache punch settings ── */
+    const prefetchSettings = async () => {
+        if (getCachedSettings()) return; // already fresh
+        try {
+            const res = await api.get('/qr/punch-settings');
+            setCachedSettings(res.data);
+        } catch {}
+    };
 
     /* ── Fetch current punch status from backend ── */
     const fetchStatus = async () => {
         try {
-            // Using a more reliable path that matches axiosConfig baseURL
             const res  = await api.get('/qr/time-logs');
             const logs = res.data.logs || [];
 
-            // Reliable punch detection: find any log with loginTime but no logoutTime
-            // Use date string directly to avoid UTC shift (log.date is "YYYY-MM-DD")
-            const todayKey  = new Date().toLocaleDateString('en-CA'); // "YYYY-MM-DD" in local time
+            const todayKey  = new Date().toLocaleDateString('en-CA');
             const todayLogs = logs.filter(l => (l.date || '').split('T')[0] === todayKey);
             const active    = todayLogs.find(l => l.loginTime && !l.logoutTime);
             setIsPunchedIn(!!active);
 
-            // Total minutes today — only count completed sessions
             const mins = todayLogs
                 .filter(l => l.logoutTime && l.totalMinutes > 0)
                 .reduce((s, l) => s + (l.totalMinutes || 0), 0);
             setTodayMinutes(mins);
 
-            // Latest log (for "last punch" display)
             if (todayLogs.length > 0) {
                 const sorted = [...todayLogs].sort((a, b) => (b.loginTime || '').localeCompare(a.loginTime || ''));
                 setLastLog(sorted[0]);
@@ -81,19 +123,22 @@ const QuickPunch = ({ variant = 'card' }) => {
         }
     };
 
-    /* ── Smart GPS Acquisition with Fallback ── */
+    /* ── GPS: use pre-warmed position instantly, fall back to fresh request ── */
     const getSmartLocation = () => {
+        // If we have a fresh pre-warmed position (< 30s old), use it immediately — zero wait
+        if (lastPositionRef.current) {
+            const age = Date.now() - lastPositionRef.current.timestamp;
+            if (age < 30000) return Promise.resolve(lastPositionRef.current);
+        }
+
+        // Otherwise request fresh position with high→standard accuracy fallback
         return new Promise((resolve, reject) => {
-            const options = { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 };
-            
             navigator.geolocation.getCurrentPosition(
-                (pos) => resolve(pos),
+                (pos) => { lastPositionRef.current = pos; resolve(pos); },
                 (err) => {
-                    // If high accuracy fails or times out, try standard accuracy as fallback
                     if (err.code === 3 || err.code === 2) {
-                        console.warn("High accuracy GPS failed, trying fallback...");
                         navigator.geolocation.getCurrentPosition(
-                            (pos) => resolve(pos),
+                            (pos) => { lastPositionRef.current = pos; resolve(pos); },
                             (err2) => reject(err2),
                             { enableHighAccuracy: false, timeout: 10000 }
                         );
@@ -101,18 +146,16 @@ const QuickPunch = ({ variant = 'card' }) => {
                         reject(err);
                     }
                 },
-                options
+                { enableHighAccuracy: true, timeout: 15000, maximumAge: 10000 }
             );
         });
     };
 
-    /* ── GPS + Direct punch (works with or without GPS) ── */
+    /* ── GPS + Direct punch with optimistic UI ── */
     const handleDirectPunch = async () => {
         setActionLoading(true);
         setError(null);
         setMessage(null);
-
-        let coords = { latitude: null, longitude: null };
 
         if (!navigator.geolocation) {
             setError("🛑 Geolocation is not supported by your browser.");
@@ -120,6 +163,7 @@ const QuickPunch = ({ variant = 'card' }) => {
             return;
         }
 
+        let coords = { latitude: null, longitude: null };
         try {
             const pos = await getSmartLocation();
             coords = { latitude: pos.coords.latitude, longitude: pos.coords.longitude };
@@ -128,10 +172,9 @@ const QuickPunch = ({ variant = 'card' }) => {
             if (e.code === 1) msg = "Location permission denied. Please allow location in your browser settings.";
             else if (e.code === 3) msg = "Location request timed out. Please step near a window or check your signal.";
             else msg = "Unable to acquire GPS location. Please check your signal.";
-            
             setError(
                 <span>
-                    🛑 {msg} 
+                    🛑 {msg}
                     <button onClick={handleDirectPunch} className="qp-retry-link">Try Again</button>
                 </span>
             );
@@ -139,13 +182,18 @@ const QuickPunch = ({ variant = 'card' }) => {
             return;
         }
 
+        // Optimistic UI — flip state immediately so user sees instant feedback
+        const wasIn = isPunchedIn;
+        setIsPunchedIn(!wasIn);
+
         try {
-            const endpoint = isPunchedIn ? '/qr/punch-out' : '/qr/punch-in';
-            const payload  = { ...coords, userId: user?.id };
-            const res      = await api.post(endpoint, payload);
-            setMessage(isPunchedIn ? '✅ Punched Out successfully!' : '✅ Punched In successfully!');
-            await fetchStatus();
+            const endpoint = wasIn ? '/qr/punch-out' : '/qr/punch-in';
+            await api.post(endpoint, { ...coords, userId: user?.id });
+            setMessage(wasIn ? '✅ Punched Out successfully!' : '✅ Punched In successfully!');
+            fetchStatus(); // sync true state in background
         } catch (err) {
+            // Revert optimistic update on failure
+            setIsPunchedIn(wasIn);
             setError(err.response?.data?.message || 'Punch failed. Please try again.');
         } finally {
             setTimeout(() => {
