@@ -56,6 +56,7 @@ function StudentProfile() {
   const [showBoard10Dropdown, setShowBoard10Dropdown] = useState(false);
   const [showBoard12Dropdown, setShowBoard12Dropdown] = useState(false);
   const fileInputRef = useRef(null);
+  const formRef = useRef(null);
 
   const storedUser = JSON.parse(localStorage.getItem("user") || "{}");
   const userEmail = storedUser?.email || "";
@@ -157,6 +158,8 @@ function StudentProfile() {
     } else if (name === "aadharNumber") {
       const numericValue = value.replace(/\D/g, "").slice(0, 12);
       setStudent({ ...student, [name]: numericValue });
+    } else if (name === "aadharName") {
+      setStudent(prev => ({ ...prev, aadharName: value, name: value }));
     } else {
       setStudent({ ...student, [name]: value });
     }
@@ -205,7 +208,7 @@ function StudentProfile() {
 
   const handleSave = async () => {
     // Validation — only block if a value was provided but is incomplete
-    if (!student.name?.trim()) { showToast("error", "Name is required"); return; }
+    if (!student.aadharName?.trim() && !student.name?.trim()) { showToast("error", "Name is required"); return; }
     if (student.phone && student.phone.length !== 10) { showToast("error", "Phone must be 10 digits"); return; }
     if (!student.gender) { showToast("error", "Gender is required"); return; }
     if (!student.fatherName?.trim()) { showToast("error", "Father name is required"); return; }
@@ -230,6 +233,12 @@ function StudentProfile() {
     }
   };
 
+  const handleScrollToForm = () => {
+    if (formRef.current) {
+      formRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  };
+
   const filteredBoards10 = INDIAN_BOARDS.filter(b => b.label.toLowerCase().includes(boardSearch10.toLowerCase()));
   const filteredBoards12 = INDIAN_BOARDS.filter(b => b.label.toLowerCase().includes(boardSearch12.toLowerCase()));
 
@@ -239,84 +248,141 @@ function StudentProfile() {
     return "#10b981";
   };
 
+  const completionHint = profileStrength < 50
+    ? "Complete more sections to strengthen your profile"
+    : profileStrength < 100
+      ? "Almost there! Keep filling in your details"
+      : "Your profile is complete!";
+
   if (loading) return (
-    <div className="sp2-loader">
-      <div className="sp2-spinner" />
-      <p>Loading your profile…</p>
+    <div className="spa-page">
+      <div className="spa-loader">
+        <div className="spa-spinner" />
+        <p>Loading your profile…</p>
+      </div>
     </div>
   );
 
   return (
-    <div className="sp2-page">
-      {toast.text && <div className={`sp2-toast sp2-toast--${toast.type}`}>{toast.text}</div>}
+    <div className="spa-page">
+      {/* Toast notification */}
+      {toast.text && (
+        <div className={`spa-toast spa-toast--${toast.type}`}>
+          {toast.text}
+        </div>
+      )}
 
-      <div className="sp2-container">
-        {/* Header Section */}
-        <div className="sp2-header">
-          <div className="sp2-photo-section">
-            <div className="sp2-photo-frame">
-              {uploading.profilePic && <div className="sp2-photo-spinner" />}
-              {!uploading.profilePic && (
+      {/* Hero Section */}
+      <div className="spa-hero">
+        <div className="spa-hero-top-bar">
+          <div className="spa-hero-logo-area">
+            {/* left side brand area */}
+          </div>
+          <button className="spa-hero-update-btn" onClick={handleScrollToForm}>
+            Update Profile
+          </button>
+        </div>
+
+        <div className="spa-hero-body">
+          <div className="spa-hero-identity">
+            <div className="spa-avatar-ring" onClick={() => fileInputRef.current?.click()}>
+              {uploading.profilePic ? (
+                <div className="spa-avatar-spinner" />
+              ) : (
                 <>
-                  <img src={student.profilePic || "https://cdn-icons-png.flaticon.com/512/3135/3135715.png"} alt="Profile" className="sp2-photo-img" />
-                  <label className="sp2-photo-upload" onClick={() => fileInputRef.current?.click()}>
+                  <img
+                    src={student.profilePic || "https://cdn-icons-png.flaticon.com/512/3135/3135715.png"}
+                    alt="Profile"
+                    className="spa-avatar-img"
+                  />
+                  <label className="spa-avatar-edit" onClick={(e) => e.stopPropagation()}>
                     📷
+                    <input
+                      type="file"
+                      ref={fileInputRef}
+                      onChange={(e) => handleFileUpload(e, "profilePic")}
+                      hidden
+                      accept="image/*"
+                    />
                   </label>
-                  <input type="file" ref={fileInputRef} onChange={(e) => handleFileUpload(e, "profilePic")} hidden accept="image/*" />
                 </>
               )}
             </div>
-          </div>
 
-          <div className="sp2-header-info">
-            <h1 className="sp2-name">{student.aadharName || student.name || "Student Profile"}</h1>
-            <p className="sp2-email">{student.email}</p>
-            {student.studentId && <p className="sp2-id">ID: {student.studentId}</p>}
-          </div>
-        </div>
-
-        {/* Profile Strength Indicator */}
-        <div className="sp2-strength-container">
-          <div className="sp2-strength-header">
-            <span className="sp2-strength-label">Profile Completion</span>
-            <span className="sp2-strength-percent" style={{ color: getStrengthColor(profileStrength) }}>
-              {profileStrength}%
-            </span>
-          </div>
-          <div className="sp2-strength-bar">
-            <div className="sp2-strength-fill" style={{ width: `${profileStrength}%`, backgroundColor: getStrengthColor(profileStrength) }} />
-          </div>
-          <p className="sp2-strength-status">
-            {profileStrength < 50 ? "⚠️ Complete more sections" : profileStrength < 100 ? "📝 Almost there!" : "✅ Profile complete!"}
-          </p>
-        </div>
-
-        {/* Scrollable Form Sections */}
-        <div className="sp2-form-wrapper">
-          {/* Section 1: Basic Information */}
-          <div className="sp2-section">
-            <div className="sp2-section-header">
-              <FaUser className="sp2-section-icon" />
-              <h2>Basic Information</h2>
+            <div className="spa-hero-text">
+              <h1 className="spa-hero-name">
+                {student.aadharName || student.name || "Student"}
+              </h1>
+              <p className="spa-hero-email">{student.email}</p>
+              {student.studentId && (
+                <span className="spa-hero-id">ID: {student.studentId}</span>
+              )}
             </div>
-            <div className="sp2-grid sp2-grid-2">
-              <div className="sp2-field">
-                <label>Full Name</label>
-                <input type="text" name="name" value={student.name} onChange={handleChange} placeholder="Your full name" />
+          </div>
+        </div>
+      </div>
+
+      {/* Card overlap — profile completion */}
+      <div className="spa-card-overlap">
+        <div className="spa-completion-row">
+          <span className="spa-completion-label">Profile Completion</span>
+          <span className="spa-completion-pct">{profileStrength}%</span>
+        </div>
+        <div className="spa-bar-track">
+          <div
+            className="spa-bar-fill"
+            style={{ width: `${profileStrength}%` }}
+          />
+        </div>
+        <span className="spa-completion-hint">{completionHint}</span>
+      </div>
+
+      {/* Form content */}
+      <div className="spa-content" ref={formRef}>
+
+        {/* ── Section 01: Basic Information ── */}
+        <div className="spa-section">
+          <div className="spa-section-head">
+            <div className="spa-section-num">01</div>
+            <div>
+              <h2>Basic Information</h2>
+              <p>Personal details and contact</p>
+            </div>
+          </div>
+          <div className="spa-section-body">
+            {/* Email full width */}
+            <div className="spa-fields-grid spa-fields-grid--1">
+              <div className="spa-field">
+                <label>EMAIL ADDRESS</label>
+                <input
+                  type="email"
+                  value={student.email}
+                  disabled
+                  readOnly
+                />
+                <span className="spa-field-hint">Your registered email — cannot be changed</span>
               </div>
-              <div className="sp2-field">
-                <label>Email (Read-only)</label>
-                <input type="email" value={student.email} disabled />
+            </div>
+            {/* Phone + Gender in 2 cols */}
+            <div className="spa-fields-grid spa-fields-grid--2">
+              <div className="spa-field">
+                <label>PHONE NUMBER</label>
+                <input
+                  type="text"
+                  name="phone"
+                  value={student.phone}
+                  onChange={handleChange}
+                  placeholder="10-digit number"
+                  maxLength="10"
+                />
+                {student.phone && student.phone.length < 10 && (
+                  <span className="spa-field-error">10 digits required</span>
+                )}
               </div>
-              <div className="sp2-field">
-                <label>Phone Number</label>
-                <input type="text" name="phone" value={student.phone} onChange={handleChange} placeholder="10-digit number" maxLength="10" />
-                {student.phone && student.phone.length < 10 && <span className="sp2-error">⚠️ 10 digits required</span>}
-              </div>
-              <div className="sp2-field">
-                <label>Gender</label>
+              <div className="spa-field">
+                <label>GENDER</label>
                 <select name="gender" value={student.gender} onChange={handleChange}>
-                  <option value="">Select</option>
+                  <option value="">Select gender</option>
                   <option value="Male">Male</option>
                   <option value="Female">Female</option>
                   <option value="Other">Other</option>
@@ -324,112 +390,200 @@ function StudentProfile() {
               </div>
             </div>
           </div>
+        </div>
 
-          {/* Section 2: Family Information */}
-          <div className="sp2-section">
-            <div className="sp2-section-header">
-              <FaUsers className="sp2-section-icon" />
-              <h2>Family Information</h2>
-            </div>
-
-            {/* Father */}
-            <div className="sp2-subsection">
-              <h3>Father's Details</h3>
-              <div className="sp2-grid sp2-grid-3">
-                <div className="sp2-field">
-                  <label>Father's Name</label>
-                  <input type="text" name="fatherName" value={student.fatherName} onChange={handleChange} placeholder="Father's full name" />
-                </div>
-                <div className="sp2-field">
-                  <label>Occupation</label>
-                  <input type="text" name="fatherOccupation" value={student.fatherOccupation} onChange={handleChange} placeholder="e.g., Engineer, Doctor" />
-                </div>
-                <div className="sp2-field">
-                  <label>Phone Number</label>
-                  <input type="text" name="fatherPhone" value={student.fatherPhone} onChange={handleChange} placeholder="10-digit number" maxLength="10" />
-                  {student.fatherPhone && student.fatherPhone.length < 10 && <span className="sp2-error">⚠️ 10 digits required</span>}
-                </div>
-              </div>
-            </div>
-
-            {/* Mother */}
-            <div className="sp2-subsection">
-              <h3>Mother's Details</h3>
-              <div className="sp2-grid sp2-grid-3">
-                <div className="sp2-field">
-                  <label>Mother's Name</label>
-                  <input type="text" name="motherName" value={student.motherName} onChange={handleChange} placeholder="Mother's full name" />
-                </div>
-                <div className="sp2-field">
-                  <label>Occupation</label>
-                  <input type="text" name="motherOccupation" value={student.motherOccupation} onChange={handleChange} placeholder="e.g., Teacher, Business" />
-                </div>
-                <div className="sp2-field">
-                  <label>Phone Number</label>
-                  <input type="text" name="motherPhone" value={student.motherPhone} onChange={handleChange} placeholder="10-digit number" maxLength="10" />
-                  {student.motherPhone && student.motherPhone.length < 10 && <span className="sp2-error">⚠️ 10 digits required</span>}
-                </div>
-              </div>
-            </div>
-
-            {/* Guardian - Optional */}
-            <div className="sp2-subsection">
-              <div className="sp2-checkbox-field">
-                <input
-                  type="checkbox"
-                  checked={student.hasGuardian || false}
-                  onChange={(e) => setStudent({ ...student, hasGuardian: e.target.checked })}
-                  id="has-guardian"
-                />
-                <label htmlFor="has-guardian" className="sp2-checkbox-label">I have a different guardian</label>
-              </div>
-
-              {student.hasGuardian && (
-                <div className="sp2-grid sp2-grid-4">
-                  <div className="sp2-field">
-                    <label>Guardian's Name</label>
-                    <input type="text" name="guardianName" value={student.guardianName} onChange={handleChange} placeholder="Guardian's full name" />
-                  </div>
-                  <div className="sp2-field">
-                    <label>Relationship</label>
-                    <input type="text" name="guardianRelationship" value={student.guardianRelationship} onChange={handleChange} placeholder="e.g., Aunt, Uncle" />
-                  </div>
-                  <div className="sp2-field">
-                    <label>Phone Number</label>
-                    <input type="text" name="guardianPhone" value={student.guardianPhone} onChange={handleChange} placeholder="10-digit number" maxLength="10" />
-                  </div>
-                </div>
-              )}
+        {/* ── Section 02: Family Details ── */}
+        <div className="spa-section">
+          <div className="spa-section-head">
+            <div className="spa-section-num">02</div>
+            <div>
+              <h2>Family Details</h2>
+              <p>Parent and guardian information</p>
             </div>
           </div>
+          <div className="spa-section-body">
 
-          {/* Section 3: Education Status */}
-          <div className="sp2-section">
-            <div className="sp2-section-header">
-              <FaGraduationCap className="sp2-section-icon" />
-              <h2>Education Status</h2>
+            {/* Father's Details */}
+            <div className="spa-subsection-header">Father's Details</div>
+            <div className="spa-fields-grid spa-fields-grid--2">
+              <div className="spa-field">
+                <label>FATHER'S NAME</label>
+                <input
+                  type="text"
+                  name="fatherName"
+                  value={student.fatherName}
+                  onChange={handleChange}
+                  placeholder="Father's full name"
+                />
+              </div>
+              <div className="spa-field">
+                <label>PHONE NUMBER</label>
+                <input
+                  type="text"
+                  name="fatherPhone"
+                  value={student.fatherPhone}
+                  onChange={handleChange}
+                  placeholder="10-digit number"
+                  maxLength="10"
+                />
+                {student.fatherPhone && student.fatherPhone.length < 10 && (
+                  <span className="spa-field-error">10 digits required</span>
+                )}
+              </div>
+              <div className="spa-field">
+                <label>OCCUPATION</label>
+                <input
+                  type="text"
+                  name="fatherOccupation"
+                  value={student.fatherOccupation}
+                  onChange={handleChange}
+                  placeholder="e.g., Engineer, Doctor"
+                />
+              </div>
             </div>
 
-            <div className="sp2-radio-group">
-              <label className="sp2-radio">
-                <input type="radio" name="educationStatus" checked={student.currentlyStudying === true} onChange={() => setStudent({ ...student, currentlyStudying: true })} />
-                <span>Currently Studying</span>
+            {/* Mother's Details */}
+            <div className="spa-subsection-header" style={{ marginTop: "20px" }}>Mother's Details</div>
+            <div className="spa-fields-grid spa-fields-grid--2">
+              <div className="spa-field">
+                <label>MOTHER'S NAME</label>
+                <input
+                  type="text"
+                  name="motherName"
+                  value={student.motherName}
+                  onChange={handleChange}
+                  placeholder="Mother's full name"
+                />
+              </div>
+              <div className="spa-field">
+                <label>PHONE NUMBER</label>
+                <input
+                  type="text"
+                  name="motherPhone"
+                  value={student.motherPhone}
+                  onChange={handleChange}
+                  placeholder="10-digit number"
+                  maxLength="10"
+                />
+                {student.motherPhone && student.motherPhone.length < 10 && (
+                  <span className="spa-field-error">10 digits required</span>
+                )}
+              </div>
+              <div className="spa-field">
+                <label>OCCUPATION</label>
+                <input
+                  type="text"
+                  name="motherOccupation"
+                  value={student.motherOccupation}
+                  onChange={handleChange}
+                  placeholder="e.g., Teacher, Business"
+                />
+              </div>
+            </div>
+
+            {/* Guardian toggle */}
+            <div className="spa-guardian-toggle">
+              <input
+                type="checkbox"
+                id="spa-has-guardian"
+                checked={student.hasGuardian || false}
+                onChange={(e) => setStudent({ ...student, hasGuardian: e.target.checked })}
+              />
+              <label htmlFor="spa-has-guardian">I have a different guardian</label>
+            </div>
+
+            {student.hasGuardian && (
+              <div className="spa-fields-grid spa-fields-grid--2" style={{ marginTop: "16px" }}>
+                <div className="spa-field">
+                  <label>GUARDIAN'S NAME</label>
+                  <input
+                    type="text"
+                    name="guardianName"
+                    value={student.guardianName}
+                    onChange={handleChange}
+                    placeholder="Guardian's full name"
+                  />
+                </div>
+                <div className="spa-field">
+                  <label>RELATIONSHIP</label>
+                  <input
+                    type="text"
+                    name="guardianRelationship"
+                    value={student.guardianRelationship}
+                    onChange={handleChange}
+                    placeholder="e.g., Aunt, Uncle"
+                  />
+                </div>
+                <div className="spa-field">
+                  <label>PHONE NUMBER</label>
+                  <input
+                    type="text"
+                    name="guardianPhone"
+                    value={student.guardianPhone}
+                    onChange={handleChange}
+                    placeholder="10-digit number"
+                    maxLength="10"
+                  />
+                  {student.guardianPhone && student.guardianPhone.length < 10 && (
+                    <span className="spa-field-error">10 digits required</span>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* ── Section 03: Education ── */}
+        <div className="spa-section">
+          <div className="spa-section-head">
+            <div className="spa-section-num">03</div>
+            <div>
+              <h2>Education</h2>
+              <p>Academic background and qualifications</p>
+            </div>
+          </div>
+          <div className="spa-section-body">
+
+            {/* Radio: Currently Studying / Graduated */}
+            <div className="spa-radio-group">
+              <label className="spa-radio-option">
+                <input
+                  type="radio"
+                  name="educationStatus"
+                  checked={student.currentlyStudying === true}
+                  onChange={() => setStudent({ ...student, currentlyStudying: true })}
+                />
+                <span className="spa-radio-custom" />
+                <span className="spa-radio-label">Currently Studying</span>
               </label>
-              <label className="sp2-radio">
-                <input type="radio" name="educationStatus" checked={student.currentlyStudying === false} onChange={() => setStudent({ ...student, currentlyStudying: false })} />
-                <span>Graduated</span>
+              <label className="spa-radio-option">
+                <input
+                  type="radio"
+                  name="educationStatus"
+                  checked={student.currentlyStudying === false}
+                  onChange={() => setStudent({ ...student, currentlyStudying: false })}
+                />
+                <span className="spa-radio-custom" />
+                <span className="spa-radio-label">Graduated</span>
               </label>
             </div>
 
+            {/* Currently Studying fields */}
             {student.currentlyStudying === true && (
-              <div className="sp2-education-section">
-                <div className="sp2-grid sp2-grid-3">
-                  <div className="sp2-field">
-                    <label>Qualification Pursuing</label>
-                    <input type="text" name="qualification" value={student.qualification} onChange={handleChange} placeholder="e.g., B.Tech, BA" />
+              <div className="spa-education-panel">
+                <div className="spa-fields-grid spa-fields-grid--2">
+                  <div className="spa-field">
+                    <label>QUALIFICATION PURSUING</label>
+                    <input
+                      type="text"
+                      name="qualification"
+                      value={student.qualification}
+                      onChange={handleChange}
+                      placeholder="e.g., B.Tech, BA"
+                    />
                   </div>
-                  <div className="sp2-field">
-                    <label>Current Year</label>
+                  <div className="spa-field">
+                    <label>CURRENT YEAR</label>
                     <select name="yearOfPassing" value={student.yearOfPassing} onChange={handleChange}>
                       <option value="">Select Year</option>
                       <option value="1st">1st Year</option>
@@ -440,8 +594,8 @@ function StudentProfile() {
                   </div>
                 </div>
 
-                <div className="sp2-board-section">
-                  <label>10th Board</label>
+                <div className="spa-board-field">
+                  <label>10TH BOARD</label>
                   <div className="sp2-searchable-select">
                     <input
                       type="text"
@@ -479,21 +633,35 @@ function StudentProfile() {
               </div>
             )}
 
+            {/* Graduated fields */}
             {student.currentlyStudying === false && (
-              <div className="sp2-education-section">
-                <div className="sp2-grid sp2-grid-2">
-                  <div className="sp2-field">
-                    <label>Graduation Year</label>
-                    <input type="number" name="yearOfPassing" value={student.yearOfPassing} onChange={handleChange} placeholder="e.g., 2023" max="2050" />
+              <div className="spa-education-panel">
+                <div className="spa-fields-grid spa-fields-grid--2">
+                  <div className="spa-field">
+                    <label>GRADUATION YEAR</label>
+                    <input
+                      type="number"
+                      name="yearOfPassing"
+                      value={student.yearOfPassing}
+                      onChange={handleChange}
+                      placeholder="e.g., 2023"
+                      max="2050"
+                    />
                   </div>
-                  <div className="sp2-field">
-                    <label>Aggregate Percentage</label>
-                    <input type="text" name="aggregatePercentage" value={student.aggregatePercentage} onChange={handleChange} placeholder="e.g., 78.5%" />
+                  <div className="spa-field">
+                    <label>AGGREGATE PERCENTAGE</label>
+                    <input
+                      type="text"
+                      name="aggregatePercentage"
+                      value={student.aggregatePercentage}
+                      onChange={handleChange}
+                      placeholder="e.g., 78.5%"
+                    />
                   </div>
                 </div>
 
-                <div className="sp2-board-section">
-                  <label>10th Board</label>
+                <div className="spa-board-field">
+                  <label>10TH BOARD</label>
                   <div className="sp2-searchable-select">
                     <input
                       type="text"
@@ -529,8 +697,8 @@ function StudentProfile() {
                   onUpload={(e) => handleFileUpload(e, "marks10")}
                 />
 
-                <div className="sp2-board-section">
-                  <label>12th Board</label>
+                <div className="spa-board-field">
+                  <label>12TH BOARD</label>
                   <div className="sp2-searchable-select">
                     <input
                       type="text"
@@ -575,27 +743,50 @@ function StudentProfile() {
               </div>
             )}
           </div>
+        </div>
 
-          {/* Section 4: Aadhar Verification */}
-          <div className="sp2-section">
-            <div className="sp2-section-header">
-              <FaUser className="sp2-section-icon" />
-              <h2>Aadhar Verification</h2>
+        {/* ── Section 04: Identity Verification ── */}
+        <div className="spa-section">
+          <div className="spa-section-head">
+            <div className="spa-section-num">04</div>
+            <div>
+              <h2>Identity Verification</h2>
+              <p>Aadhar card details for verification</p>
+            </div>
+          </div>
+          <div className="spa-section-body">
+            {/* (1) Aadhar Number */}
+            <div className="spa-fields-grid spa-fields-grid--2">
+              <div className="spa-field">
+                <label>AADHAR NUMBER</label>
+                <input
+                  type="text"
+                  name="aadharNumber"
+                  value={student.aadharNumber}
+                  onChange={handleChange}
+                  placeholder="Enter 12-digit Aadhar"
+                  maxLength="12"
+                />
+                {student.aadharNumber && student.aadharNumber.length < 12 && (
+                  <span className="spa-field-error">12 digits required</span>
+                )}
+              </div>
+
+              {/* (2) Full Name as per Aadhar */}
+              <div className="spa-field">
+                <label>FULL NAME (EXACTLY AS ON AADHAR CARD)</label>
+                <input
+                  type="text"
+                  name="aadharName"
+                  value={student.aadharName}
+                  onChange={handleChange}
+                  placeholder="e.g. Vinayaka S H"
+                />
+                <span className="spa-field-hint">This name will appear on your profile everywhere</span>
+              </div>
             </div>
 
-            <div className="sp2-grid sp2-grid-2">
-              <div className="sp2-field">
-                <label>Aadhar Number (12-digit)</label>
-                <input type="text" name="aadharNumber" value={student.aadharNumber} onChange={handleChange} placeholder="Enter 12-digit Aadhar" maxLength="12" />
-                {student.aadharNumber && student.aadharNumber.length < 12 && <span className="sp2-error">⚠️ 12 digits required</span>}
-              </div>
-              <div className="sp2-field">
-                <label>Full Name (As on Aadhar)</label>
-                <input type="text" name="aadharName" value={student.aadharName} onChange={handleChange} placeholder="Your full name from Aadhar" />
-                <small>This will be shown as your profile name</small>
-              </div>
-            </div>
-
+            {/* (3) Upload Aadhar Card */}
             <DocUploadItem
               label="Aadhar Card (Proof)"
               url={student.aadharCardUrl}
@@ -603,96 +794,148 @@ function StudentProfile() {
               onUpload={(e) => handleFileUpload(e, "aadhar")}
             />
           </div>
+        </div>
 
-          {/* Section 5: Bank Details */}
-          <div className="sp2-section">
-            <div className="sp2-section-header">
-              <FaUniversity className="sp2-section-icon" />
-              <h2>Bank Account Details</h2>
-            </div>
-
-            <div className="sp2-subsection">
-              <h3>Manual Entry (Required)</h3>
-              <div className="sp2-grid sp2-grid-2">
-                <div className="sp2-field">
-                  <label>Account Holder Name</label>
-                  <input type="text" name="bankAccountHolder" value={student.bankAccountHolder} onChange={handleChange} placeholder="Name as per bank account" />
-                </div>
-                <div className="sp2-field">
-                  <label>Bank Name</label>
-                  <input type="text" name="bankName" value={student.bankName} onChange={handleChange} placeholder="e.g., HDFC Bank, SBI" />
-                </div>
-                <div className="sp2-field">
-                  <label>Account Number</label>
-                  <input type="text" name="bankAccountNumber" value={student.bankAccountNumber} onChange={handleChange} placeholder="Your account number" />
-                </div>
-                <div className="sp2-field">
-                  <label>Account Type</label>
-                  <select name="bankAccountType" value={student.bankAccountType} onChange={handleChange}>
-                    <option value="">Select Type</option>
-                    <option value="SAVINGS">Savings</option>
-                    <option value="CURRENT">Current</option>
-                    <option value="OTHER">Other</option>
-                  </select>
-                </div>
-                <div className="sp2-field">
-                  <label>IFSC Code</label>
-                  <input type="text" name="bankIfscCode" value={student.bankIfscCode} onChange={handleChange} placeholder="e.g., HDFC0001234" />
-                </div>
-              </div>
-            </div>
-
-            <div className="sp2-subsection">
-              <h3>Upload Bank Passbook (First Page)</h3>
-              <p className="sp2-subsection-desc">Upload the first page of your bank passbook for verification</p>
-              <DocUploadItem
-                label="Bank Passbook First Page"
-                url={student.bankPassbookUrl}
-                loading={uploading.bankPassbook}
-                onUpload={(e) => handleFileUpload(e, "bankPassbook")}
-              />
+        {/* ── Section 05: Banking Details ── */}
+        <div className="spa-section">
+          <div className="spa-section-head">
+            <div className="spa-section-num">05</div>
+            <div>
+              <h2>Banking Details</h2>
+              <p>Bank account for scholarship &amp; payments</p>
             </div>
           </div>
-
-          {/* Section 6: Address */}
-          <div className="sp2-section">
-            <div className="sp2-section-header">
-              <FaHome className="sp2-section-icon" />
-              <h2>Residential Address</h2>
-            </div>
-
-            <div className="sp2-grid sp2-grid-1">
-              <div className="sp2-field">
-                <label>Street Address</label>
-                <input type="text" name="address" value={student.address} onChange={handleChange} placeholder="House no, building, street..." />
+          <div className="spa-section-body">
+            <div className="spa-fields-grid spa-fields-grid--2">
+              <div className="spa-field">
+                <label>ACCOUNT HOLDER NAME</label>
+                <input
+                  type="text"
+                  name="bankAccountHolder"
+                  value={student.bankAccountHolder}
+                  onChange={handleChange}
+                  placeholder="Name as per bank account"
+                />
               </div>
-            </div>
-
-            <div className="sp2-grid sp2-grid-4">
-              <div className="sp2-field">
-                <label>City</label>
-                <input type="text" name="city" value={student.city} onChange={handleChange} placeholder="City" />
+              <div className="spa-field">
+                <label>BANK NAME</label>
+                <input
+                  type="text"
+                  name="bankName"
+                  value={student.bankName}
+                  onChange={handleChange}
+                  placeholder="e.g., HDFC Bank, SBI"
+                />
               </div>
-              <div className="sp2-field">
-                <label>State</label>
-                <input type="text" name="state" value={student.state} onChange={handleChange} placeholder="State" />
+              <div className="spa-field">
+                <label>ACCOUNT NUMBER</label>
+                <input
+                  type="text"
+                  name="bankAccountNumber"
+                  value={student.bankAccountNumber}
+                  onChange={handleChange}
+                  placeholder="Your account number"
+                />
               </div>
-              <div className="sp2-field">
-                <label>Pincode</label>
-                <input type="text" name="pincode" value={student.pincode} onChange={handleChange} placeholder="6-digit pincode" />
+              <div className="spa-field">
+                <label>ACCOUNT TYPE</label>
+                <select name="bankAccountType" value={student.bankAccountType} onChange={handleChange}>
+                  <option value="">Select Type</option>
+                  <option value="SAVINGS">Savings</option>
+                  <option value="CURRENT">Current</option>
+                  <option value="OTHER">Other</option>
+                </select>
               </div>
-            </div>
-          </div>
-
-          {/* Section 7: Additional Documents */}
-          <div className="sp2-section">
-            <div className="sp2-section-header">
-              <FaFileUpload className="sp2-section-icon" />
-              <h2>Additional Documents (Optional)</h2>
+              <div className="spa-field">
+                <label>IFSC CODE</label>
+                <input
+                  type="text"
+                  name="bankIfscCode"
+                  value={student.bankIfscCode}
+                  onChange={handleChange}
+                  placeholder="e.g., HDFC0001234"
+                />
+              </div>
             </div>
 
             <DocUploadItem
-              label="Resume/CV"
+              label="Bank Passbook First Page"
+              url={student.bankPassbookUrl}
+              loading={uploading.bankPassbook}
+              onUpload={(e) => handleFileUpload(e, "bankPassbook")}
+            />
+          </div>
+        </div>
+
+        {/* ── Section 06: Address ── */}
+        <div className="spa-section">
+          <div className="spa-section-head">
+            <div className="spa-section-num">06</div>
+            <div>
+              <h2>Address</h2>
+              <p>Your residential address</p>
+            </div>
+          </div>
+          <div className="spa-section-body">
+            <div className="spa-fields-grid spa-fields-grid--1">
+              <div className="spa-field">
+                <label>STREET ADDRESS</label>
+                <input
+                  type="text"
+                  name="address"
+                  value={student.address}
+                  onChange={handleChange}
+                  placeholder="House no, building, street..."
+                />
+              </div>
+            </div>
+            <div className="spa-fields-grid spa-fields-grid--3">
+              <div className="spa-field">
+                <label>CITY</label>
+                <input
+                  type="text"
+                  name="city"
+                  value={student.city}
+                  onChange={handleChange}
+                  placeholder="City"
+                />
+              </div>
+              <div className="spa-field">
+                <label>STATE</label>
+                <input
+                  type="text"
+                  name="state"
+                  value={student.state}
+                  onChange={handleChange}
+                  placeholder="State"
+                />
+              </div>
+              <div className="spa-field">
+                <label>PINCODE</label>
+                <input
+                  type="text"
+                  name="pincode"
+                  value={student.pincode}
+                  onChange={handleChange}
+                  placeholder="6-digit pincode"
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* ── Section 07: Documents ── */}
+        <div className="spa-section">
+          <div className="spa-section-head">
+            <div className="spa-section-num">07</div>
+            <div>
+              <h2>Documents</h2>
+              <p>Resume and additional documents</p>
+            </div>
+          </div>
+          <div className="spa-section-body">
+            <DocUploadItem
+              label="Resume / CV"
               url={student.resumeUrl}
               loading={uploading.resume}
               onUpload={(e) => handleFileUpload(e, "resume")}
@@ -700,21 +943,31 @@ function StudentProfile() {
           </div>
         </div>
 
-        {/* Save Button */}
-        <div className="sp2-footer">
+        {/* ── Save Area ── */}
+        <div className="spa-save-area">
           <button
-            className="sp2-save-btn"
+            className="spa-save-btn"
             onClick={handleSave}
-            disabled={saving || profileStrength < 50}
+            disabled={saving}
           >
-            {saving ? <><span className="sp2-btn-spinner" /> Saving…</> : `💾 Save Profile (${profileStrength}% Complete)`}
+            {saving ? (
+              <>
+                <span className="spa-btn-spinner" />
+                Saving…
+              </>
+            ) : (
+              `Save Changes (${profileStrength}% Complete)`
+            )}
           </button>
-          <p className="sp2-footer-note">
-            {profileStrength < 50 && "⚠️ Please complete at least 50% of the form"}
-            {profileStrength >= 50 && profileStrength < 100 && "📝 Continue filling your profile"}
-            {profileStrength === 100 && "✅ Your profile is complete"}
+          <p className="spa-save-hint">
+            {profileStrength < 50
+              ? "Complete more sections to strengthen your profile"
+              : profileStrength < 100
+                ? "Continue filling your profile for full completion"
+                : "Your profile is complete!"}
           </p>
         </div>
+
       </div>
     </div>
   );
@@ -725,7 +978,11 @@ function DocUploadItem({ label, url, loading, onUpload }) {
     <div className={`sp2-doc-item ${url ? "sp2-doc-item--uploaded" : ""}`}>
       <div className="sp2-doc-label">
         <span>{label}</span>
-        {url && <span className="sp2-doc-badge"><FaCheckCircle /> Uploaded</span>}
+        {url && (
+          <span className="sp2-doc-badge">
+            <FaCheckCircle /> Uploaded
+          </span>
+        )}
       </div>
       <div className="sp2-doc-action">
         {loading ? (
