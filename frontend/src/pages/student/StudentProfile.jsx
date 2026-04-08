@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { FaUser, FaGraduationCap, FaFileUpload, FaCheckCircle, FaExternalLinkAlt, FaLock, FaWhatsapp, FaHome, FaUsers, FaBank, FaSearch, FaTimes, FaSave } from "react-icons/fa";
+import { FaUser, FaGraduationCap, FaFileUpload, FaCheckCircle, FaExternalLinkAlt, FaLock, FaWhatsapp, FaHome, FaUsers, FaUniversity, FaSearch, FaTimes, FaSave } from "react-icons/fa";
 import api from "../../api/axiosConfig";
 import "./StudentProfile.css";
 
@@ -607,7 +607,7 @@ function StudentProfile() {
           {/* Section 5: Bank Details */}
           <div className="sp2-section">
             <div className="sp2-section-header">
-              <FaBank className="sp2-section-icon" />
+              <FaUniversity className="sp2-section-icon" />
               <h2>Bank Account Details</h2>
             </div>
 
