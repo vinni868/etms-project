@@ -138,4 +138,14 @@ public class Student {
 
     @Column(name = "bank_passbook_url", columnDefinition = "TEXT")
     private String bankPassbookUrl; // Passbook first page for verification
+
+    // ── DigiLocker / Aadhaar Verification ─────────────────────────────────
+    @Column(name = "is_aadhar_verified")
+    private Boolean isAadharVerified = false;
+
+    @Column(name = "aadhar_verified_at")
+    private java.time.LocalDateTime aadharVerifiedAt;
+
+    @Column(name = "digilocker_sub", length = 100)
+    private String digilockerSub; // DigiLocker unique user identifier (sub claim)
 }

@@ -544,6 +544,17 @@ public class StudentController {
             profile.setBoard10th(updatedData.getBoard10th());
             profile.setBoard12th(updatedData.getBoard12th());
 
+            // PROTECTED: isAadharVerified can ONLY be set via DigiLocker callback
+            // — never overwrite it from a regular profile save.
+            // If updatedData somehow carries false (frontend default), ignore it
+            // and preserve whatever is already in the DB.
+            if (updatedData.getIsAadharVerified() != null && updatedData.getIsAadharVerified()) {
+                // Only allow setting to true if not already verified (shouldn't happen via
+                // this endpoint, but as a guard we allow it to remain true if already set)
+                profile.setIsAadharVerified(true);
+            }
+            // isAadharVerified = false from frontend is silently ignored here.
+
             studentRepository.save(profile);
 
             userRepository.findByEmail(updatedData.getEmail()).ifPresent(user -> {

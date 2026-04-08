@@ -69,7 +69,7 @@ function StudentProfile() {
     hasGuardian: false, guardianName: "", guardianPhone: "", guardianRelationship: "",
     currentlyStudying: null, qualification: "", board10th: "", board12th: "",
     marks10th: "", marks12th: "", yearOfPassing: "", aggregatePercentage: "",
-    aadharNumber: "", aadharName: "", aadharCardUrl: "",
+    aadharNumber: "", aadharName: "", aadharCardUrl: "", isAadharVerified: false,
     bankAccountHolder: "", bankAccountNumber: "", bankIfscCode: "", bankName: "", bankAccountType: "", bankPassbookUrl: "",
     address: "", city: "", state: "", pincode: "",
     resumeUrl: "", marks10thUrl: "", marks12thUrl: "", graduationDocUrl: "",
@@ -239,6 +239,44 @@ function StudentProfile() {
     }
   };
 
+  // ── DigiLocker OAuth helpers ─────────────────────────────────────────────
+  const [digilockerLoading, setDigilockerLoading] = useState(false);
+
+  // On mount: check if we're returning from a DigiLocker OAuth callback
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const dlResult = params.get("digilocker");
+    if (dlResult === "success") {
+      showToast("success", "Aadhaar verified via DigiLocker! ✅ Document saved automatically.");
+      // Remove the query param from URL without page reload
+      window.history.replaceState({}, document.title, window.location.pathname);
+      // Re-fetch profile to get updated isAadharVerified and aadharCardUrl
+      fetchProfile();
+    } else if (dlResult === "error") {
+      const reason = params.get("reason") || "Verification failed";
+      showToast("error", `DigiLocker error: ${decodeURIComponent(reason)}`);
+      window.history.replaceState({}, document.title, window.location.pathname);
+    }
+  }, []);
+
+  const handleDigiLockerVerify = async () => {
+    setDigilockerLoading(true);
+    try {
+      const res = await api.get("/digilocker/auth-url");
+      if (res.data?.authUrl) {
+        // Redirect browser to DigiLocker OAuth page
+        window.location.href = res.data.authUrl;
+      } else {
+        showToast("error", "Could not get DigiLocker URL. Please try again.");
+      }
+    } catch (err) {
+      const msg = err.response?.data?.hint || err.response?.data?.error || "DigiLocker is not available right now.";
+      showToast("error", msg);
+    } finally {
+      setDigilockerLoading(false);
+    }
+  };
+
   const filteredBoards10 = INDIAN_BOARDS.filter(b => b.label.toLowerCase().includes(boardSearch10.toLowerCase()));
   const filteredBoards12 = INDIAN_BOARDS.filter(b => b.label.toLowerCase().includes(boardSearch12.toLowerCase()));
 
@@ -350,16 +388,27 @@ function StudentProfile() {
             </div>
           </div>
           <div className="spa-section-body">
+            {/* Full Name (as on Aadhar) — first, full width */}
+            <div className="spa-fields-grid spa-fields-grid--1">
+              <div className="spa-field">
+                <label>FULL NAME (AS ON AADHAR CARD)</label>
+                <input
+                  type="text"
+                  name="aadharName"
+                  value={student.aadharName}
+                  onChange={handleChange}
+                  placeholder="Enter your name exactly as it appears on Aadhar"
+                />
+                <span className="spa-field-hint">
+                  This is your official name — it will appear on your profile, ID card, and all certificates
+                </span>
+              </div>
+            </div>
             {/* Email full width */}
             <div className="spa-fields-grid spa-fields-grid--1">
               <div className="spa-field">
                 <label>EMAIL ADDRESS</label>
-                <input
-                  type="email"
-                  value={student.email}
-                  disabled
-                  readOnly
-                />
+                <input type="email" value={student.email} disabled readOnly />
                 <span className="spa-field-hint">Your registered email — cannot be changed</span>
               </div>
             </div>
@@ -751,48 +800,123 @@ function StudentProfile() {
             <div className="spa-section-num">04</div>
             <div>
               <h2>Identity Verification</h2>
-              <p>Aadhar card details for verification</p>
+              <p>Aadhar number and DigiLocker verification</p>
             </div>
           </div>
           <div className="spa-section-body">
-            {/* (1) Aadhar Number */}
-            <div className="spa-fields-grid spa-fields-grid--2">
+
+            {/* Aadhar Number with verification badge */}
+            <div className="spa-fields-grid spa-fields-grid--1">
               <div className="spa-field">
                 <label>AADHAR NUMBER</label>
-                <input
-                  type="text"
-                  name="aadharNumber"
-                  value={student.aadharNumber}
-                  onChange={handleChange}
-                  placeholder="Enter 12-digit Aadhar"
-                  maxLength="12"
-                />
+                <div className="spa-aadhar-row">
+                  <input
+                    type="text"
+                    name="aadharNumber"
+                    value={student.aadharNumber}
+                    onChange={handleChange}
+                    placeholder="Enter 12-digit Aadhar number"
+                    maxLength="12"
+                    className="spa-aadhar-input"
+                  />
+                  {student.isAadharVerified ? (
+                    <span className="spa-verified-badge">✓ Verified</span>
+                  ) : student.aadharCardUrl ? (
+                    <span className="spa-pending-badge">⏳ Pending Review</span>
+                  ) : (
+                    <span className="spa-unverified-badge">Not Verified</span>
+                  )}
+                </div>
                 {student.aadharNumber && student.aadharNumber.length < 12 && (
                   <span className="spa-field-error">12 digits required</span>
                 )}
-              </div>
-
-              {/* (2) Full Name as per Aadhar */}
-              <div className="spa-field">
-                <label>FULL NAME (EXACTLY AS ON AADHAR CARD)</label>
-                <input
-                  type="text"
-                  name="aadharName"
-                  value={student.aadharName}
-                  onChange={handleChange}
-                  placeholder="e.g. Vinayaka S H"
-                />
-                <span className="spa-field-hint">This name will appear on your profile everywhere</span>
+                <span className="spa-field-hint">
+                  Your 12-digit Aadhaar number issued by UIDAI
+                </span>
               </div>
             </div>
 
-            {/* (3) Upload Aadhar Card */}
+            {/* DigiLocker Verification Card */}
+            <div className="spa-digilocker-card">
+              <div className="spa-digilocker-header">
+                <div className="spa-digilocker-brand">
+                  <div className="spa-digilocker-icon">🏛️</div>
+                  <div>
+                    <div className="spa-digilocker-title">DigiLocker Verification</div>
+                    <div className="spa-digilocker-subtitle">Government of India — Secure Document Wallet</div>
+                  </div>
+                </div>
+                {student.isAadharVerified && (
+                  <span className="spa-dl-verified">✓ Verified</span>
+                )}
+              </div>
+
+              <p className="spa-digilocker-desc">
+                DigiLocker is India's official document wallet by the Ministry of Electronics &amp; IT.
+                Click the button below — you'll be securely redirected to DigiLocker to sign in and grant permission.
+                Your Aadhaar is then fetched automatically and stored securely.
+              </p>
+
+              <div className="spa-digilocker-steps">
+                <div className="spa-dl-step">
+                  <div className="spa-dl-step-num">1</div>
+                  <span>Click <strong>Verify with DigiLocker</strong> — you'll be redirected to the official Government portal</span>
+                </div>
+                <div className="spa-dl-step">
+                  <div className="spa-dl-step-num">2</div>
+                  <span>Sign in with your Aadhaar-linked mobile number and grant permission to share your Aadhaar</span>
+                </div>
+                <div className="spa-dl-step">
+                  <div className="spa-dl-step-num">3</div>
+                  <span>You're automatically returned here — your Aadhaar is saved and your profile is marked verified</span>
+                </div>
+              </div>
+
+              <div className="spa-digilocker-actions">
+                {student.isAadharVerified ? (
+                  <div className="spa-dl-verified-state">
+                    <span className="spa-dl-verified-icon">✓</span>
+                    <div>
+                      <div className="spa-dl-verified-title">Aadhaar Verified</div>
+                      <div className="spa-dl-verified-sub">Your identity has been confirmed via DigiLocker</div>
+                    </div>
+                  </div>
+                ) : (
+                  <>
+                    <button
+                      className="spa-dl-open-btn"
+                      onClick={handleDigiLockerVerify}
+                      disabled={digilockerLoading}
+                    >
+                      {digilockerLoading ? (
+                        <><span className="spa-btn-spinner spa-btn-spinner--sm" /> Connecting…</>
+                      ) : (
+                        <><span>🏛️</span> Verify with DigiLocker</>
+                      )}
+                    </button>
+                    <span className="spa-dl-note">
+                      You will be redirected to DigiLocker to grant permission — then returned here automatically
+                    </span>
+                  </>
+                )}
+              </div>
+            </div>
+
+            {/* Upload Aadhar Card */}
+            <div className="spa-upload-section-label">
+              Upload Aadhaar Card (from DigiLocker or physical scan)
+            </div>
             <DocUploadItem
-              label="Aadhar Card (Proof)"
+              label="Aadhaar Card Document"
               url={student.aadharCardUrl}
               loading={uploading.aadhar}
               onUpload={(e) => handleFileUpload(e, "aadhar")}
             />
+            {student.aadharCardUrl && !student.isAadharVerified && (
+              <p className="spa-verification-note">
+                📋 Document uploaded — admin will review and verify your Aadhaar within 24 hours
+              </p>
+            )}
           </div>
         </div>
 

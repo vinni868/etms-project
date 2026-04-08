@@ -132,6 +132,31 @@ public class CloudinaryService {
         }
     }
 
+    /**
+     * Upload raw bytes to Cloudinary — used by DigiLocker integration
+     * to store the fetched Aadhaar PDF without needing a MultipartFile.
+     */
+    public String uploadBytes(byte[] bytes, String fileName, String folder) throws IOException {
+        if (!isConfigured()) {
+            throw new RuntimeException("Cloudinary is not configured.");
+        }
+        String sanitizedName = sanitize(fileName);
+        String publicId = folder + "/" + UUID.randomUUID() + "_" + sanitizedName;
+
+        @SuppressWarnings("unchecked")
+        Map<String, Object> result = cloudinary.uploader().upload(
+            bytes,
+            ObjectUtils.asMap(
+                "public_id",     publicId,
+                "resource_type", "raw",
+                "overwrite",     false
+            )
+        );
+        String url = (String) result.get("secure_url");
+        System.out.println("CLOUDINARY: Uploaded bytes '" + fileName + "' → " + url);
+        return url;
+    }
+
     public boolean isConfigured() {
         return cloudName != null && !cloudName.isEmpty()
             && apiKey != null && !apiKey.isEmpty()
