@@ -1,7 +1,6 @@
 package com.lms.entity;
 
 import jakarta.persistence.*;
-import lombok.Data;
 import java.time.LocalDateTime;
 
 @Entity

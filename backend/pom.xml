@@ -120,6 +120,12 @@
 			<version>1.36.0</version>
 		</dependency>
 
+		<!-- Spring Cache - Required for @EnableCaching / @Cacheable / @CacheEvict -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-cache</artifactId>
+		</dependency>
+
 	</dependencies>
 
 	<dependencyManagement>

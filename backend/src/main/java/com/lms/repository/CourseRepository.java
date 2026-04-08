@@ -6,6 +6,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 import com.lms.entity.CourseMaster;
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface CourseRepository extends JpaRepository<CourseMaster, Long> {
@@ -21,5 +22,5 @@ public interface CourseRepository extends JpaRepository<CourseMaster, Long> {
            nativeQuery = true)
     List<CourseMaster> findByStudentId(@Param("studentId") Long studentId);
 
-    java.util.Optional<com.lms.entity.CourseMaster> findByCourseName(String courseName);
+    Optional<CourseMaster> findByCourseName(String courseName);
 }
