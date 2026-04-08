@@ -64,6 +64,7 @@ const NAV_CONFIG = {
         { to: "/superadmin/finance", icon: "💰", name: "Finance Ledger", desc: "Revenue and fee collection audits" },
         { to: "/superadmin/reviews", icon: "⭐", name: "Platform Reviews", desc: "Monitor user feedback" },
         { to: "/superadmin/attendance-report", icon: <FaClipboardList />, name: "Audit Log", desc: "Daily attendance consolidation" },
+        { to: "/superadmin/violations", icon: "⚠️", name: "Violations", desc: "Attendance violation records" },
         { to: "/superadmin/meetings", icon: "🤝", name: "Strategy Room", desc: "Executive session scheduler" },
       ]
     },
@@ -123,6 +124,7 @@ const NAV_CONFIG = {
         { to: "/admin/announcements", icon: "📢", name: "Bulletins", desc: "Publish general announcements" },
         { to: "/admin/notifications", icon: <FaBullhorn />, name: "Notifications Hub", desc: "Manage administrative alerts" },
         { to: "/admin/reviews", icon: "⭐", name: "User Reviews", desc: "Read platform feedback" },
+        { to: "/admin/violations", icon: "⚠️", name: "Violations", desc: "Attendance violation records" },
       ]
     }
   ],

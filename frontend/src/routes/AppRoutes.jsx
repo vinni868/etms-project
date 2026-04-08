@@ -82,6 +82,8 @@ import AdminLeaves from "../pages/admin/AdminLeaves";
 import PostJob from "../pages/admin/PostJob";
 import ManageJobs from "../pages/admin/ManageJobs";
 import NotificationsPage from "../pages/admin/NotificationsPage";
+import ViolationsPage from "../pages/admin/ViolationsPage";
+import SuperAdminViolationsPage from "../pages/superadmin/ViolationsPage";
 
 /* ================= MARKETER ================= */
 import MarketerDashboard from "../pages/marketer/MarketerDashboard";
@@ -192,6 +194,7 @@ export default function AppRoutes() {
         <Route path="notifications"     element={<NotificationsPage />} />
         <Route path="app-review"        element={<AppReviewPage />} />
         <Route path="reviews"           element={<AdminAppReviews />} />
+        <Route path="violations"        element={<SuperAdminViolationsPage />} />
       </Route>
 
       {/* ================= ADMIN ================= */}
@@ -234,6 +237,7 @@ export default function AppRoutes() {
         <Route path="job-applications"   element={<ManageJobs />} /> {/* Reusing ManageJobs since it has the modal built-in */}
         <Route path="company-partners"   element={<div style={{padding:'20px'}}><h3>Industry Partners</h3><p>Coming Soon</p></div>} />
         <Route path="placement-stats"    element={<div style={{padding:'20px'}}><h3>Placement CRM</h3><p>Coming Soon</p></div>} />
+        <Route path="violations"         element={<ViolationsPage />} />
       </Route>
 
 

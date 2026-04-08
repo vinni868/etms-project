@@ -2,14 +2,18 @@ package com.lms.service;
 
 import com.lms.dto.QrScanRequest;
 import com.lms.dto.QrScanResponse;
+import com.lms.entity.AttendanceViolation;
 import com.lms.entity.SystemSetting;
 import com.lms.entity.TimeTracking;
 import com.lms.entity.User;
+import com.lms.repository.AttendanceViolationRepository;
 import com.lms.repository.SystemSettingRepository;
 import com.lms.repository.TimeTrackingRepository;
 import com.lms.repository.UserRepository;
 import com.lms.util.HaversineUtil;
 import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -27,6 +31,7 @@ public class QrAttendanceService {
     private final SystemSettingRepository settingRepo;
     private final TimeTrackingRepository trackingRepo;
     private final UserRepository userRepo;
+    private final AttendanceViolationRepository violationRepo;
 
     // ─── QR Secret Management ──────────────────────────────────────────────
 
@@ -50,6 +55,7 @@ public class QrAttendanceService {
 
     // ─── Punch Settings ─────────────────────────────────────────────────────
 
+    @Cacheable("punchSettings")
     public Map<String, Object> getPunchSettings() {
         Map<String, Object> result = new HashMap<>();
         result.put("latitude",      parseDouble(getSetting("office_latitude", "0.0")));
@@ -60,6 +66,7 @@ public class QrAttendanceService {
     }
 
     @Transactional
+    @CacheEvict(value = "punchSettings", allEntries = true)
     public void savePunchSettings(Double latitude, Double longitude, Double radiusMeters, String lateThreshold) {
         saveSetting("office_latitude",      latitude != null      ? String.valueOf(latitude)      : "0.0");
         saveSetting("office_longitude",     longitude != null     ? String.valueOf(longitude)     : "0.0");
@@ -432,6 +439,12 @@ public class QrAttendanceService {
         record.setTotalMinutes((int) diffMinutes);
         trackingRepo.save(record);
 
+        // Record violation for geofence exit
+        if ("GEOFENCE_EXIT".equals(reason)) {
+            recordViolationIfNotDuplicate(userId, today, "GEOFENCE_EXIT",
+                    "Left institute premises without punching out. Auto-checked out by geofence.");
+        }
+
         long hours = diffMinutes / 60;
         long mins  = diffMinutes % 60;
         String duration = hours > 0 ? String.format("%dh %dm", hours, mins) : String.format("%dm", mins);
@@ -458,6 +471,28 @@ public class QrAttendanceService {
             long diffMinutes = java.time.Duration.between(session.getLoginTime(), endOfDay).toMinutes();
             session.setTotalMinutes((int) diffMinutes);
             trackingRepo.save(session);
+
+            // Record violation: forgot to punch out (system closed at midnight)
+            recordViolationIfNotDuplicate(session.getUserId(), date, "FORGOT_PUNCH_OUT",
+                    "Did not punch out before end of day. Session auto-closed at 23:59.");
+        }
+    }
+
+    // ─── Record violation safely (no duplicates) ───────────────────────────
+    private void recordViolationIfNotDuplicate(Long userId, LocalDate date, String type, String description) {
+        try {
+            long existing = violationRepo.countByUserIdAndViolationDateAndType(userId, date, type);
+            if (existing > 0) return; // already recorded
+
+            userRepo.findById(userId).ifPresent(user -> {
+                String roleName = user.getRole() != null ? user.getRole().getRoleName() : "UNKNOWN";
+                String portalId = user.getPortalId() != null ? user.getPortalId() : user.getStudentId();
+                AttendanceViolation v = new AttendanceViolation(
+                        userId, user.getName(), roleName, portalId, date, type, description);
+                violationRepo.save(v);
+            });
+        } catch (Exception ignored) {
+            // Violations are non-critical — never block the main punch flow
         }
     }
 
