@@ -242,15 +242,21 @@ function StudentProfile() {
   // ── DigiLocker OAuth helpers ─────────────────────────────────────────────
   const [digilockerLoading, setDigilockerLoading] = useState(false);
 
+  // ── Offline Aadhaar Verification state ───────────────────────────────────
+  const [offlineZip, setOfflineZip] = useState(null);
+  const [offlineZipName, setOfflineZipName] = useState("");
+  const [offlineShareCode, setOfflineShareCode] = useState("");
+  const [offlineVerifying, setOfflineVerifying] = useState(false);
+  const [offlineResult, setOfflineResult] = useState(null); // extracted data after verify
+  const offlineFileRef = useRef(null);
+
   // On mount: check if we're returning from a DigiLocker OAuth callback
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const dlResult = params.get("digilocker");
     if (dlResult === "success") {
       showToast("success", "Aadhaar verified via DigiLocker! ✅ Document saved automatically.");
-      // Remove the query param from URL without page reload
       window.history.replaceState({}, document.title, window.location.pathname);
-      // Re-fetch profile to get updated isAadharVerified and aadharCardUrl
       fetchProfile();
     } else if (dlResult === "error") {
       const reason = params.get("reason") || "Verification failed";
@@ -264,7 +270,6 @@ function StudentProfile() {
     try {
       const res = await api.get("/digilocker/auth-url");
       if (res.data?.authUrl) {
-        // Redirect browser to DigiLocker OAuth page
         window.location.href = res.data.authUrl;
       } else {
         showToast("error", "Could not get DigiLocker URL. Please try again.");
@@ -274,6 +279,52 @@ function StudentProfile() {
       showToast("error", msg);
     } finally {
       setDigilockerLoading(false);
+    }
+  };
+
+  const handleOfflineZipSelect = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    if (!file.name.toLowerCase().endsWith(".zip")) {
+      showToast("error", "Please select the ZIP file downloaded from UIDAI.");
+      return;
+    }
+    setOfflineZip(file);
+    setOfflineZipName(file.name);
+    setOfflineResult(null);
+  };
+
+  const handleOfflineVerify = async () => {
+    if (!offlineZip) { showToast("error", "Please select the Offline eKYC ZIP file."); return; }
+    if (!offlineShareCode.trim()) { showToast("error", "Please enter the share code you set during download."); return; }
+    setOfflineVerifying(true);
+    try {
+      const formData = new FormData();
+      formData.append("file", offlineZip);
+      formData.append("shareCode", offlineShareCode.trim().toUpperCase());
+      const res = await api.post("/student/verify-aadhaar-offline", formData, {
+        headers: { "Content-Type": "multipart/form-data" }
+      });
+      setOfflineResult(res.data);
+      if (res.data.verified) {
+        showToast("success", "Aadhaar verified successfully! ✅");
+        // Update local state immediately
+        setStudent(prev => ({
+          ...prev,
+          isAadharVerified: true,
+          aadharCardUrl: res.data.cloudinaryUrl || prev.aadharCardUrl,
+          aadharName: res.data.name || prev.aadharName,
+          name: res.data.name || prev.name,
+          aadhaarVerificationSource: "OFFLINE_XML"
+        }));
+      } else {
+        showToast("error", res.data.message || "Verification failed.");
+      }
+    } catch (err) {
+      const msg = err.response?.data?.error || "Verification failed — please try again.";
+      showToast("error", msg);
+    } finally {
+      setOfflineVerifying(false);
     }
   };
 
@@ -836,86 +887,209 @@ function StudentProfile() {
               </div>
             </div>
 
-            {/* DigiLocker Verification Card */}
-            <div className="spa-digilocker-card">
-              <div className="spa-digilocker-header">
-                <div className="spa-digilocker-brand">
-                  <div className="spa-digilocker-icon">🏛️</div>
-                  <div>
-                    <div className="spa-digilocker-title">DigiLocker Verification</div>
-                    <div className="spa-digilocker-subtitle">Government of India — Secure Document Wallet</div>
+            {/* ── Aadhaar Verification Methods Card ── */}
+            {student.isAadharVerified ? (
+              /* Already verified — show confirmed state */
+              <div className="spa-av-verified-banner">
+                <div className="spa-av-verified-icon">✓</div>
+                <div className="spa-av-verified-text">
+                  <div className="spa-av-verified-title">Aadhaar Verified</div>
+                  <div className="spa-av-verified-sub">
+                    {student.aadhaarVerificationSource === "OFFLINE_XML"
+                      ? "Verified via UIDAI Offline eKYC — cryptographically authenticated"
+                      : student.aadhaarVerificationSource === "DIGILOCKER_OAUTH"
+                        ? "Verified via DigiLocker OAuth — document fetched automatically"
+                        : "Identity verified and document on file"}
                   </div>
                 </div>
-                {student.isAadharVerified && (
-                  <span className="spa-dl-verified">✓ Verified</span>
+                {offlineResult?.maskedAadhaar && (
+                  <span className="spa-av-masked">{offlineResult.maskedAadhaar}</span>
                 )}
               </div>
-
-              <p className="spa-digilocker-desc">
-                DigiLocker is India's official document wallet by the Ministry of Electronics &amp; IT.
-                Click the button below — you'll be securely redirected to DigiLocker to sign in and grant permission.
-                Your Aadhaar is then fetched automatically and stored securely.
-              </p>
-
-              <div className="spa-digilocker-steps">
-                <div className="spa-dl-step">
-                  <div className="spa-dl-step-num">1</div>
-                  <span>Click <strong>Verify with DigiLocker</strong> — you'll be redirected to the official Government portal</span>
-                </div>
-                <div className="spa-dl-step">
-                  <div className="spa-dl-step-num">2</div>
-                  <span>Sign in with your Aadhaar-linked mobile number and grant permission to share your Aadhaar</span>
-                </div>
-                <div className="spa-dl-step">
-                  <div className="spa-dl-step-num">3</div>
-                  <span>You're automatically returned here — your Aadhaar is saved and your profile is marked verified</span>
-                </div>
-              </div>
-
-              <div className="spa-digilocker-actions">
-                {student.isAadharVerified ? (
-                  <div className="spa-dl-verified-state">
-                    <span className="spa-dl-verified-icon">✓</span>
-                    <div>
-                      <div className="spa-dl-verified-title">Aadhaar Verified</div>
-                      <div className="spa-dl-verified-sub">Your identity has been confirmed via DigiLocker</div>
+            ) : (
+              <div className="spa-av-card">
+                {/* ── Method 1: Offline XML (RECOMMENDED) ── */}
+                <div className="spa-av-method spa-av-method--primary">
+                  <div className="spa-av-method-head">
+                    <div className="spa-av-method-badge spa-av-method-badge--recommended">
+                      ✅ Recommended — Works Now
+                    </div>
+                    <div className="spa-av-method-title">UIDAI Offline Aadhaar Verification</div>
+                    <div className="spa-av-method-sub">
+                      Download your signed Aadhaar XML from UIDAI &amp; verify here —
+                      no DigiLocker registration needed
                     </div>
                   </div>
-                ) : (
-                  <>
+
+                  <div className="spa-av-steps">
+                    <div className="spa-av-step">
+                      <div className="spa-av-step-num">1</div>
+                      <div>
+                        <strong>Download your Offline eKYC ZIP</strong> from UIDAI
+                        <a
+                          href="https://resident.uidai.gov.in/offline-kyc"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="spa-av-link"
+                        >
+                          resident.uidai.gov.in/offline-kyc ↗
+                        </a>
+                        <span className="spa-av-step-hint">
+                          Enter Aadhaar number → OTP → set a 4-character share code → download ZIP
+                        </span>
+                      </div>
+                    </div>
+                    <div className="spa-av-step">
+                      <div className="spa-av-step-num">2</div>
+                      <div>
+                        <strong>Upload the ZIP file</strong> and enter your share code below
+                      </div>
+                    </div>
+                    <div className="spa-av-step">
+                      <div className="spa-av-step-num">3</div>
+                      <div>
+                        <strong>Click Verify</strong> — your name, DOB, and gender are extracted &amp; saved automatically
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Upload + Share Code form */}
+                  <div className="spa-av-form">
+                    <div className="spa-av-upload-row">
+                      <button
+                        className="spa-av-zip-btn"
+                        type="button"
+                        onClick={() => offlineFileRef.current?.click()}
+                      >
+                        📂 {offlineZipName || "Select Offline eKYC ZIP"}
+                      </button>
+                      <input
+                        ref={offlineFileRef}
+                        type="file"
+                        accept=".zip"
+                        hidden
+                        onChange={handleOfflineZipSelect}
+                      />
+                      {offlineZip && (
+                        <span className="spa-av-file-ok">✓ {offlineZipName}</span>
+                      )}
+                    </div>
+
+                    <div className="spa-av-sharecode-row">
+                      <div className="spa-field">
+                        <label>SHARE CODE</label>
+                        <input
+                          type="text"
+                          value={offlineShareCode}
+                          onChange={(e) => setOfflineShareCode(e.target.value.toUpperCase().slice(0, 8))}
+                          placeholder="e.g. AB12"
+                          maxLength="8"
+                          className="spa-av-sharecode-input"
+                        />
+                        <span className="spa-field-hint">
+                          The 4–8 character code you set when downloading from UIDAI
+                        </span>
+                      </div>
+                    </div>
+
                     <button
-                      className="spa-dl-open-btn"
-                      onClick={handleDigiLockerVerify}
-                      disabled={digilockerLoading}
+                      className="spa-av-verify-btn"
+                      onClick={handleOfflineVerify}
+                      disabled={offlineVerifying || !offlineZip}
                     >
-                      {digilockerLoading ? (
-                        <><span className="spa-btn-spinner spa-btn-spinner--sm" /> Connecting…</>
+                      {offlineVerifying ? (
+                        <><span className="spa-btn-spinner spa-btn-spinner--sm" /> Verifying…</>
                       ) : (
-                        <><span>🏛️</span> Verify with DigiLocker</>
+                        "🔐 Verify Aadhaar"
                       )}
                     </button>
-                    <span className="spa-dl-note">
-                      You will be redirected to DigiLocker to grant permission — then returned here automatically
-                    </span>
-                  </>
-                )}
-              </div>
-            </div>
+                  </div>
 
-            {/* Upload Aadhar Card */}
-            <div className="spa-upload-section-label">
-              Upload Aadhaar Card (from DigiLocker or physical scan)
-            </div>
-            <DocUploadItem
-              label="Aadhaar Card Document"
-              url={student.aadharCardUrl}
-              loading={uploading.aadhar}
-              onUpload={(e) => handleFileUpload(e, "aadhar")}
-            />
-            {student.aadharCardUrl && !student.isAadharVerified && (
-              <p className="spa-verification-note">
-                📋 Document uploaded — admin will review and verify your Aadhaar within 24 hours
-              </p>
+                  {/* Extracted data result */}
+                  {offlineResult && (
+                    <div className={`spa-av-result ${offlineResult.verified ? "spa-av-result--ok" : "spa-av-result--fail"}`}>
+                      {offlineResult.verified ? (
+                        <>
+                          <div className="spa-av-result-title">
+                            ✅ {offlineResult.verificationLevel === "CRYPTOGRAPHIC"
+                              ? "Cryptographically Verified by UIDAI"
+                              : "Document Verified — Aadhaar Structure Confirmed"}
+                          </div>
+                          <div className="spa-av-result-grid">
+                            {offlineResult.name && (
+                              <div className="spa-av-result-item">
+                                <span className="spa-av-result-label">NAME</span>
+                                <span className="spa-av-result-value">{offlineResult.name}</span>
+                              </div>
+                            )}
+                            {offlineResult.dob && (
+                              <div className="spa-av-result-item">
+                                <span className="spa-av-result-label">DATE OF BIRTH</span>
+                                <span className="spa-av-result-value">{offlineResult.dob}</span>
+                              </div>
+                            )}
+                            {offlineResult.gender && (
+                              <div className="spa-av-result-item">
+                                <span className="spa-av-result-label">GENDER</span>
+                                <span className="spa-av-result-value">{offlineResult.gender}</span>
+                              </div>
+                            )}
+                            {offlineResult.maskedAadhaar && (
+                              <div className="spa-av-result-item">
+                                <span className="spa-av-result-label">AADHAAR</span>
+                                <span className="spa-av-result-value">{offlineResult.maskedAadhaar}</span>
+                              </div>
+                            )}
+                          </div>
+                        </>
+                      ) : (
+                        <div className="spa-av-result-title">❌ {offlineResult.message}</div>
+                      )}
+                    </div>
+                  )}
+                </div>
+
+                {/* ── Method 2: DigiLocker OAuth (Future) ── */}
+                <div className="spa-av-method spa-av-method--secondary">
+                  <div className="spa-av-method-badge spa-av-method-badge--future">
+                    🔜 After DigiLocker Partner Registration
+                  </div>
+                  <div className="spa-av-method-title">DigiLocker OAuth Verification</div>
+                  <div className="spa-av-method-sub">
+                    One-click verification — authorise once and your Aadhaar is fetched automatically.
+                    Requires institution registration at DigiLocker API portal.
+                  </div>
+                  <button
+                    className="spa-dl-open-btn spa-dl-open-btn--muted"
+                    onClick={handleDigiLockerVerify}
+                    disabled={digilockerLoading}
+                  >
+                    {digilockerLoading
+                      ? <><span className="spa-btn-spinner spa-btn-spinner--sm" /> Connecting…</>
+                      : <><span>🏛️</span> Verify with DigiLocker</>}
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* Manual upload fallback */}
+            {!student.isAadharVerified && (
+              <>
+                <div className="spa-upload-section-label" style={{ marginTop: "20px" }}>
+                  Or manually upload Aadhaar card (admin will review)
+                </div>
+                <DocUploadItem
+                  label="Aadhaar Card Document"
+                  url={student.aadharCardUrl}
+                  loading={uploading.aadhar}
+                  onUpload={(e) => handleFileUpload(e, "aadhar")}
+                />
+                {student.aadharCardUrl && (
+                  <p className="spa-verification-note">
+                    📋 Document uploaded — admin will review and verify your Aadhaar within 24 hours
+                  </p>
+                )}
+              </>
             )}
           </div>
         </div>

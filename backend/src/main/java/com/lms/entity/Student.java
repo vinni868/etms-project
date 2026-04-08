@@ -148,4 +148,7 @@ public class Student {
 
     @Column(name = "digilocker_sub", length = 100)
     private String digilockerSub; // DigiLocker unique user identifier (sub claim)
+
+    @Column(name = "aadhaar_verification_source", length = 30)
+    private String aadhaarVerificationSource; // OFFLINE_XML | DIGILOCKER_OAUTH | ADMIN_MANUAL
 }
