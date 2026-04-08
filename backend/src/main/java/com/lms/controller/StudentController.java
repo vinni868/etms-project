@@ -543,6 +543,7 @@ public class StudentController {
             profile.setCurrentlyStudying(updatedData.getCurrentlyStudying());
             profile.setBoard10th(updatedData.getBoard10th());
             profile.setBoard12th(updatedData.getBoard12th());
+            profile.setCountry(updatedData.getCountry());
 
             // PROTECTED: isAadharVerified can ONLY be set via DigiLocker callback
             // — never overwrite it from a regular profile save.

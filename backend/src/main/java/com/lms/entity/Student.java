@@ -112,6 +112,7 @@ public class Student {
     private String city;
     private String state;
     private String pincode;
+    private String country;
 
     // ── Identity Verification ──────────────────────────────────────────────
     @Column(name = "aadhar_number", length = 12)

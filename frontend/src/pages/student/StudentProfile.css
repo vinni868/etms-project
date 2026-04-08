@@ -1379,6 +1379,114 @@
 .sp2-footer-note { /* legacy */ }
 
 /* ══════════════════════════════════════════════════════════════
+   SEARCHABLE SELECT — spa-ss-* (City / State / Country dropdowns)
+   ══════════════════════════════════════════════════════════════ */
+
+.spa-ss-wrap {
+  position: relative;
+}
+
+.spa-ss-input-row {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+/* The text input inherits spa-field input styles */
+.spa-ss-input-row input {
+  width: 100%;
+  padding-right: 32px; /* room for clear button */
+}
+
+/* Clear (✕) button inside input */
+.spa-ss-clear {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #94a3b8;
+  font-size: 0.75rem;
+  line-height: 1;
+  padding: 2px 4px;
+  border-radius: 4px;
+  transition: color 0.15s, background 0.15s;
+}
+
+.spa-ss-clear:hover {
+  color: #ef4444;
+  background: #fee2e2;
+}
+
+/* Dropdown list */
+.spa-ss-dropdown {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  z-index: 200;
+  background: #ffffff;
+  border: 1.5px solid #bfdbfe;
+  border-radius: 10px;
+  box-shadow: 0 8px 24px rgba(0, 94, 164, 0.12), 0 2px 8px rgba(0, 0, 0, 0.06);
+  overflow: hidden;
+  animation: spa-ss-drop 0.15s ease;
+  max-height: 280px;
+  overflow-y: auto;
+}
+
+@keyframes spa-ss-drop {
+  from { opacity: 0; transform: translateY(-4px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+/* Individual option */
+.spa-ss-option {
+  padding: 10px 14px;
+  font-size: 0.855rem;
+  color: #1e293b;
+  cursor: pointer;
+  transition: background 0.12s;
+  border-bottom: 1px solid #f1f5f9;
+  font-family: 'Inter', sans-serif;
+}
+
+.spa-ss-option:last-child {
+  border-bottom: none;
+}
+
+.spa-ss-option:hover {
+  background: #eff6ff;
+  color: #005ea4;
+}
+
+.spa-ss-option--active {
+  background: #dbeafe;
+  color: #005ea4;
+  font-weight: 600;
+}
+
+/* Scrollbar inside dropdown */
+.spa-ss-dropdown::-webkit-scrollbar {
+  width: 5px;
+}
+
+.spa-ss-dropdown::-webkit-scrollbar-track {
+  background: #f8f9fb;
+}
+
+.spa-ss-dropdown::-webkit-scrollbar-thumb {
+  background: rgba(0, 94, 164, 0.2);
+  border-radius: 99px;
+}
+
+.spa-ss-dropdown::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 94, 164, 0.4);
+}
+
+/* ══════════════════════════════════════════════════════════════
    IDENTITY VERIFICATION — spa-id-* design system
    Covers: Offline eKYC flow, guide steps, upload zone, result
    ══════════════════════════════════════════════════════════════ */

@@ -71,14 +71,25 @@ function StudentProfile() {
     marks10th: "", marks12th: "", yearOfPassing: "", aggregatePercentage: "",
     aadharNumber: "", aadharName: "", aadharCardUrl: "", isAadharVerified: false,
     bankAccountHolder: "", bankAccountNumber: "", bankIfscCode: "", bankName: "", bankAccountType: "", bankPassbookUrl: "",
-    address: "", city: "", state: "", pincode: "",
+    address: "", city: "", state: "", pincode: "", country: "India",
     resumeUrl: "", marks10thUrl: "", marks12thUrl: "", graduationDocUrl: "",
     skills: "", bio: "", studentId: ""
   });
 
+  // ── Master data from DB ───────────────────────────────────────────────────
+  const [masterCities, setMasterCities] = useState([]);
+  const [masterStates, setMasterStates] = useState([]);
+  const [masterCountries, setMasterCountries] = useState([]);
+
   useEffect(() => {
     if (!userEmail) { setLoading(false); return; }
     fetchProfile();
+    // Fetch master data (cities, states, countries) once
+    api.get("/public/master/all").then(res => {
+      setMasterCities(res.data.cities || []);
+      setMasterStates(res.data.states || []);
+      setMasterCountries(res.data.countries || []);
+    }).catch(() => {}); // non-critical — silently ignore
   }, [userEmail]);
 
   const fetchProfile = async () => {
@@ -1183,6 +1194,7 @@ function StudentProfile() {
             </div>
           </div>
           <div className="spa-section-body">
+            {/* Street address — full width */}
             <div className="spa-fields-grid spa-fields-grid--1">
               <div className="spa-field">
                 <label>STREET ADDRESS</label>
@@ -1191,41 +1203,55 @@ function StudentProfile() {
                   name="address"
                   value={student.address}
                   onChange={handleChange}
-                  placeholder="House no, building, street..."
+                  placeholder="House no, building, street, area..."
                 />
               </div>
             </div>
+
+            {/* City + State + Pincode */}
             <div className="spa-fields-grid spa-fields-grid--3">
-              <div className="spa-field">
-                <label>CITY</label>
-                <input
-                  type="text"
-                  name="city"
-                  value={student.city}
-                  onChange={handleChange}
-                  placeholder="City"
-                />
-              </div>
-              <div className="spa-field">
-                <label>STATE</label>
-                <input
-                  type="text"
-                  name="state"
-                  value={student.state}
-                  onChange={handleChange}
-                  placeholder="State"
-                />
-              </div>
+              <SearchableSelect
+                label="CITY"
+                value={student.city}
+                options={masterCities}
+                placeholder="Type to search city..."
+                onSelect={(val) => setStudent(prev => ({ ...prev, city: val }))}
+                onChange={(val) => setStudent(prev => ({ ...prev, city: val }))}
+              />
+              <SearchableSelect
+                label="STATE"
+                value={student.state}
+                options={masterStates}
+                placeholder="Type to search state..."
+                onSelect={(val) => setStudent(prev => ({ ...prev, state: val }))}
+                onChange={(val) => setStudent(prev => ({ ...prev, state: val }))}
+              />
               <div className="spa-field">
                 <label>PINCODE</label>
                 <input
                   type="text"
                   name="pincode"
                   value={student.pincode}
-                  onChange={handleChange}
+                  onChange={(e) => setStudent(prev => ({ ...prev, pincode: e.target.value.replace(/\D/g, "").slice(0, 6) }))}
                   placeholder="6-digit pincode"
+                  maxLength="6"
                 />
+                {student.pincode && student.pincode.length < 6 && (
+                  <span className="spa-field-error">6 digits required</span>
+                )}
               </div>
+            </div>
+
+            {/* Country — full width */}
+            <div className="spa-fields-grid spa-fields-grid--1">
+              <SearchableSelect
+                label="COUNTRY"
+                value={student.country}
+                options={masterCountries}
+                placeholder="Type to search country..."
+                onSelect={(val) => setStudent(prev => ({ ...prev, country: val }))}
+                onChange={(val) => setStudent(prev => ({ ...prev, country: val }))}
+              />
             </div>
           </div>
         </div>
@@ -1310,6 +1336,83 @@ function DocUploadItem({ label, url, loading, onUpload }) {
           </label>
         )}
       </div>
+    </div>
+  );
+}
+
+/**
+ * SearchableSelect — reusable searchable dropdown for City / State / Country.
+ * - Typing filters the list from master DB
+ * - Click an option to select it (fills the field)
+ * - Typing custom text is allowed (stored as-is if not in list)
+ * - Clicking outside closes the dropdown
+ */
+function SearchableSelect({ label, value, options, placeholder, onSelect, onChange }) {
+  const [query, setQuery] = useState(value || "");
+  const [open, setOpen] = useState(false);
+  const ref = useRef(null);
+
+  // Keep query in sync when value changes from parent (e.g. profile load)
+  useEffect(() => { setQuery(value || ""); }, [value]);
+
+  // Close on outside click
+  useEffect(() => {
+    const handler = (e) => { if (ref.current && !ref.current.contains(e.target)) setOpen(false); };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
+
+  const filtered = query.length === 0
+    ? []
+    : options.filter(o => o.toLowerCase().includes(query.toLowerCase())).slice(0, 8);
+
+  const handleInput = (e) => {
+    const val = e.target.value;
+    setQuery(val);
+    setOpen(true);
+    onChange(val); // allow free-text
+  };
+
+  const handleSelect = (opt) => {
+    setQuery(opt);
+    setOpen(false);
+    onSelect(opt);
+  };
+
+  return (
+    <div className="spa-field spa-ss-wrap" ref={ref}>
+      <label>{label}</label>
+      <div className="spa-ss-input-row">
+        <input
+          type="text"
+          value={query}
+          onChange={handleInput}
+          onFocus={() => query.length > 0 && setOpen(true)}
+          placeholder={placeholder}
+          autoComplete="off"
+        />
+        {query && (
+          <button
+            className="spa-ss-clear"
+            type="button"
+            onClick={() => { setQuery(""); setOpen(false); onSelect(""); }}
+            title="Clear"
+          >✕</button>
+        )}
+      </div>
+      {open && filtered.length > 0 && (
+        <div className="spa-ss-dropdown">
+          {filtered.map(opt => (
+            <div
+              key={opt}
+              className={`spa-ss-option ${opt === value ? "spa-ss-option--active" : ""}`}
+              onMouseDown={() => handleSelect(opt)}
+            >
+              {opt}
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
