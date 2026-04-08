@@ -945,21 +945,6 @@
 @media (prefers-color-scheme: dark) {
   /* Colors can be adjusted for dark mode here */
 }
-    right: 0;
-    background: rgba(0,0,0,0.5);
-    color: #fff;
-    font-size: 12px;
-    padding: 4px;
-    text-align: center;
-    cursor: pointer;
-    backdrop-filter: blur(4px);
-    transition: opacity 0.3s;
-    opacity: 0;
-}
-
-.sp-avatar-main:hover .sp-avatar-edit {
-    opacity: 1;
-}
 
 .premium-text-gradient {
     font-size: 1.8rem;
