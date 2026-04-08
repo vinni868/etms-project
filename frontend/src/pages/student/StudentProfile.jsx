@@ -83,7 +83,16 @@ function StudentProfile() {
   const fetchProfile = async () => {
     try {
       const res = await api.get(`/student/profile/${userEmail}`);
-      if (res.data) setStudent(res.data);
+      if (res.data) {
+        // Merge with defaults — never overwrite empty-string defaults with null from backend
+        setStudent(prev => {
+          const updated = { ...prev };
+          Object.entries(res.data).forEach(([k, v]) => {
+            if (v !== null && v !== undefined) updated[k] = v;
+          });
+          return updated;
+        });
+      }
     } catch (err) {
       console.error("Error fetching profile:", err);
       showToast("error", "Failed to load profile data.");
@@ -195,16 +204,20 @@ function StudentProfile() {
   };
 
   const handleSave = async () => {
-    // Validation
+    // Validation — only block if a value was provided but is incomplete
     if (!student.name?.trim()) { showToast("error", "Name is required"); return; }
-    if (student.phone?.length !== 10) { showToast("error", "Phone must be 10 digits"); return; }
+    if (student.phone && student.phone.length !== 10) { showToast("error", "Phone must be 10 digits"); return; }
     if (!student.gender) { showToast("error", "Gender is required"); return; }
-    if (!student.fatherName?.trim() || !student.fatherPhone?.length === 10) { showToast("error", "Father details are required"); return; }
-    if (!student.motherName?.trim() || !student.motherPhone?.length === 10) { showToast("error", "Mother details are required"); return; }
-    if (student.hasGuardian && (!student.guardianName?.trim() || !student.guardianPhone?.length === 10)) { showToast("error", "Guardian details are required"); return; }
+    if (!student.fatherName?.trim()) { showToast("error", "Father name is required"); return; }
+    if (student.fatherPhone && student.fatherPhone.length !== 10) { showToast("error", "Father phone must be 10 digits"); return; }
+    if (!student.motherName?.trim()) { showToast("error", "Mother name is required"); return; }
+    if (student.motherPhone && student.motherPhone.length !== 10) { showToast("error", "Mother phone must be 10 digits"); return; }
+    if (student.hasGuardian && !student.guardianName?.trim()) { showToast("error", "Guardian name is required"); return; }
+    if (student.hasGuardian && student.guardianPhone && student.guardianPhone.length !== 10) { showToast("error", "Guardian phone must be 10 digits"); return; }
     if (student.currentlyStudying === null) { showToast("error", "Please select education status"); return; }
-    if (student.aadharNumber?.length !== 12) { showToast("error", "Aadhar number must be 12 digits"); return; }
-    if (!student.bankAccountNumber?.trim()) { showToast("error", "Bank account number is required"); return; }
+    // Aadhar & bank: only validate format if user has started filling them in
+    if (student.aadharNumber && student.aadharNumber.length !== 12) { showToast("error", "Aadhar number must be 12 digits"); return; }
+    if (student.bankAccountNumber && !student.bankAccountNumber.trim()) { showToast("error", "Bank account number cannot be blank"); return; }
 
     setSaving(true);
     try {
