@@ -25,7 +25,10 @@ public class SecurityConfig {
     @Autowired
     private CustomUserDetailsService userDetailsService;
 
-    @org.springframework.beans.factory.annotation.Value("${ALLOWED_ORIGINS:http://localhost:5173,http://localhost:3000}")
+    // Set ALLOWED_ORIGINS in Render environment variables.
+    // Example: https://etms-project-seven.vercel.app,http://localhost:5173
+    @org.springframework.beans.factory.annotation.Value(
+        "${ALLOWED_ORIGINS:http://localhost:5173,http://localhost:3000,https://etms-project-seven.vercel.app}")
     private String allowedOrigins;
 
     @Bean
@@ -64,18 +67,30 @@ public class SecurityConfig {
 
     @Bean
     public org.springframework.web.cors.CorsConfigurationSource corsConfigurationSource() {
-        System.out.println("CORS_CONFIG: Initializing CorsConfigurationSource [v5 - Specific Origin]...");
-        org.springframework.web.cors.CorsConfiguration configuration = new org.springframework.web.cors.CorsConfiguration();
-        
-        // Split allowed origins into a list
-        java.util.List<String> origins = java.util.Arrays.asList(allowedOrigins.split(","));
-        configuration.setAllowedOrigins(origins); 
-        configuration.setAllowedMethods(java.util.List.of("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
-        configuration.setAllowedHeaders(java.util.List.of("Authorization", "Cache-Control", "Content-Type"));
-        configuration.setExposedHeaders(java.util.List.of("Authorization"));
-        configuration.setAllowCredentials(true); 
-        
-        org.springframework.web.cors.UrlBasedCorsConfigurationSource source = new org.springframework.web.cors.UrlBasedCorsConfigurationSource();
+        org.springframework.web.cors.CorsConfiguration configuration =
+            new org.springframework.web.cors.CorsConfiguration();
+
+        // Trim each origin and add it — avoids "no match" from accidental spaces in env var
+        java.util.List<String> origins = java.util.Arrays.stream(allowedOrigins.split(","))
+            .map(String::trim)
+            .filter(s -> !s.isEmpty())
+            .collect(java.util.stream.Collectors.toList());
+
+        System.out.println("CORS_CONFIG: Allowed origins → " + origins);
+
+        // setAllowedOriginPatterns supports wildcards; also works with exact URLs
+        configuration.setAllowedOriginPatterns(origins);
+        configuration.setAllowedMethods(java.util.List.of(
+            "GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
+        // Allow all headers — needed for Authorization, Content-Type, multipart uploads, etc.
+        configuration.setAllowedHeaders(java.util.List.of("*"));
+        configuration.setExposedHeaders(java.util.List.of("Authorization", "Content-Disposition"));
+        configuration.setAllowCredentials(true);
+        // Cache preflight for 1 hour to reduce OPTIONS round-trips
+        configuration.setMaxAge(3600L);
+
+        org.springframework.web.cors.UrlBasedCorsConfigurationSource source =
+            new org.springframework.web.cors.UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", configuration);
         return source;
     }
