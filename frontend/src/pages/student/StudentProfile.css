@@ -1379,7 +1379,567 @@
 .sp2-footer-note { /* legacy */ }
 
 /* ══════════════════════════════════════════════════════════════
-   OFFLINE AADHAAR VERIFICATION — spa-av-* design system
+   IDENTITY VERIFICATION — spa-id-* design system
+   Covers: Offline eKYC flow, guide steps, upload zone, result
+   ══════════════════════════════════════════════════════════════ */
+
+/* ── Already-Verified State ─────────────────────────────────── */
+.spa-id-verified-wrap {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  margin-top: 20px;
+  padding: 20px;
+  background: linear-gradient(135deg, #ecfdf5 0%, #f0fdf4 100%);
+  border: 2px solid #6ee7b7;
+  border-radius: 16px;
+}
+
+.spa-id-verified-check {
+  width: 48px;
+  height: 48px;
+  background: linear-gradient(135deg, #10b981, #059669);
+  color: #fff;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.25rem;
+  font-weight: 800;
+  flex-shrink: 0;
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.35);
+}
+
+.spa-id-verified-body { flex: 1; }
+
+.spa-id-verified-title {
+  font-family: 'Manrope', sans-serif;
+  font-weight: 800;
+  font-size: 1rem;
+  color: #065f46;
+  margin-bottom: 4px;
+}
+
+.spa-id-verified-sub {
+  font-size: 0.8rem;
+  color: #047857;
+  line-height: 1.5;
+  margin-bottom: 12px;
+}
+
+.spa-id-verified-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.spa-id-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 12px;
+  background: rgba(16, 185, 129, 0.12);
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  border-radius: 99px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #065f46;
+}
+
+/* ── Full flow wrapper ─────────────────────────────────────── */
+.spa-id-flow {
+  margin-top: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* ── Guide card ──────────────────────────────────────────────── */
+.spa-id-guide {
+  background: linear-gradient(135deg, #eff6ff 0%, #f8faff 100%);
+  border: 1.5px solid #bfdbfe;
+  border-radius: 16px;
+  overflow: hidden;
+  position: relative;
+}
+
+.spa-id-guide::before {
+  content: "";
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, #005ea4 0%, #38bdf8 50%, #005ea4 100%);
+}
+
+.spa-id-guide-header {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 18px 20px 16px;
+  border-bottom: 1px solid #e0eeff;
+  flex-wrap: wrap;
+}
+
+.spa-id-guide-icon {
+  width: 44px;
+  height: 44px;
+  background: linear-gradient(135deg, #005ea4, #0077ce);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.3rem;
+  flex-shrink: 0;
+  box-shadow: 0 3px 10px rgba(0, 94, 164, 0.25);
+}
+
+.spa-id-guide-title {
+  font-family: 'Manrope', sans-serif;
+  font-weight: 800;
+  font-size: 0.95rem;
+  color: #1e293b;
+}
+
+.spa-id-guide-sub {
+  font-size: 0.78rem;
+  color: #64748b;
+  margin-top: 2px;
+}
+
+.spa-id-uidai-btn {
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 9px 18px;
+  background: linear-gradient(135deg, #005ea4, #0077ce);
+  color: #fff;
+  text-decoration: none;
+  border-radius: 8px;
+  font-family: 'Manrope', sans-serif;
+  font-size: 0.82rem;
+  font-weight: 700;
+  white-space: nowrap;
+  box-shadow: 0 2px 8px rgba(0, 94, 164, 0.3);
+  transition: opacity 0.2s, transform 0.15s;
+}
+
+.spa-id-uidai-btn:hover {
+  opacity: 0.9;
+  transform: translateY(-1px);
+}
+
+/* ── Guide numbered steps ───────────────────────────────────── */
+.spa-id-guide-steps {
+  padding: 16px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.spa-id-guide-step {
+  display: flex;
+  gap: 14px;
+  padding: 14px 0;
+  border-bottom: 1px solid #e8f0fe;
+  position: relative;
+}
+
+.spa-id-guide-step:last-child {
+  border-bottom: none;
+  padding-bottom: 4px;
+}
+
+/* Connecting line between step numbers */
+.spa-id-guide-step:not(:last-child) .spa-id-gs-num::after {
+  content: "";
+  position: absolute;
+  left: 30px;
+  top: 46px;
+  bottom: 0;
+  width: 2px;
+  background: linear-gradient(to bottom, #bfdbfe, transparent);
+}
+
+.spa-id-gs-num {
+  width: 28px;
+  height: 28px;
+  background: #005ea4;
+  color: #fff;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
+  font-weight: 800;
+  flex-shrink: 0;
+  margin-top: 1px;
+  box-shadow: 0 2px 6px rgba(0, 94, 164, 0.3);
+  position: relative;
+  z-index: 1;
+}
+
+.spa-id-gs-body { flex: 1; }
+
+.spa-id-gs-title {
+  font-family: 'Manrope', sans-serif;
+  font-weight: 700;
+  font-size: 0.88rem;
+  color: #1e293b;
+  margin-bottom: 5px;
+}
+
+.spa-id-gs-desc {
+  font-size: 0.8rem;
+  color: #475569;
+  line-height: 1.6;
+}
+
+.spa-id-gs-url {
+  font-family: 'Inter', monospace;
+  font-size: 0.76rem;
+  color: #005ea4;
+  font-weight: 600;
+  background: rgba(0, 94, 164, 0.08);
+  padding: 1px 6px;
+  border-radius: 4px;
+  margin-left: 4px;
+}
+
+.spa-id-gs-warning {
+  display: block;
+  margin-top: 6px;
+  font-size: 0.76rem;
+  color: #b45309;
+  background: #fffbeb;
+  border: 1px solid #fde68a;
+  border-radius: 6px;
+  padding: 5px 10px;
+  font-weight: 600;
+}
+
+/* ── Upload Card ─────────────────────────────────────────────── */
+.spa-id-upload-card {
+  background: #ffffff;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 16px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
+}
+
+.spa-id-upload-title {
+  font-family: 'Manrope', sans-serif;
+  font-weight: 800;
+  font-size: 0.95rem;
+  color: #1e293b;
+}
+
+/* Drop zone */
+.spa-id-dropzone {
+  border: 2px dashed #93c5fd;
+  border-radius: 12px;
+  background: #f8fbff;
+  min-height: 90px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background 0.2s, border-color 0.2s;
+  padding: 16px;
+}
+
+.spa-id-dropzone:hover {
+  background: #eff6ff;
+  border-color: #3b82f6;
+}
+
+.spa-id-dropzone--filled {
+  background: #f0fdf4;
+  border-color: #6ee7b7;
+  border-style: solid;
+}
+
+.spa-id-dropzone--filled:hover {
+  background: #ecfdf5;
+  border-color: #34d399;
+}
+
+.spa-id-dz-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  text-align: center;
+}
+
+.spa-id-dz-icon {
+  font-size: 2rem;
+  line-height: 1;
+}
+
+.spa-id-dz-label {
+  font-family: 'Manrope', sans-serif;
+  font-weight: 700;
+  font-size: 0.88rem;
+  color: #005ea4;
+}
+
+.spa-id-dz-hint {
+  font-size: 0.75rem;
+  color: #64748b;
+}
+
+.spa-id-dz-filled {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+}
+
+.spa-id-dz-file-icon {
+  font-size: 2rem;
+  flex-shrink: 0;
+}
+
+.spa-id-dz-file-info { flex: 1; }
+
+.spa-id-dz-filename {
+  font-family: 'Manrope', sans-serif;
+  font-weight: 700;
+  font-size: 0.88rem;
+  color: #1e293b;
+  word-break: break-all;
+}
+
+.spa-id-dz-replace {
+  font-size: 0.73rem;
+  color: #64748b;
+  margin-top: 2px;
+}
+
+.spa-id-dz-ok {
+  width: 32px;
+  height: 32px;
+  background: #10b981;
+  color: #fff;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  font-size: 0.9rem;
+  flex-shrink: 0;
+}
+
+/* Share Code + Verify row */
+.spa-id-bottom-row {
+  display: flex;
+  align-items: flex-end;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+.spa-id-sc-field {
+  flex: 0 0 180px;
+}
+
+.spa-id-verify-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 13px 28px;
+  background: linear-gradient(135deg, #005ea4, #0077ce);
+  color: #fff;
+  border: none;
+  border-radius: 10px;
+  font-family: 'Manrope', sans-serif;
+  font-size: 0.9rem;
+  font-weight: 800;
+  cursor: pointer;
+  transition: opacity 0.2s, transform 0.15s, box-shadow 0.2s;
+  box-shadow: 0 3px 12px rgba(0, 94, 164, 0.3);
+  white-space: nowrap;
+  align-self: flex-end;
+  margin-bottom: 1px;
+  letter-spacing: 0.01em;
+}
+
+.spa-id-verify-btn:hover:not(:disabled) {
+  opacity: 0.9;
+  transform: translateY(-1px);
+  box-shadow: 0 5px 16px rgba(0, 94, 164, 0.35);
+}
+
+.spa-id-verify-btn:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.spa-id-verify-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+/* ── Result card ────────────────────────────────────────────── */
+.spa-id-result {
+  border-radius: 12px;
+  padding: 16px;
+  animation: spa-id-pop 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+@keyframes spa-id-pop {
+  from { opacity: 0; transform: scale(0.96) translateY(6px); }
+  to   { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+.spa-id-result--ok {
+  background: #f0fdf4;
+  border: 1.5px solid #86efac;
+}
+
+.spa-id-result--fail {
+  background: #fef2f2;
+  border: 1.5px solid #fca5a5;
+}
+
+.spa-id-result-head {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.spa-id-result-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  font-size: 1rem;
+  flex-shrink: 0;
+}
+
+.spa-id-result-icon--ok { background: #10b981; color: #fff; }
+.spa-id-result-icon--fail { background: #ef4444; color: #fff; }
+
+.spa-id-result-title {
+  font-family: 'Manrope', sans-serif;
+  font-weight: 800;
+  font-size: 0.92rem;
+  color: #15803d;
+  margin-bottom: 3px;
+}
+
+.spa-id-result--fail .spa-id-result-title { color: #b91c1c; }
+
+.spa-id-result-lvl {
+  font-size: 0.77rem;
+  color: #166534;
+  line-height: 1.4;
+}
+
+.spa-id-result--fail .spa-id-result-lvl { color: #991b1b; }
+
+.spa-id-result-chips {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  gap: 10px;
+}
+
+.spa-id-rchip {
+  background: rgba(16, 185, 129, 0.08);
+  border: 1px solid rgba(16, 185, 129, 0.2);
+  border-radius: 8px;
+  padding: 8px 12px;
+}
+
+.spa-id-rchip-label {
+  font-size: 0.67rem;
+  font-weight: 700;
+  letter-spacing: 0.07em;
+  color: #64748b;
+  margin-bottom: 3px;
+}
+
+.spa-id-rchip-val {
+  font-family: 'Manrope', sans-serif;
+  font-weight: 700;
+  font-size: 0.88rem;
+  color: #1e293b;
+}
+
+/* ── Manual upload fallback section ─────────────────────────── */
+.spa-id-manual {
+  border-top: 1px dashed #cbd5e1;
+  padding-top: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.spa-id-manual-label {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.spa-id-manual-label span:first-child {
+  font-family: 'Manrope', sans-serif;
+  font-weight: 700;
+  font-size: 0.82rem;
+  color: #475569;
+}
+
+.spa-id-manual-sub {
+  font-size: 0.75rem !important;
+  color: #94a3b8 !important;
+}
+
+/* ── Mobile ──────────────────────────────────────────────────── */
+@media (max-width: 768px) {
+  .spa-id-guide-header {
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  .spa-id-uidai-btn {
+    margin-left: 0;
+    width: 100%;
+    justify-content: center;
+  }
+
+  .spa-id-bottom-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .spa-id-sc-field {
+    flex: none;
+    width: 100%;
+  }
+
+  .spa-id-verify-btn {
+    width: 100%;
+  }
+
+  .spa-id-result-chips {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .spa-id-verified-chips {
+    gap: 6px;
+  }
+}
+
+/* ══════════════════════════════════════════════════════════════
+   OFFLINE AADHAAR VERIFICATION — spa-av-* (legacy, kept for compat)
    ══════════════════════════════════════════════════════════════ */
 
 /* ── Already-verified banner (replaces entire card when verified) ── */

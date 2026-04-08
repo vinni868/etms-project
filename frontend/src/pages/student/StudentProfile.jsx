@@ -851,22 +851,22 @@ function StudentProfile() {
             <div className="spa-section-num">04</div>
             <div>
               <h2>Identity Verification</h2>
-              <p>Aadhar number and DigiLocker verification</p>
+              <p>Aadhaar verification via UIDAI Offline eKYC</p>
             </div>
           </div>
           <div className="spa-section-body">
 
-            {/* Aadhar Number with verification badge */}
+            {/* Aadhaar Number */}
             <div className="spa-fields-grid spa-fields-grid--1">
               <div className="spa-field">
-                <label>AADHAR NUMBER</label>
+                <label>AADHAAR NUMBER</label>
                 <div className="spa-aadhar-row">
                   <input
                     type="text"
                     name="aadharNumber"
                     value={student.aadharNumber}
                     onChange={handleChange}
-                    placeholder="Enter 12-digit Aadhar number"
+                    placeholder="Enter 12-digit Aadhaar number"
                     maxLength="12"
                     className="spa-aadhar-input"
                   />
@@ -881,215 +881,223 @@ function StudentProfile() {
                 {student.aadharNumber && student.aadharNumber.length < 12 && (
                   <span className="spa-field-error">12 digits required</span>
                 )}
-                <span className="spa-field-hint">
-                  Your 12-digit Aadhaar number issued by UIDAI
-                </span>
+                <span className="spa-field-hint">Your 12-digit Aadhaar number issued by UIDAI</span>
               </div>
             </div>
 
-            {/* ── Aadhaar Verification Methods Card ── */}
+            {/* ── Already Verified State ── */}
             {student.isAadharVerified ? (
-              /* Already verified — show confirmed state */
-              <div className="spa-av-verified-banner">
-                <div className="spa-av-verified-icon">✓</div>
-                <div className="spa-av-verified-text">
-                  <div className="spa-av-verified-title">Aadhaar Verified</div>
-                  <div className="spa-av-verified-sub">
+              <div className="spa-id-verified-wrap">
+                <div className="spa-id-verified-check">✓</div>
+                <div className="spa-id-verified-body">
+                  <div className="spa-id-verified-title">Aadhaar Identity Verified</div>
+                  <div className="spa-id-verified-sub">
                     {student.aadhaarVerificationSource === "OFFLINE_XML"
-                      ? "Verified via UIDAI Offline eKYC — cryptographically authenticated"
+                      ? "Verified via UIDAI Offline eKYC — document is digitally authentic"
                       : student.aadhaarVerificationSource === "DIGILOCKER_OAUTH"
-                        ? "Verified via DigiLocker OAuth — document fetched automatically"
-                        : "Identity verified and document on file"}
+                        ? "Verified via DigiLocker — document fetched automatically from UIDAI"
+                        : "Your Aadhaar has been verified by the admin team"}
                   </div>
+                  {offlineResult?.name && (
+                    <div className="spa-id-verified-chips">
+                      {offlineResult.name && <span className="spa-id-chip"><span>👤</span>{offlineResult.name}</span>}
+                      {offlineResult.dob && <span className="spa-id-chip"><span>🎂</span>{offlineResult.dob}</span>}
+                      {offlineResult.gender && <span className="spa-id-chip"><span>⚧</span>{offlineResult.gender}</span>}
+                      {offlineResult.maskedAadhaar && <span className="spa-id-chip"><span>🪪</span>{offlineResult.maskedAadhaar}</span>}
+                    </div>
+                  )}
                 </div>
-                {offlineResult?.maskedAadhaar && (
-                  <span className="spa-av-masked">{offlineResult.maskedAadhaar}</span>
-                )}
               </div>
             ) : (
-              <div className="spa-av-card">
-                {/* ── Method 1: Offline XML (RECOMMENDED) ── */}
-                <div className="spa-av-method spa-av-method--primary">
-                  <div className="spa-av-method-head">
-                    <div className="spa-av-method-badge spa-av-method-badge--recommended">
-                      ✅ Recommended — Works Now
+              /* ── Not Verified — Full Verification Flow ── */
+              <div className="spa-id-flow">
+
+                {/* ── Step Guide: How to get the ZIP ── */}
+                <div className="spa-id-guide">
+                  <div className="spa-id-guide-header">
+                    <div className="spa-id-guide-icon">🏛️</div>
+                    <div>
+                      <div className="spa-id-guide-title">How to get your Offline eKYC file</div>
+                      <div className="spa-id-guide-sub">
+                        Free from Government of India — takes 2 minutes on your phone
+                      </div>
                     </div>
-                    <div className="spa-av-method-title">UIDAI Offline Aadhaar Verification</div>
-                    <div className="spa-av-method-sub">
-                      Download your signed Aadhaar XML from UIDAI &amp; verify here —
-                      no DigiLocker registration needed
-                    </div>
+                    <a
+                      href="https://myaadhaar.uidai.gov.in/offlineaadhaar"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="spa-id-uidai-btn"
+                    >
+                      Open UIDAI Portal ↗
+                    </a>
                   </div>
 
-                  <div className="spa-av-steps">
-                    <div className="spa-av-step">
-                      <div className="spa-av-step-num">1</div>
-                      <div>
-                        <strong>Download your Offline eKYC ZIP</strong> from UIDAI
-                        <a
-                          href="https://resident.uidai.gov.in/offline-kyc"
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="spa-av-link"
-                        >
-                          resident.uidai.gov.in/offline-kyc ↗
-                        </a>
-                        <span className="spa-av-step-hint">
-                          Enter Aadhaar number → OTP → set a 4-character share code → download ZIP
-                        </span>
+                  <div className="spa-id-guide-steps">
+                    <div className="spa-id-guide-step">
+                      <div className="spa-id-gs-num">1</div>
+                      <div className="spa-id-gs-body">
+                        <div className="spa-id-gs-title">Open the UIDAI Aadhaar portal</div>
+                        <div className="spa-id-gs-desc">
+                          Click <strong>Open UIDAI Portal</strong> above or visit
+                          <span className="spa-id-gs-url"> myaadhaar.uidai.gov.in/offlineaadhaar</span>
+                        </div>
                       </div>
                     </div>
-                    <div className="spa-av-step">
-                      <div className="spa-av-step-num">2</div>
-                      <div>
-                        <strong>Upload the ZIP file</strong> and enter your share code below
+
+                    <div className="spa-id-guide-step">
+                      <div className="spa-id-gs-num">2</div>
+                      <div className="spa-id-gs-body">
+                        <div className="spa-id-gs-title">Enter your Aadhaar &amp; verify OTP</div>
+                        <div className="spa-id-gs-desc">
+                          Enter your 12-digit Aadhaar number and the captcha shown.
+                          Click <strong>Send OTP</strong> — you'll get an SMS on your Aadhaar-linked mobile number.
+                          Enter that OTP.
+                        </div>
                       </div>
                     </div>
-                    <div className="spa-av-step">
-                      <div className="spa-av-step-num">3</div>
-                      <div>
-                        <strong>Click Verify</strong> — your name, DOB, and gender are extracted &amp; saved automatically
+
+                    <div className="spa-id-guide-step">
+                      <div className="spa-id-gs-num">3</div>
+                      <div className="spa-id-gs-body">
+                        <div className="spa-id-gs-title">Set a Share Code &amp; download</div>
+                        <div className="spa-id-gs-desc">
+                          You'll see a field to set a <strong>Share Code</strong> (any 4 characters — e.g. <code>AB12</code>).
+                          <span className="spa-id-gs-warning">⚠ Remember this code — you'll need it below.</span>
+                          Then click <strong>Download</strong> — a ZIP file saves to your device.
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="spa-id-guide-step">
+                      <div className="spa-id-gs-num">4</div>
+                      <div className="spa-id-gs-body">
+                        <div className="spa-id-gs-title">Upload here &amp; verify instantly</div>
+                        <div className="spa-id-gs-desc">
+                          Come back to this page, upload the ZIP file below, enter your share code, and click
+                          <strong> Verify Aadhaar</strong>. Your identity is confirmed automatically.
+                        </div>
                       </div>
                     </div>
                   </div>
+                </div>
 
-                  {/* Upload + Share Code form */}
-                  <div className="spa-av-form">
-                    <div className="spa-av-upload-row">
-                      <button
-                        className="spa-av-zip-btn"
-                        type="button"
-                        onClick={() => offlineFileRef.current?.click()}
-                      >
-                        📂 {offlineZipName || "Select Offline eKYC ZIP"}
-                      </button>
+                {/* ── Upload Form ── */}
+                <div className="spa-id-upload-card">
+                  <div className="spa-id-upload-title">Upload &amp; Verify</div>
+
+                  {/* Drop zone */}
+                  <div
+                    className={`spa-id-dropzone ${offlineZip ? "spa-id-dropzone--filled" : ""}`}
+                    onClick={() => offlineFileRef.current?.click()}
+                  >
+                    <input
+                      ref={offlineFileRef}
+                      type="file"
+                      accept=".zip"
+                      hidden
+                      onChange={handleOfflineZipSelect}
+                    />
+                    {offlineZip ? (
+                      <div className="spa-id-dz-filled">
+                        <div className="spa-id-dz-file-icon">📦</div>
+                        <div className="spa-id-dz-file-info">
+                          <div className="spa-id-dz-filename">{offlineZipName}</div>
+                          <div className="spa-id-dz-replace">Click to replace file</div>
+                        </div>
+                        <div className="spa-id-dz-ok">✓</div>
+                      </div>
+                    ) : (
+                      <div className="spa-id-dz-empty">
+                        <div className="spa-id-dz-icon">📂</div>
+                        <div className="spa-id-dz-label">Click to select your Offline eKYC ZIP</div>
+                        <div className="spa-id-dz-hint">The .zip file downloaded from UIDAI portal</div>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Share Code + Verify row */}
+                  <div className="spa-id-bottom-row">
+                    <div className="spa-field spa-id-sc-field">
+                      <label>SHARE CODE</label>
                       <input
-                        ref={offlineFileRef}
-                        type="file"
-                        accept=".zip"
-                        hidden
-                        onChange={handleOfflineZipSelect}
+                        type="text"
+                        value={offlineShareCode}
+                        onChange={(e) => setOfflineShareCode(e.target.value.toUpperCase().slice(0, 8))}
+                        placeholder="e.g.  AB12"
+                        maxLength="8"
+                        className="spa-av-sharecode-input"
                       />
-                      {offlineZip && (
-                        <span className="spa-av-file-ok">✓ {offlineZipName}</span>
-                      )}
-                    </div>
-
-                    <div className="spa-av-sharecode-row">
-                      <div className="spa-field">
-                        <label>SHARE CODE</label>
-                        <input
-                          type="text"
-                          value={offlineShareCode}
-                          onChange={(e) => setOfflineShareCode(e.target.value.toUpperCase().slice(0, 8))}
-                          placeholder="e.g. AB12"
-                          maxLength="8"
-                          className="spa-av-sharecode-input"
-                        />
-                        <span className="spa-field-hint">
-                          The 4–8 character code you set when downloading from UIDAI
-                        </span>
-                      </div>
+                      <span className="spa-field-hint">Code you set on UIDAI portal</span>
                     </div>
 
                     <button
-                      className="spa-av-verify-btn"
+                      className="spa-id-verify-btn"
                       onClick={handleOfflineVerify}
-                      disabled={offlineVerifying || !offlineZip}
+                      disabled={offlineVerifying || !offlineZip || !offlineShareCode.trim()}
                     >
                       {offlineVerifying ? (
-                        <><span className="spa-btn-spinner spa-btn-spinner--sm" /> Verifying…</>
+                        <><span className="spa-btn-spinner spa-btn-spinner--sm" />Verifying…</>
                       ) : (
-                        "🔐 Verify Aadhaar"
+                        <>🔐 Verify Aadhaar</>
                       )}
                     </button>
                   </div>
 
-                  {/* Extracted data result */}
+                  {/* Result */}
                   {offlineResult && (
-                    <div className={`spa-av-result ${offlineResult.verified ? "spa-av-result--ok" : "spa-av-result--fail"}`}>
+                    <div className={`spa-id-result ${offlineResult.verified ? "spa-id-result--ok" : "spa-id-result--fail"}`}>
                       {offlineResult.verified ? (
                         <>
-                          <div className="spa-av-result-title">
-                            ✅ {offlineResult.verificationLevel === "CRYPTOGRAPHIC"
-                              ? "Cryptographically Verified by UIDAI"
-                              : "Document Verified — Aadhaar Structure Confirmed"}
+                          <div className="spa-id-result-head">
+                            <span className="spa-id-result-icon spa-id-result-icon--ok">✓</span>
+                            <div>
+                              <div className="spa-id-result-title">Aadhaar Verified Successfully</div>
+                              <div className="spa-id-result-lvl">
+                                {offlineResult.verificationLevel === "CRYPTOGRAPHIC"
+                                  ? "🔒 Cryptographic signature confirmed by UIDAI"
+                                  : "📄 Document structure confirmed — authentic UIDAI format"}
+                              </div>
+                            </div>
                           </div>
-                          <div className="spa-av-result-grid">
-                            {offlineResult.name && (
-                              <div className="spa-av-result-item">
-                                <span className="spa-av-result-label">NAME</span>
-                                <span className="spa-av-result-value">{offlineResult.name}</span>
-                              </div>
-                            )}
-                            {offlineResult.dob && (
-                              <div className="spa-av-result-item">
-                                <span className="spa-av-result-label">DATE OF BIRTH</span>
-                                <span className="spa-av-result-value">{offlineResult.dob}</span>
-                              </div>
-                            )}
-                            {offlineResult.gender && (
-                              <div className="spa-av-result-item">
-                                <span className="spa-av-result-label">GENDER</span>
-                                <span className="spa-av-result-value">{offlineResult.gender}</span>
-                              </div>
-                            )}
-                            {offlineResult.maskedAadhaar && (
-                              <div className="spa-av-result-item">
-                                <span className="spa-av-result-label">AADHAAR</span>
-                                <span className="spa-av-result-value">{offlineResult.maskedAadhaar}</span>
-                              </div>
-                            )}
+                          <div className="spa-id-result-chips">
+                            {offlineResult.name && <div className="spa-id-rchip"><div className="spa-id-rchip-label">NAME</div><div className="spa-id-rchip-val">{offlineResult.name}</div></div>}
+                            {offlineResult.dob && <div className="spa-id-rchip"><div className="spa-id-rchip-label">DATE OF BIRTH</div><div className="spa-id-rchip-val">{offlineResult.dob}</div></div>}
+                            {offlineResult.gender && <div className="spa-id-rchip"><div className="spa-id-rchip-label">GENDER</div><div className="spa-id-rchip-val">{offlineResult.gender}</div></div>}
+                            {offlineResult.maskedAadhaar && <div className="spa-id-rchip"><div className="spa-id-rchip-label">AADHAAR</div><div className="spa-id-rchip-val">{offlineResult.maskedAadhaar}</div></div>}
                           </div>
                         </>
                       ) : (
-                        <div className="spa-av-result-title">❌ {offlineResult.message}</div>
+                        <div className="spa-id-result-head">
+                          <span className="spa-id-result-icon spa-id-result-icon--fail">✕</span>
+                          <div>
+                            <div className="spa-id-result-title">Verification Failed</div>
+                            <div className="spa-id-result-lvl">{offlineResult.message}</div>
+                          </div>
+                        </div>
                       )}
                     </div>
                   )}
                 </div>
 
-                {/* ── Method 2: DigiLocker OAuth (Future) ── */}
-                <div className="spa-av-method spa-av-method--secondary">
-                  <div className="spa-av-method-badge spa-av-method-badge--future">
-                    🔜 After DigiLocker Partner Registration
+                {/* Manual upload fallback */}
+                <div className="spa-id-manual">
+                  <div className="spa-id-manual-label">
+                    <span>Can't access UIDAI portal?</span>
+                    <span className="spa-id-manual-sub">Upload a scanned copy for admin review (slower — 24–48 hrs)</span>
                   </div>
-                  <div className="spa-av-method-title">DigiLocker OAuth Verification</div>
-                  <div className="spa-av-method-sub">
-                    One-click verification — authorise once and your Aadhaar is fetched automatically.
-                    Requires institution registration at DigiLocker API portal.
-                  </div>
-                  <button
-                    className="spa-dl-open-btn spa-dl-open-btn--muted"
-                    onClick={handleDigiLockerVerify}
-                    disabled={digilockerLoading}
-                  >
-                    {digilockerLoading
-                      ? <><span className="spa-btn-spinner spa-btn-spinner--sm" /> Connecting…</>
-                      : <><span>🏛️</span> Verify with DigiLocker</>}
-                  </button>
+                  <DocUploadItem
+                    label="Aadhaar Card (scanned copy)"
+                    url={student.aadharCardUrl}
+                    loading={uploading.aadhar}
+                    onUpload={(e) => handleFileUpload(e, "aadhar")}
+                  />
+                  {student.aadharCardUrl && (
+                    <p className="spa-verification-note">
+                      📋 Document uploaded — admin will review and mark you verified within 24–48 hours
+                    </p>
+                  )}
                 </div>
               </div>
-            )}
-
-            {/* Manual upload fallback */}
-            {!student.isAadharVerified && (
-              <>
-                <div className="spa-upload-section-label" style={{ marginTop: "20px" }}>
-                  Or manually upload Aadhaar card (admin will review)
-                </div>
-                <DocUploadItem
-                  label="Aadhaar Card Document"
-                  url={student.aadharCardUrl}
-                  loading={uploading.aadhar}
-                  onUpload={(e) => handleFileUpload(e, "aadhar")}
-                />
-                {student.aadharCardUrl && (
-                  <p className="spa-verification-note">
-                    📋 Document uploaded — admin will review and verify your Aadhaar within 24 hours
-                  </p>
-                )}
-              </>
             )}
           </div>
         </div>
