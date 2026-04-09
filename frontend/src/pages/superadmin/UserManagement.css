@@ -475,7 +475,154 @@
   transform: scale(1.05);
 }
 
-/* Responsive */
+/* ── ID Badge ── */
+.um-id-badge {
+  display: inline-block;
+  font-size: 0.72rem;
+  color: #2f59e0;
+  font-weight: 800;
+  font-family: 'JetBrains Mono', monospace;
+  background: rgba(47, 89, 224, 0.1);
+  padding: 2px 6px;
+  border-radius: 4px;
+  margin-top: 3px;
+}
+
+/* ── Empty state ── */
+.um-empty {
+  padding: 3rem;
+  text-align: center;
+  color: var(--sa-text-muted);
+  font-size: 0.95rem;
+}
+
+/* ── Mobile Card List (hidden on desktop) ── */
+.um-card-list {
+  display: none;
+}
+
+.um-card {
+  border-bottom: 1px solid #f1f5f9;
+  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.um-card:last-child {
+  border-bottom: none;
+}
+
+.um-card-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 0.75rem;
+}
+
+.um-card-left {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex: 1;
+  min-width: 0;
+}
+
+.um-avatar--lg {
+  width: 44px;
+  height: 44px;
+  font-size: 1.1rem;
+  flex-shrink: 0;
+}
+
+.um-card-meta {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.um-card-actions {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+/* ── Pagination ── */
+.um-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 1rem 0 0.5rem;
+  flex-wrap: wrap;
+}
+
+.um-page-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  border: 1.5px solid var(--sa-border);
+  background: #fff;
+  color: var(--sa-text-mid);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.85rem;
+  transition: all 0.2s;
+}
+
+.um-page-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.um-page-btn:not(:disabled):hover {
+  background: var(--sa-blue);
+  color: #fff;
+  border-color: var(--sa-blue);
+}
+
+.um-page-numbers {
+  display: flex;
+  gap: 0.35rem;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.um-page-num {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+  border: 1.5px solid var(--sa-border);
+  background: #fff;
+  color: var(--sa-text-mid);
+  cursor: pointer;
+  font-size: 0.85rem;
+  font-weight: 600;
+  transition: all 0.2s;
+}
+
+.um-page-num:hover {
+  background: var(--sa-blue-light);
+  color: var(--sa-blue);
+  border-color: var(--sa-blue);
+}
+
+.um-page-num.active {
+  background: var(--sa-blue);
+  color: #fff;
+  border-color: var(--sa-blue);
+}
+
+.um-page-info {
+  font-size: 0.8rem;
+  color: var(--sa-text-muted);
+  font-weight: 600;
+  margin-left: 0.5rem;
+}
+
+/* ── Responsive ── */
 @media (max-width: 992px) {
   .sa-wrapper.um-wrapper-extra {
     grid-template-columns: 1fr;
@@ -483,43 +630,67 @@
     margin: 0;
     border-radius: 0;
   }
-  .sa-side-panel {
-    display: none;
-  }
-  .um-main-panel {
-    padding: 1.5rem 1rem;
-  }
+  .sa-side-panel { display: none; }
+  .um-main-panel { padding: 1.25rem 0.75rem; gap: 1.25rem; }
   .um-header {
     flex-direction: column;
     align-items: stretch;
-    gap: 1.5rem;
+    gap: 0.75rem;
   }
+  .um-header h1 { font-size: 1.3rem; }
+  .um-btn--primary { width: 100%; justify-content: center; }
   .um-controls {
     flex-direction: column;
     align-items: stretch;
-    gap: 1rem;
+    gap: 0.75rem;
+    padding: 1rem;
   }
+  .um-search input { width: 100%; }
+  .um-filters { flex-direction: column; gap: 0.5rem; }
+  .um-filter-group { width: 100%; }
+  .um-filter-group select { flex: 1; }
   .um-stats-rectangle {
     flex-direction: column;
-    padding: 1.5rem;
-    gap: 1rem;
-    align-items: stretch;
+    padding: 1.25rem;
+    gap: 0.75rem;
   }
-  .um-stat-divider {
-    display: none;
+  .um-stat-divider { display: none; }
+  .um-stat-card { justify-content: space-between; }
+}
+
+@media (max-width: 700px) {
+  /* Hide desktop table, show mobile cards */
+  .um-table--desktop { display: none; }
+  .um-card-list { display: block; }
+
+  .um-member-info {
+    min-width: 0;
   }
-  .um-stat-card {
-    justify-content: space-between;
+  .um-name, .um-email-main {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 180px;
+  }
+
+  .um-pagination {
+    gap: 0.35rem;
+  }
+
+  .um-page-info {
+    width: 100%;
+    text-align: center;
+    margin-left: 0;
+    margin-top: 0.25rem;
   }
 }
 
 @media (max-width: 600px) {
-  .um-form-row {
-    grid-template-columns: 1fr;
-  }
+  .um-form-row { grid-template-columns: 1fr; }
   .um-modal {
     margin: 10px;
     max-height: 90vh;
     overflow-y: auto;
   }
+  .um-main-panel { padding: 1rem 0.5rem; }
 }
