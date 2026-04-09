@@ -172,15 +172,20 @@ public class CloudinaryService {
                 ? mimeType : "application/octet-stream";
             InputStreamContent mediaContent = new InputStreamContent(contentType, inputStream);
 
+            // supportsAllDrives=true is required for Shared Drives (Team Drives)
+            // Without this, service accounts get 403 storageQuotaExceeded
             com.google.api.services.drive.model.File uploaded = driveService.files()
                 .create(fileMetadata, mediaContent)
                 .setFields("id, name")
+                .setSupportsAllDrives(true)
                 .execute();
 
             Permission permission = new Permission();
             permission.setType("anyone");
             permission.setRole("reader");
-            driveService.permissions().create(uploaded.getId(), permission).execute();
+            driveService.permissions().create(uploaded.getId(), permission)
+                .setSupportsAllDrives(true)
+                .execute();
 
             String url = "https://drive.google.com/uc?export=view&id=" + uploaded.getId();
             System.out.println("GOOGLE_DRIVE: Uploaded '" + fileName + "' → " + url);
@@ -200,6 +205,8 @@ public class CloudinaryService {
         FileList result = driveService.files().list()
             .setQ(query)
             .setFields("files(id, name)")
+            .setSupportsAllDrives(true)
+            .setIncludeItemsFromAllDrives(true)
             .execute();
 
         List<com.google.api.services.drive.model.File> files = result.getFiles();
@@ -216,6 +223,7 @@ public class CloudinaryService {
         com.google.api.services.drive.model.File created = driveService.files()
             .create(folderMeta)
             .setFields("id")
+            .setSupportsAllDrives(true)
             .execute();
         return created.getId();
     }
@@ -227,7 +235,9 @@ public class CloudinaryService {
                 if (fileId.contains("&")) {
                     fileId = fileId.substring(0, fileId.indexOf("&"));
                 }
-                driveService.files().delete(fileId).execute();
+                driveService.files().delete(fileId)
+                    .setSupportsAllDrives(true)
+                    .execute();
                 System.out.println("GOOGLE_DRIVE: Deleted file " + fileId);
             }
         } catch (Exception e) {
