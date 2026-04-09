@@ -7,9 +7,10 @@ import com.google.api.client.http.InputStreamContent;
 import com.google.api.client.json.jackson2.JacksonFactory;
 import com.google.api.services.drive.Drive;
 import com.google.api.services.drive.DriveScopes;
-import com.google.api.services.drive.model.File;
+import com.google.api.services.drive.model.FileList;
 import com.google.api.services.drive.model.Permission;
 import com.google.auth.http.HttpCredentialsAdapter;
+import com.google.auth.oauth2.GoogleCredentials;
 import com.google.auth.oauth2.ServiceAccountCredentials;
 import jakarta.annotation.PostConstruct;
 import org.springframework.beans.factory.annotation.Value;
@@ -22,32 +23,24 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
 /**
  * CloudinaryService — handles ALL file uploads for the EtMS project.
  *
- * ┌─────────────────────────────────────────────────────────────────────┐
- * │  MODE 1 — GOOGLE DRIVE  (when GOOGLE_DRIVE_* env vars are set)     │
- * │  Files are uploaded to Google Drive (trainers@aptechcourses.com).   │
- * │                                                                     │
- * │  MODE 2 — CLOUDINARY  (when CLOUDINARY_* env vars are set)         │
- * │  Files are uploaded to Cloudinary CDN.                              │
- * │                                                                     │
- * │  MODE 3 — LOCAL DISK  (fallback when nothing is configured)        │
- * │  Files are saved to local filesystem under `file.upload.dir`.       │
- * └─────────────────────────────────────────────────────────────────────┘
+ * Priority: Google Drive → Cloudinary → Local Disk
  */
 @Service
 public class CloudinaryService {
 
     // ── Google Drive config ───────────────────────────────────────────────
     @Value("${google.drive.credentials-json:}")
-    private String driveCredentialsJson;   // full JSON content as env var (for Render/prod)
+    private String driveCredentialsJson;
 
     @Value("${google.drive.credentials-path:}")
-    private String driveCredentialsPath;   // path to JSON file (for local dev)
+    private String driveCredentialsPath;
 
     @Value("${google.drive.folder-id:}")
     private String driveFolderId;
@@ -70,8 +63,11 @@ public class CloudinaryService {
     private String appBaseUrl;
 
     // ─────────────────────────────────────────────────────────────────────
-    private enum Mode { GOOGLE_DRIVE, CLOUDINARY, LOCAL_DISK }
-    private Mode mode;
+    private static final int GOOGLE_DRIVE = 1;
+    private static final int CLOUDINARY   = 2;
+    private static final int LOCAL_DISK   = 3;
+
+    private int mode = LOCAL_DISK;
     private Drive driveService;
     private Cloudinary cloudinary;
 
@@ -80,10 +76,10 @@ public class CloudinaryService {
         if (isGoogleDriveConfigured()) {
             try {
                 initGoogleDrive();
-                mode = Mode.GOOGLE_DRIVE;
+                mode = GOOGLE_DRIVE;
                 System.out.println("FILE_STORAGE: ✅ Google Drive mode — folder: " + driveFolderId);
             } catch (Exception e) {
-                System.err.println("FILE_STORAGE: ❌ Google Drive init failed: " + e.getMessage() + " → falling back to local disk");
+                System.err.println("FILE_STORAGE: ❌ Google Drive init failed: " + e.getMessage());
                 initLocalDisk();
             }
         } else if (isCloudinaryConfigured()) {
@@ -93,7 +89,7 @@ public class CloudinaryService {
                 "api_secret", apiSecret,
                 "secure",     true
             ));
-            mode = Mode.CLOUDINARY;
+            mode = CLOUDINARY;
             System.out.println("FILE_STORAGE: ✅ Cloudinary mode — cloud: " + cloudName);
         } else {
             initLocalDisk();
@@ -101,7 +97,7 @@ public class CloudinaryService {
     }
 
     private void initLocalDisk() {
-        mode = Mode.LOCAL_DISK;
+        mode = LOCAL_DISK;
         System.out.println("FILE_STORAGE: 📁 Local disk mode — uploads dir: " + uploadDir);
         try {
             Files.createDirectories(Paths.get(uploadDir));
@@ -113,16 +109,14 @@ public class CloudinaryService {
     private void initGoogleDrive() throws Exception {
         InputStream credStream;
         if (!driveCredentialsJson.isEmpty()) {
-            // Production: JSON content stored as env var
             credStream = new ByteArrayInputStream(driveCredentialsJson.getBytes());
         } else {
-            // Local dev: path to JSON file
             credStream = new FileInputStream(driveCredentialsPath);
         }
 
-        ServiceAccountCredentials credentials = (ServiceAccountCredentials)
-            ServiceAccountCredentials.fromStream(credStream)
-                .createScoped(Collections.singletonList(DriveScopes.DRIVE));
+        GoogleCredentials credentials = ServiceAccountCredentials
+            .fromStream(credStream)
+            .createScoped(Collections.singletonList(DriveScopes.DRIVE));
 
         driveService = new Drive.Builder(
             GoogleNetHttpTransport.newTrustedTransport(),
@@ -131,51 +125,47 @@ public class CloudinaryService {
         ).setApplicationName("ETMS-LMS").build();
     }
 
-    // ── Public API (same interface — all callers unchanged) ───────────────
+    // ── Public API ────────────────────────────────────────────────────────
 
-    /**
-     * Upload a MultipartFile — PDF, image, or any file.
-     */
     public String upload(MultipartFile file, String folder, String resourceType) throws IOException {
-        return switch (mode) {
-            case GOOGLE_DRIVE -> driveUpload(file.getInputStream(), file.getOriginalFilename(), file.getContentType(), folder);
-            case CLOUDINARY   -> cloudinaryUpload(file.getBytes(), file.getOriginalFilename(), folder, resourceType);
-            default           -> localUpload(file.getInputStream(), file.getOriginalFilename(), folder);
-        };
+        if (mode == GOOGLE_DRIVE) {
+            return driveUpload(file.getInputStream(), file.getOriginalFilename(), file.getContentType(), folder);
+        } else if (mode == CLOUDINARY) {
+            return cloudinaryUpload(file.getBytes(), file.getOriginalFilename(), folder, resourceType);
+        } else {
+            return localUpload(file.getInputStream(), file.getOriginalFilename(), folder);
+        }
     }
 
-    /** Upload a PDF / document. */
     public String uploadDocument(MultipartFile file, String folder) throws IOException {
         return upload(file, folder, "raw");
     }
 
-    /** Upload an image. */
     public String uploadImage(MultipartFile file, String folder) throws IOException {
         return upload(file, folder, "image");
     }
 
-    /** Upload raw bytes (used by DigiLocker and Offline Aadhaar services). */
     public String uploadBytes(byte[] bytes, String fileName, String folder) throws IOException {
-        return switch (mode) {
-            case GOOGLE_DRIVE -> driveUpload(new ByteArrayInputStream(bytes), fileName, guessMimeType(fileName), folder);
-            case CLOUDINARY   -> cloudinaryUpload(bytes, fileName, folder, "raw");
-            default           -> localUpload(new ByteArrayInputStream(bytes), fileName, folder);
-        };
-    }
-
-    /**
-     * Delete a file by its URL.
-     */
-    public void deleteByUrl(String fileUrl, String resourceType) {
-        if (fileUrl == null || fileUrl.isBlank()) return;
-        switch (mode) {
-            case GOOGLE_DRIVE -> driveDelete(fileUrl);
-            case CLOUDINARY   -> cloudinaryDelete(fileUrl, resourceType);
-            default           -> localDelete(fileUrl);
+        if (mode == GOOGLE_DRIVE) {
+            return driveUpload(new ByteArrayInputStream(bytes), fileName, guessMimeType(fileName), folder);
+        } else if (mode == CLOUDINARY) {
+            return cloudinaryUpload(bytes, fileName, folder, "raw");
+        } else {
+            return localUpload(new ByteArrayInputStream(bytes), fileName, folder);
         }
     }
 
-    /** Always returns true — all modes are functional. */
+    public void deleteByUrl(String fileUrl, String resourceType) {
+        if (fileUrl == null || fileUrl.isBlank()) return;
+        if (mode == GOOGLE_DRIVE) {
+            driveDelete(fileUrl);
+        } else if (mode == CLOUDINARY) {
+            cloudinaryDelete(fileUrl, resourceType);
+        } else {
+            localDelete(fileUrl);
+        }
+    }
+
     public boolean isConfigured() {
         return true;
     }
@@ -193,32 +183,26 @@ public class CloudinaryService {
             String sanitized = sanitize(fileName);
             String uniqueName = UUID.randomUUID() + "_" + sanitized;
 
-            // Get or create subfolder inside ETMS-Uploads
             String parentFolderId = getOrCreateSubfolder(subFolder);
 
-            // Build file metadata
-            File fileMetadata = new File();
+            com.google.api.services.drive.model.File fileMetadata = new com.google.api.services.drive.model.File();
             fileMetadata.setName(uniqueName);
             fileMetadata.setParents(Collections.singletonList(parentFolderId));
 
-            String contentType = (mimeType != null && !mimeType.isEmpty())
-                ? mimeType : "application/octet-stream";
+            String contentType = (mimeType != null && !mimeType.isEmpty()) ? mimeType : "application/octet-stream";
             InputStreamContent mediaContent = new InputStreamContent(contentType, inputStream);
 
-            // Upload to Drive
-            File uploadedFile = driveService.files().create(fileMetadata, mediaContent)
+            com.google.api.services.drive.model.File uploaded = driveService.files()
+                .create(fileMetadata, mediaContent)
                 .setFields("id, name")
                 .execute();
 
-            // Make file publicly readable (anyone with link)
             Permission permission = new Permission();
             permission.setType("anyone");
             permission.setRole("reader");
-            driveService.permissions().create(uploadedFile.getId(), permission).execute();
+            driveService.permissions().create(uploaded.getId(), permission).execute();
 
-            // Return public URL
-            String fileId = uploadedFile.getId();
-            String url = "https://drive.google.com/uc?export=view&id=" + fileId;
+            String url = "https://drive.google.com/uc?export=view&id=" + uploaded.getId();
             System.out.println("GOOGLE_DRIVE: Uploaded '" + fileName + "' → " + url);
             return url;
 
@@ -228,28 +212,28 @@ public class CloudinaryService {
     }
 
     private String getOrCreateSubfolder(String subFolderName) throws IOException {
-        // Search for existing subfolder under ETMS-Uploads
         String query = "name='" + subFolderName + "' and '"
-            + driveFolderId + "' in parents "
-            + "and mimeType='application/vnd.google-apps.folder' "
-            + "and trashed=false";
+            + driveFolderId + "' in parents"
+            + " and mimeType='application/vnd.google-apps.folder'"
+            + " and trashed=false";
 
-        var result = driveService.files().list()
+        FileList result = driveService.files().list()
             .setQ(query)
             .setFields("files(id, name)")
             .execute();
 
-        if (!result.getFiles().isEmpty()) {
-            return result.getFiles().get(0).getId();
+        List<com.google.api.services.drive.model.File> files = result.getFiles();
+        if (files != null && !files.isEmpty()) {
+            return files.get(0).getId();
         }
 
-        // Create new subfolder
-        File folderMeta = new File();
+        com.google.api.services.drive.model.File folderMeta = new com.google.api.services.drive.model.File();
         folderMeta.setName(subFolderName);
         folderMeta.setMimeType("application/vnd.google-apps.folder");
         folderMeta.setParents(Collections.singletonList(driveFolderId));
 
-        File created = driveService.files().create(folderMeta)
+        com.google.api.services.drive.model.File created = driveService.files()
+            .create(folderMeta)
             .setFields("id")
             .execute();
         return created.getId();
@@ -257,10 +241,11 @@ public class CloudinaryService {
 
     private void driveDelete(String fileUrl) {
         try {
-            // Extract file ID from: https://drive.google.com/uc?export=view&id=FILE_ID
             if (fileUrl.contains("id=")) {
                 String fileId = fileUrl.substring(fileUrl.indexOf("id=") + 3);
-                if (fileId.contains("&")) fileId = fileId.substring(0, fileId.indexOf("&"));
+                if (fileId.contains("&")) {
+                    fileId = fileId.substring(0, fileId.indexOf("&"));
+                }
                 driveService.files().delete(fileId).execute();
                 System.out.println("GOOGLE_DRIVE: Deleted file " + fileId);
             }
@@ -331,8 +316,7 @@ public class CloudinaryService {
 
     // ── Local disk implementation ─────────────────────────────────────────
 
-    private String localUpload(InputStream inputStream, String fileName, String folder)
-            throws IOException {
+    private String localUpload(InputStream inputStream, String fileName, String folder) throws IOException {
         String sanitized = sanitize(fileName);
         String uniqueName = UUID.randomUUID() + "_" + sanitized;
 
@@ -342,8 +326,7 @@ public class CloudinaryService {
 
         Files.copy(inputStream, filePath, StandardCopyOption.REPLACE_EXISTING);
 
-        String url = appBaseUrl.replaceAll("/$", "")
-            + "/uploads/" + folder + "/" + uniqueName;
+        String url = appBaseUrl.replaceAll("/$", "") + "/uploads/" + folder + "/" + uniqueName;
         System.out.println("LOCAL_STORAGE: Saved '" + fileName + "' → " + url);
         return url;
     }
@@ -362,7 +345,7 @@ public class CloudinaryService {
         }
     }
 
-    // ── Shared utility ────────────────────────────────────────────────────
+    // ── Utility ──────────────────────────────────────────────────────────
 
     private String sanitize(String fileName) {
         if (fileName == null) return "file";
