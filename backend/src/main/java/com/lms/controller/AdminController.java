@@ -1681,15 +1681,14 @@ public ResponseEntity<?> updateAdminAttendance(
     public ResponseEntity<?> approveAadhaar(@PathVariable Long studentId) {
         return studentRepository.findById(studentId).map(s -> {
             s.setIsAadharVerified(true);
-            s.setAadhaarVerifiedAt(java.time.LocalDateTime.now());
+            s.setAadharVerifiedAt(java.time.LocalDateTime.now());
             s.setAadhaarVerificationSource("ADMIN_MANUAL");
             studentRepository.save(s);
-            // Notify student
+            // Notify student (user-specific so only this student sees it)
             userRepository.findByEmail(s.getEmail()).ifPresent(u ->
-                notificationService.createNotification(u.getId(),
-                    "✅ Aadhaar Verified",
+                notificationService.createNotificationForUser(
                     "Your Aadhaar card has been manually verified by the admin. Your identity is now confirmed.",
-                    "SYSTEM")
+                    "SYSTEM", "STUDENT", u.getId(), s.getId())
             );
             return ResponseEntity.ok(Map.of("status", "success", "message", "Aadhaar verified for " + s.getName()));
         }).orElse(ResponseEntity.notFound().build());
@@ -1705,10 +1704,9 @@ public ResponseEntity<?> updateAdminAttendance(
             studentRepository.save(s);
             String reason = body.getOrDefault("reason", "Document was unclear or invalid.");
             userRepository.findByEmail(s.getEmail()).ifPresent(u ->
-                notificationService.createNotification(u.getId(),
-                    "❌ Aadhaar Upload Rejected",
+                notificationService.createNotificationForUser(
                     "Your Aadhaar upload was rejected. Reason: " + reason + " — Please re-upload a clear scanned copy.",
-                    "SYSTEM")
+                    "SYSTEM", "STUDENT", u.getId(), s.getId())
             );
             return ResponseEntity.ok(Map.of("status", "success", "message", "Aadhaar rejected for " + s.getName()));
         }).orElse(ResponseEntity.notFound().build());
