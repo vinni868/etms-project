@@ -113,13 +113,6 @@
 			<version>3.0.0</version>
 		</dependency>
 
-		<!-- Cloudinary - Persistent cloud file storage for PDFs, images, docs -->
-		<dependency>
-			<groupId>com.cloudinary</groupId>
-			<artifactId>cloudinary-http45</artifactId>
-			<version>1.36.0</version>
-		</dependency>
-
 		<!-- Google Drive API - For storing files in Google Drive -->
 		<dependency>
 			<groupId>com.google.apis</groupId>

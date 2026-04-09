@@ -1,7 +1,5 @@
 package com.lms.service;
 
-import com.cloudinary.Cloudinary;
-import com.cloudinary.utils.ObjectUtils;
 import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport;
 import com.google.api.client.http.InputStreamContent;
 import com.google.api.client.json.jackson2.JacksonFactory;
@@ -24,13 +22,16 @@ import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 import java.util.UUID;
 
 /**
  * CloudinaryService — handles ALL file uploads for the EtMS project.
  *
- * Priority: Google Drive → Cloudinary → Local Disk
+ * MODE 1 — GOOGLE DRIVE  (when GOOGLE_DRIVE_* env vars are set)
+ *   Files go to trainers@aptechcourses.com → ETMS-Uploads/
+ *
+ * MODE 2 — LOCAL DISK  (fallback when Drive vars not set)
+ *   Files saved to local filesystem (for local dev / VPS)
  */
 @Service
 public class CloudinaryService {
@@ -45,17 +46,7 @@ public class CloudinaryService {
     @Value("${google.drive.folder-id:}")
     private String driveFolderId;
 
-    // ── Cloudinary credentials ────────────────────────────────────────────
-    @Value("${cloudinary.cloud-name:}")
-    private String cloudName;
-
-    @Value("${cloudinary.api-key:}")
-    private String apiKey;
-
-    @Value("${cloudinary.api-secret:}")
-    private String apiSecret;
-
-    // ── Local storage config ──────────────────────────────────────────────
+    // ── Local disk fallback ───────────────────────────────────────────────
     @Value("${file.upload.dir:uploads}")
     private String uploadDir;
 
@@ -64,12 +55,10 @@ public class CloudinaryService {
 
     // ─────────────────────────────────────────────────────────────────────
     private static final int GOOGLE_DRIVE = 1;
-    private static final int CLOUDINARY   = 2;
-    private static final int LOCAL_DISK   = 3;
+    private static final int LOCAL_DISK   = 2;
 
     private int mode = LOCAL_DISK;
     private Drive driveService;
-    private Cloudinary cloudinary;
 
     @PostConstruct
     public void init() {
@@ -79,18 +68,9 @@ public class CloudinaryService {
                 mode = GOOGLE_DRIVE;
                 System.out.println("FILE_STORAGE: ✅ Google Drive mode — folder: " + driveFolderId);
             } catch (Exception e) {
-                System.err.println("FILE_STORAGE: ❌ Google Drive init failed: " + e.getMessage());
+                System.err.println("FILE_STORAGE: ❌ Google Drive init failed: " + e.getMessage() + " → falling back to local disk");
                 initLocalDisk();
             }
-        } else if (isCloudinaryConfigured()) {
-            cloudinary = new Cloudinary(ObjectUtils.asMap(
-                "cloud_name", cloudName,
-                "api_key",    apiKey,
-                "api_secret", apiSecret,
-                "secure",     true
-            ));
-            mode = CLOUDINARY;
-            System.out.println("FILE_STORAGE: ✅ Cloudinary mode — cloud: " + cloudName);
         } else {
             initLocalDisk();
         }
@@ -98,7 +78,7 @@ public class CloudinaryService {
 
     private void initLocalDisk() {
         mode = LOCAL_DISK;
-        System.out.println("FILE_STORAGE: 📁 Local disk mode — uploads dir: " + uploadDir);
+        System.out.println("FILE_STORAGE: 📁 Local disk mode — dir: " + uploadDir);
         try {
             Files.createDirectories(Paths.get(uploadDir));
         } catch (Exception e) {
@@ -127,45 +107,43 @@ public class CloudinaryService {
 
     // ── Public API ────────────────────────────────────────────────────────
 
+    /** Upload a MultipartFile — PDF, image, or any file. */
     public String upload(MultipartFile file, String folder, String resourceType) throws IOException {
         if (mode == GOOGLE_DRIVE) {
             return driveUpload(file.getInputStream(), file.getOriginalFilename(), file.getContentType(), folder);
-        } else if (mode == CLOUDINARY) {
-            return cloudinaryUpload(file.getBytes(), file.getOriginalFilename(), folder, resourceType);
-        } else {
-            return localUpload(file.getInputStream(), file.getOriginalFilename(), folder);
         }
+        return localUpload(file.getInputStream(), file.getOriginalFilename(), folder);
     }
 
+    /** Upload a PDF / document. */
     public String uploadDocument(MultipartFile file, String folder) throws IOException {
         return upload(file, folder, "raw");
     }
 
+    /** Upload an image. */
     public String uploadImage(MultipartFile file, String folder) throws IOException {
         return upload(file, folder, "image");
     }
 
+    /** Upload raw bytes (used by DigiLocker and Offline Aadhaar services). */
     public String uploadBytes(byte[] bytes, String fileName, String folder) throws IOException {
         if (mode == GOOGLE_DRIVE) {
             return driveUpload(new ByteArrayInputStream(bytes), fileName, guessMimeType(fileName), folder);
-        } else if (mode == CLOUDINARY) {
-            return cloudinaryUpload(bytes, fileName, folder, "raw");
-        } else {
-            return localUpload(new ByteArrayInputStream(bytes), fileName, folder);
         }
+        return localUpload(new ByteArrayInputStream(bytes), fileName, folder);
     }
 
+    /** Delete a file by its URL. */
     public void deleteByUrl(String fileUrl, String resourceType) {
         if (fileUrl == null || fileUrl.isBlank()) return;
         if (mode == GOOGLE_DRIVE) {
             driveDelete(fileUrl);
-        } else if (mode == CLOUDINARY) {
-            cloudinaryDelete(fileUrl, resourceType);
         } else {
             localDelete(fileUrl);
         }
     }
 
+    /** Always returns true — both modes are functional. */
     public boolean isConfigured() {
         return true;
     }
@@ -185,11 +163,13 @@ public class CloudinaryService {
 
             String parentFolderId = getOrCreateSubfolder(subFolder);
 
-            com.google.api.services.drive.model.File fileMetadata = new com.google.api.services.drive.model.File();
+            com.google.api.services.drive.model.File fileMetadata =
+                new com.google.api.services.drive.model.File();
             fileMetadata.setName(uniqueName);
             fileMetadata.setParents(Collections.singletonList(parentFolderId));
 
-            String contentType = (mimeType != null && !mimeType.isEmpty()) ? mimeType : "application/octet-stream";
+            String contentType = (mimeType != null && !mimeType.isEmpty())
+                ? mimeType : "application/octet-stream";
             InputStreamContent mediaContent = new InputStreamContent(contentType, inputStream);
 
             com.google.api.services.drive.model.File uploaded = driveService.files()
@@ -227,7 +207,8 @@ public class CloudinaryService {
             return files.get(0).getId();
         }
 
-        com.google.api.services.drive.model.File folderMeta = new com.google.api.services.drive.model.File();
+        com.google.api.services.drive.model.File folderMeta =
+            new com.google.api.services.drive.model.File();
         folderMeta.setName(subFolderName);
         folderMeta.setMimeType("application/vnd.google-apps.folder");
         folderMeta.setParents(Collections.singletonList(driveFolderId));
@@ -266,55 +247,7 @@ public class CloudinaryService {
         return "application/octet-stream";
     }
 
-    // ── Cloudinary implementation ─────────────────────────────────────────
-
-    private boolean isCloudinaryConfigured() {
-        return cloudName != null && !cloudName.isEmpty()
-            && apiKey != null && !apiKey.isEmpty()
-            && apiSecret != null && !apiSecret.isEmpty();
-    }
-
-    @SuppressWarnings("unchecked")
-    private String cloudinaryUpload(byte[] bytes, String fileName, String folder, String resourceType)
-            throws IOException {
-        String sanitized = sanitize(fileName);
-        String nameForId = sanitized;
-        int lastDot = nameForId.lastIndexOf('.');
-        if (lastDot > 0 && !"raw".equals(resourceType)) {
-            nameForId = nameForId.substring(0, lastDot);
-        }
-        String publicId = folder + "/" + UUID.randomUUID() + "_" + nameForId;
-
-        Map<String, Object> result = cloudinary.uploader().upload(
-            bytes,
-            ObjectUtils.asMap(
-                "public_id",     publicId,
-                "resource_type", resourceType,
-                "overwrite",     false
-            )
-        );
-        String url = (String) result.get("secure_url");
-        System.out.println("CLOUDINARY: Uploaded '" + fileName + "' → " + url);
-        return url;
-    }
-
-    private void cloudinaryDelete(String cloudinaryUrl, String resourceType) {
-        try {
-            String[] parts = cloudinaryUrl.split("/upload/");
-            if (parts.length < 2) return;
-            String publicId = parts[1].replaceFirst("v\\d+/", "");
-            int dotIdx = publicId.lastIndexOf('.');
-            if ("image".equals(resourceType) && dotIdx > 0) {
-                publicId = publicId.substring(0, dotIdx);
-            }
-            cloudinary.uploader().destroy(publicId, ObjectUtils.asMap("resource_type", resourceType));
-            System.out.println("CLOUDINARY: Deleted " + publicId);
-        } catch (Exception e) {
-            System.err.println("CLOUDINARY: Delete failed (non-fatal): " + e.getMessage());
-        }
-    }
-
-    // ── Local disk implementation ─────────────────────────────────────────
+    // ── Local disk fallback ───────────────────────────────────────────────
 
     private String localUpload(InputStream inputStream, String fileName, String folder) throws IOException {
         String sanitized = sanitize(fileName);
