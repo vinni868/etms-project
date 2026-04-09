@@ -1,157 +1,144 @@
-.mk-page {
-  min-height: 100vh;
-  background: #f8fafc;
-  font-family: 'Inter', -apple-system, sans-serif;
+/* ════════════════════════════════════════════════════════════
+   MARKETER DASHBOARD — Growth & Lead Generation
+   ════════════════════════════════════════════════════════════ */
+
+.mkd-page { background: #f8fafc; min-height: 100vh; }
+
+/* ── Hero ── */
+.mkd-hero {
+  background: linear-gradient(135deg, #7c3aed 0%, #9333ea 60%, #a855f7 100%);
+  padding: 2rem 0; color: #fff;
 }
-
-/* ── HERO ── */
-.mk-hero {
-  background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
-  color: #fff;
-  padding: 40px 30px 60px;
-  position: relative;
-  overflow: hidden;
+.mkd-hero__inner {
+  max-width: 1200px; margin: 0 auto; padding: 0 1.5rem;
+  display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1.5rem;
 }
-
-.mk-hero::after {
-  content: "";
-  position: absolute;
-  top: -50%;
-  right: -10%;
-  width: 400px;
-  height: 400px;
-  background: radial-gradient(circle, rgba(37,99,235,0.15) 0%, transparent 70%);
-  pointer-events: none;
+.mkd-chip {
+  display: inline-block; background: rgba(255,255,255,.2); border: 1px solid rgba(255,255,255,.35);
+  padding: .25rem .75rem; border-radius: 20px; font-size: .75rem; font-weight: 600;
+  letter-spacing: .05em; text-transform: uppercase; margin-bottom: .5rem;
 }
+.mkd-hero__name { font-size: 2rem; font-weight: 800; margin: 0 0 .25rem; }
+.mkd-hero__sub  { font-size: .95rem; opacity: .85; margin: 0; }
+.mkd-clock { text-align: right; }
+.mkd-clock__time { font-size: 2rem; font-weight: 800; letter-spacing: .05em; }
+.mkd-clock__date { font-size: .85rem; opacity: .8; margin-top: .25rem; }
 
-.mk-hero__inner {
-  max-width: 1200px;
-  margin: 0 auto;
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-end;
-  position: relative;
-  z-index: 2;
+/* ── Content ── */
+.mkd-content { max-width: 1200px; margin: 0 auto; padding: 2rem 1.5rem; display: flex; flex-direction: column; gap: 2rem; }
+
+/* ── Attendance ── */
+.mkd-attendance { background: #fff; border-radius: 16px; padding: 1.5rem; box-shadow: 0 2px 12px rgba(0,0,0,.06); }
+
+/* ── KPI Row ── */
+.mkd-kpi-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; }
+.mkd-kpi {
+  border-radius: 16px; padding: 1.25rem 1.5rem;
+  display: flex; align-items: center; gap: 1rem;
+  box-shadow: 0 2px 12px rgba(0,0,0,.06); transition: transform .2s;
 }
+.mkd-kpi:hover { transform: translateY(-2px); }
+.mkd-kpi__icon  { font-size: 1.75rem; }
+.mkd-kpi__val   { display: block; font-size: 2rem; font-weight: 800; line-height: 1; }
+.mkd-kpi__label { display: block; font-size: .78rem; opacity: .75; margin-top: .2rem; font-weight: 500; }
+.mkd-kpi--blue   { background: #eff6ff; border-left: 4px solid #3b82f6; }
+.mkd-kpi--green  { background: #f0fdf4; border-left: 4px solid #10b981; }
+.mkd-kpi--purple { background: #f5f3ff; border-left: 4px solid #8b5cf6; }
+.mkd-kpi--orange { background: #fff7ed; border-left: 4px solid #f59e0b; }
 
-.mk-greeting-chip {
-  display: inline-block;
-  background: rgba(255,255,255,0.1);
-  padding: 6px 14px;
-  border-radius: 20px;
-  font-size: 13px;
-  font-weight: 600;
-  margin-bottom: 12px;
-  border: 1px solid rgba(255,255,255,0.1);
+/* ── Cards ── */
+.mkd-card {
+  background: #fff; border-radius: 16px; padding: 1.5rem;
+  box-shadow: 0 2px 12px rgba(0,0,0,.06);
 }
+.mkd-card__title { font-size: 1.1rem; font-weight: 700; color: #1e293b; margin: 0 0 1.25rem; }
+.mkd-card__header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.25rem; }
+.mkd-card__header .mkd-card__title { margin-bottom: 0; }
+.mkd-view-all { font-size: .85rem; color: #7c3aed; font-weight: 600; text-decoration: none; }
+.mkd-view-all:hover { text-decoration: underline; }
 
-.mk-hero__name {
-  font-size: 32px;
-  font-weight: 800;
-  margin: 0 0 4px;
-  letter-spacing: -0.5px;
+/* ── Two-column layout ── */
+.mkd-two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
+
+/* ── Funnel ── */
+.mkd-funnel { display: flex; flex-direction: column; gap: .6rem; }
+.mkd-funnel-row { display: flex; align-items: center; gap: .75rem; }
+.mkd-funnel-label { font-size: .8rem; font-weight: 600; color: #475569; width: 90px; flex-shrink: 0; }
+.mkd-funnel-bar-wrap { flex: 1; background: #f1f5f9; border-radius: 8px; height: 12px; overflow: hidden; }
+.mkd-funnel-bar { height: 100%; border-radius: 8px; transition: width .5s ease; min-width: 4px; }
+.mkd-funnel-count { font-size: .85rem; font-weight: 700; width: 30px; text-align: right; }
+
+/* ── Sources ── */
+.mkd-sources { display: flex; flex-direction: column; gap: .75rem; }
+.mkd-source-row { display: flex; align-items: center; gap: .75rem; }
+.mkd-source-icon { font-size: 1.35rem; width: 28px; text-align: center; flex-shrink: 0; }
+.mkd-source-body { flex: 1; }
+.mkd-source-top   { display: flex; justify-content: space-between; margin-bottom: .25rem; }
+.mkd-source-name  { font-size: .83rem; font-weight: 600; color: #1e293b; }
+.mkd-source-cnt   { font-size: .78rem; color: #64748b; font-weight: 500; }
+.mkd-source-bar-wrap { height: 6px; background: #f1f5f9; border-radius: 6px; overflow: hidden; }
+.mkd-source-bar   { height: 100%; background: linear-gradient(90deg, #7c3aed, #a855f7); border-radius: 6px; transition: width .5s ease; }
+
+/* ── Counselor Table ── */
+.mkd-counselor-table { display: flex; flex-direction: column; gap: .5rem; }
+.mkd-ct-header {
+  display: grid; grid-template-columns: 2fr 1fr 1fr 2fr;
+  font-size: .72rem; font-weight: 700; color: #94a3b8; text-transform: uppercase;
+  letter-spacing: .04em; padding: 0 .75rem .5rem; border-bottom: 1px solid #f1f5f9;
 }
-
-.mk-hero__role {
-  font-size: 15px;
-  color: #94a3b8;
-  margin: 0;
+.mkd-ct-row {
+  display: grid; grid-template-columns: 2fr 1fr 1fr 2fr;
+  align-items: center; padding: .65rem .75rem; border-radius: 10px;
+  transition: background .15s;
 }
-
-.mk-live-clock {
-  text-align: right;
+.mkd-ct-row:hover { background: #f8fafc; }
+.mkd-ct-name { display: flex; align-items: center; gap: .5rem; font-size: .88rem; font-weight: 600; color: #1e293b; }
+.mkd-ct-avatar {
+  width: 28px; height: 28px; border-radius: 50%; background: linear-gradient(135deg,#7c3aed,#a855f7);
+  color: #fff; font-size: .78rem; font-weight: 700;
+  display: flex; align-items: center; justify-content: center; flex-shrink: 0;
 }
+.mkd-ct-num  { font-size: .88rem; font-weight: 600; color: #475569; }
+.mkd-ct-rate { display: flex; align-items: center; gap: .5rem; font-size: .85rem; font-weight: 700; color: #7c3aed; }
+.mkd-ct-bar-wrap { flex: 1; height: 6px; background: #f1f5f9; border-radius: 6px; overflow: hidden; }
+.mkd-ct-bar { height: 100%; background: linear-gradient(90deg,#7c3aed,#10b981); border-radius: 6px; }
 
-.mk-clock__time {
-  font-size: 28px;
-  font-weight: 800;
-  letter-spacing: 1px;
+/* ── Campaigns ── */
+.mkd-campaign-list { display: flex; flex-direction: column; gap: .6rem; }
+.mkd-campaign-row {
+  display: flex; align-items: center; gap: .75rem; padding: .75rem;
+  border-radius: 10px; background: #f8fafc; border: 1px solid #f1f5f9;
 }
+.mkd-campaign-icon { font-size: 1.5rem; width: 36px; text-align: center; flex-shrink: 0; }
+.mkd-campaign-info { flex: 1; display: flex; flex-direction: column; gap: .15rem; }
+.mkd-campaign-name { font-size: .9rem; font-weight: 600; color: #1e293b; }
+.mkd-campaign-meta { font-size: .78rem; color: #64748b; }
+.mkd-campaign-status { font-size: .72rem; font-weight: 700; padding: .2rem .6rem; border-radius: 12px; flex-shrink: 0; }
+.mkd-cs--active  { background: #d1fae5; color: #059669; }
+.mkd-cs--paused  { background: #fef3c7; color: #d97706; }
+.mkd-cs--ended   { background: #f1f5f9; color: #64748b; }
+.mkd-cs--draft   { background: #eff6ff; color: #3b82f6; }
 
-.mk-clock__date {
-  font-size: 13px;
-  color: #94a3b8;
-  font-weight: 500;
-  margin-top: 2px;
+/* ── Misc ── */
+.mkd-empty-sm { text-align: center; padding: 1.5rem; color: #64748b; font-size: .88rem; }
+.mkd-link { color: #7c3aed; font-weight: 600; text-decoration: none; }
+.mkd-link:hover { text-decoration: underline; }
+.mkd-skeleton-list { display: flex; flex-direction: column; gap: .6rem; }
+.mkd-skeleton {
+  border-radius: 8px;
+  background: linear-gradient(90deg,#f1f5f9 25%,#e2e8f0 50%,#f1f5f9 75%);
+  background-size: 200% 100%; animation: mkd-shimmer 1.5s infinite;
 }
+@keyframes mkd-shimmer { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
 
-/* ── CONTENT ── */
-.mk-content {
-  max-width: 1200px;
-  margin: -30px auto 40px;
-  padding: 0 20px;
-  position: relative;
-  z-index: 3;
+/* ── Responsive ── */
+@media (max-width: 900px) {
+  .mkd-kpi-row { grid-template-columns: repeat(2, 1fr); }
+  .mkd-two-col { grid-template-columns: 1fr; }
 }
-
-.mk-attendance-section {
-  background: #fff;
-  border-radius: 18px;
-  box-shadow: 0 10px 25px rgba(0,0,0,0.05);
-  padding: 10px;
-  margin-bottom: 24px;
-}
-
-/* ── STATS ── */
-.mk-stats-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  gap: 20px;
-}
-
-.mk-stat-card {
-  background: #fff;
-  padding: 24px;
-  border-radius: 18px;
-  display: flex;
-  align-items: center;
-  gap: 18px;
-  border: 1px solid #f1f5f9;
-  transition: transform 0.2s, box-shadow 0.2s;
-}
-
-.mk-stat-card:hover {
-  transform: translateY(-4px);
-  box-shadow: 0 12px 30px rgba(0,0,0,0.08);
-}
-
-.mk-stat__icon {
-  width: 52px;
-  height: 52px;
-  border-radius: 14px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 22px;
-}
-
-.mk-stat--leads .mk-stat__icon { background: #eff6ff; color: #2563eb; }
-.mk-stat--conv  .mk-stat__icon { background: #f5f3ff; color: #7c3aed; }
-.mk-stat--rev   .mk-stat__icon { background: #ecfdf5; color: #059669; }
-
-.mk-stat__val {
-  display: block;
-  font-size: 24px;
-  font-weight: 800;
-  color: #0f172a;
-}
-
-.mk-stat__label {
-  font-size: 13px;
-  font-weight: 600;
-  color: #64748b;
-}
-
-@media (max-width: 768px) {
-  .mk-hero__inner {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 20px;
-  }
-  .mk-live-clock {
-    text-align: left;
-  }
-  .mk-content {
-    padding-bottom: 120px !important;
-  }
+@media (max-width: 600px) {
+  .mkd-kpi-row { grid-template-columns: repeat(2, 1fr); }
+  .mkd-hero__inner { flex-direction: column; }
+  .mkd-clock { text-align: left; }
+  .mkd-ct-header, .mkd-ct-row { grid-template-columns: 1.5fr 1fr 1fr 1.5fr; }
 }

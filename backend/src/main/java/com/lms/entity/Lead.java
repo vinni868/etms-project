@@ -1,6 +1,7 @@
 package com.lms.entity;
 
 import jakarta.persistence.*;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Entity
@@ -19,23 +20,43 @@ public class Lead {
     @Column(nullable = false, length = 20)
     private String phone;
 
+    @Column(name = "whatsapp_number", length = 20)
+    private String whatsappNumber;
+
     @Column(name = "course_interest", length = 300)
     private String courseInterest;
 
     @Column(length = 100)
-    private String source; // WALK_IN, SOCIAL_MEDIA, REFERRAL, WEBSITE, PHONE, EMAIL
+    private String source; // WALK_IN, SOCIAL_MEDIA, REFERRAL, WEBSITE, PHONE, FACEBOOK, INSTAGRAM, GOOGLE
 
     @Column(length = 50)
-    private String status = "NEW"; // NEW, CONTACTED, INTERESTED, NOT_INTERESTED, CONVERTED, LOST
+    private String status = "NEW"; // NEW, CONTACTED, INTERESTED, DEMO_BOOKED, ENROLLED, NOT_INTERESTED, LOST
 
     @Column(length = 20)
     private String priority = "MEDIUM"; // LOW, MEDIUM, HIGH
 
+    /** Marketer who created/owns this lead */
     @Column(name = "assigned_to")
     private Long assignedTo;
 
+    /** Counselor assigned to convert this lead */
+    @Column(name = "assigned_counselor_id")
+    private Long assignedCounselorId;
+
+    @Column(name = "campaign_id")
+    private Long campaignId;
+
     @Column(name = "next_followup_date")
-    private java.time.LocalDate nextFollowupDate;
+    private LocalDate nextFollowupDate;
+
+    @Column(name = "last_contacted_at")
+    private LocalDateTime lastContactedAt;
+
+    @Column(name = "demo_scheduled_at")
+    private LocalDateTime demoScheduledAt;
+
+    @Column(name = "callback_scheduled_at")
+    private LocalDateTime callbackScheduledAt;
 
     @Column(columnDefinition = "TEXT")
     private String notes;
@@ -58,6 +79,8 @@ public class Lead {
     public void setEmail(String email) { this.email = email; }
     public String getPhone() { return phone; }
     public void setPhone(String phone) { this.phone = phone; }
+    public String getWhatsappNumber() { return whatsappNumber; }
+    public void setWhatsappNumber(String whatsappNumber) { this.whatsappNumber = whatsappNumber; }
     public String getCourseInterest() { return courseInterest; }
     public void setCourseInterest(String courseInterest) { this.courseInterest = courseInterest; }
     public String getSource() { return source; }
@@ -68,8 +91,18 @@ public class Lead {
     public void setPriority(String priority) { this.priority = priority; }
     public Long getAssignedTo() { return assignedTo; }
     public void setAssignedTo(Long assignedTo) { this.assignedTo = assignedTo; }
-    public java.time.LocalDate getNextFollowupDate() { return nextFollowupDate; }
-    public void setNextFollowupDate(java.time.LocalDate nextFollowupDate) { this.nextFollowupDate = nextFollowupDate; }
+    public Long getAssignedCounselorId() { return assignedCounselorId; }
+    public void setAssignedCounselorId(Long assignedCounselorId) { this.assignedCounselorId = assignedCounselorId; }
+    public Long getCampaignId() { return campaignId; }
+    public void setCampaignId(Long campaignId) { this.campaignId = campaignId; }
+    public LocalDate getNextFollowupDate() { return nextFollowupDate; }
+    public void setNextFollowupDate(LocalDate nextFollowupDate) { this.nextFollowupDate = nextFollowupDate; }
+    public LocalDateTime getLastContactedAt() { return lastContactedAt; }
+    public void setLastContactedAt(LocalDateTime lastContactedAt) { this.lastContactedAt = lastContactedAt; }
+    public LocalDateTime getDemoScheduledAt() { return demoScheduledAt; }
+    public void setDemoScheduledAt(LocalDateTime demoScheduledAt) { this.demoScheduledAt = demoScheduledAt; }
+    public LocalDateTime getCallbackScheduledAt() { return callbackScheduledAt; }
+    public void setCallbackScheduledAt(LocalDateTime callbackScheduledAt) { this.callbackScheduledAt = callbackScheduledAt; }
     public String getNotes() { return notes; }
     public void setNotes(String notes) { this.notes = notes; }
     public LocalDateTime getCreatedAt() { return createdAt; }

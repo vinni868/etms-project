@@ -8,8 +8,6 @@ import {
   FaBook,  FaQrcode,
   FaBars,
   FaTimes,
-  FaHeartbeat,
-  FaComments,
   FaBriefcase,
   FaSatellite,
   FaUserShield,
@@ -174,9 +172,8 @@ const NAV_CONFIG = {
       group: "Growth Hub",
       id: "mk-growth",
       items: [
-        { to: "/marketer/leads", icon: <FaChartLine />, name: "Leads", desc: "Manage and track leads" },
-        { to: "/marketer/campaigns", icon: <FaBullhorn />, name: "Campaigns", desc: "Active marketing campaigns" },
-        { to: "/marketer/vouchers", icon: "🎟️", name: "Vouchers", desc: "Discount and coupon management" },
+        { to: "/marketer/leads", icon: <FaChartLine />, name: "Leads CRM", desc: "Generate, assign & track leads" },
+        { to: "/marketer/campaigns", icon: <FaBullhorn />, name: "Campaigns", desc: "Run social & digital campaigns" },
         { to: "/marketer/time-tracking", icon: <FaQrcode />, name: "Punch Portal", desc: "Daily check-in station" },
         { to: "/marketer/notifications", icon: <FaBullhorn />, name: "Notifications Hub", desc: "My alert history" },
         { to: "/marketer/leave", icon: <FaCalendarAlt />, name: "Leave", desc: "Request absence" },
@@ -185,11 +182,10 @@ const NAV_CONFIG = {
   ],
   COUNSELOR: [
     {
-      group: "Wellness Hub",
-      id: "cs-wellness",
+      group: "Conversion Hub",
+      id: "cs-conversion",
       items: [
-        { to: "/counselor/sessions", icon: <FaHeartbeat />, name: "Sessions", desc: "Active counseling sessions" },
-        { to: "/counselor/messages", icon: <FaComments />, name: "Messages", desc: "Student communications" },
+        { to: "/counselor/leads", icon: <FaChartLine />, name: "My Leads", desc: "Call, follow-up & convert leads" },
         { to: "/counselor/time-tracking", icon: <FaQrcode />, name: "Punch Portal", desc: "Daily check-in station" },
         { to: "/counselor/notifications", icon: <FaBullhorn />, name: "Notifications Hub", desc: "My alert history" },
         { to: "/counselor/leave", icon: <FaCalendarAlt />, name: "Leave", desc: "Request absence" },

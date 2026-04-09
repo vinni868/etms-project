@@ -1,130 +1,211 @@
 package com.lms.controller;
 
-import com.lms.entity.CounselingSession;
+import com.lms.entity.Lead;
+import com.lms.entity.LeadNote;
 import com.lms.entity.User;
-import com.lms.repository.CounselingSessionRepository;
+import com.lms.repository.LeadNoteRepository;
+import com.lms.repository.LeadRepository;
 import com.lms.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.*;
 
+/**
+ * Counselor Lead Management Controller
+ * Counselors call prospects, update pipeline status, log notes, schedule callbacks.
+ * Marketer generates leads → assigns to counselor → counselor converts to enrollment.
+ */
 @RestController
 @RequiredArgsConstructor
 public class CounselingController {
 
-    private final CounselingSessionRepository sessionRepo;
+    private final LeadRepository leadRepo;
+    private final LeadNoteRepository noteRepo;
     private final UserRepository userRepo;
 
-    // ─────────────── COUNSELOR ENDPOINTS ─────────────────────────────
+    // ─────────────── COUNSELOR DASHBOARD ─────────────────────────────
 
-    /** GET /api/counselor/sessions — all assigned sessions */
-    @GetMapping("/api/counselor/sessions")
-    public ResponseEntity<?> mySessions(Authentication auth) {
+    /** GET /api/counselor/dashboard — stats summary for counselor */
+    @GetMapping("/api/counselor/dashboard")
+    public ResponseEntity<?> dashboard(Authentication auth) {
         User user = getUser(auth);
-        List<CounselingSession> list = sessionRepo.findByCounselorIdOrderByScheduledAtAsc(user.getId());
-        return ResponseEntity.ok(Map.of(
-            "sessions", enrichSessions(list),
-            "pendingCount", sessionRepo.countByCounselorIdAndStatus(user.getId(), "SCHEDULED"),
-            "completedCount", sessionRepo.countByCounselorIdAndStatus(user.getId(), "COMPLETED")
-        ));
+        Long cid = user.getId();
+
+        long totalAssigned  = leadRepo.countByAssignedCounselorId(cid);
+        long newLeads       = leadRepo.countByAssignedCounselorIdAndStatus(cid, "NEW");
+        long contacted      = leadRepo.countByAssignedCounselorIdAndStatus(cid, "CONTACTED");
+        long interested     = leadRepo.countByAssignedCounselorIdAndStatus(cid, "INTERESTED");
+        long demoBooked     = leadRepo.countByAssignedCounselorIdAndStatus(cid, "DEMO_BOOKED");
+        long enrolled       = leadRepo.countByAssignedCounselorIdAndStatus(cid, "ENROLLED");
+        long lost           = leadRepo.countByAssignedCounselorIdAndStatus(cid, "LOST");
+
+        List<Lead> todayFollowups = leadRepo.findByAssignedCounselorIdAndNextFollowupDate(cid, LocalDate.now());
+
+        long callsToday = noteRepo.countByCounselorIdAndCreatedAtAfter(cid,
+                LocalDate.now().atStartOfDay());
+
+        double convRate = totalAssigned > 0 ? (enrolled * 100.0 / totalAssigned) : 0;
+
+        Map<String, Object> res = new LinkedHashMap<>();
+        res.put("totalAssigned", totalAssigned);
+        res.put("newLeads", newLeads);
+        res.put("contacted", contacted);
+        res.put("interested", interested);
+        res.put("demoBooked", demoBooked);
+        res.put("enrolled", enrolled);
+        res.put("lost", lost);
+        res.put("callsToday", callsToday);
+        res.put("conversionRate", Math.round(convRate * 10.0) / 10.0);
+        res.put("todayFollowups", enrichLeads(todayFollowups));
+        return ResponseEntity.ok(res);
     }
 
-    /** PUT /api/counselor/sessions/{id} — update status, notes, meet link */
-    @PutMapping("/api/counselor/sessions/{id}")
-    public ResponseEntity<?> updateSession(@PathVariable Long id, @RequestBody Map<String, Object> body) {
-        CounselingSession s = sessionRepo.findById(id).orElseThrow(() -> new RuntimeException("Session not found"));
-        if (body.containsKey("status")) s.setStatus(str(body, "status"));
-        if (body.containsKey("meetingLink")) s.setMeetingLink(str(body, "meetingLink"));
-        if (body.containsKey("notes")) s.setNotes(str(body, "notes"));
-        if (body.containsKey("actionItems")) s.setActionItems(str(body, "actionItems"));
-        if (body.containsKey("nextSessionAt")) {
-            s.setNextSessionAt(LocalDateTime.parse(body.get("nextSessionAt").toString()));
-        }
-        if (body.containsKey("scheduledAt")) {
-            s.setScheduledAt(LocalDateTime.parse(body.get("scheduledAt").toString()));
-        }
-        sessionRepo.save(s);
-        return ResponseEntity.ok(Map.of("status", "success", "message", "Session updated."));
-    }
+    // ─────────────── COUNSELOR LEADS ─────────────────────────────
 
-    // ─────────────── ADMIN ENDPOINTS ─────────────────────────────
-
-    /** GET /api/admin/counseling — all sessions */
-    @GetMapping("/api/admin/counseling")
-    public ResponseEntity<?> allSessions() {
-        return ResponseEntity.ok(enrichSessions(sessionRepo.findAllByOrderByScheduledAtDesc()));
-    }
-
-    /** POST /api/admin/counseling/assign — assign or schedule a session manually */
-    @PostMapping("/api/admin/counseling/assign")
-    public ResponseEntity<?> assignSession(@RequestBody Map<String, Object> body) {
-        CounselingSession s = new CounselingSession();
-        s.setStudentId(Long.parseLong(body.get("studentId").toString()));
-        s.setCounselorId(Long.parseLong(body.get("counselorId").toString()));
-        s.setType(str(body, "type"));
-        if (body.get("scheduledAt") != null) {
-            s.setScheduledAt(LocalDateTime.parse(body.get("scheduledAt").toString()));
-        }
-        s.setMeetingLink(str(body, "meetingLink"));
-        s.setNotes(str(body, "notes"));
-        sessionRepo.save(s);
-        return ResponseEntity.ok(Map.of("status", "success", "message", "Session scheduled."));
-    }
-
-    // ─────────────── STUDENT ENDPOINTS ─────────────────────────────
-
-    /** GET /api/student/counseling — my sessions */
-    @GetMapping("/api/student/counseling")
-    public ResponseEntity<?> studentSessions(Authentication auth) {
+    /** GET /api/counselor/leads — all leads assigned to this counselor */
+    @GetMapping("/api/counselor/leads")
+    public ResponseEntity<?> myLeads(Authentication auth) {
         User user = getUser(auth);
-        return ResponseEntity.ok(enrichSessions(sessionRepo.findByStudentIdOrderByScheduledAtDesc(user.getId())));
+        List<Lead> leads = leadRepo.findByAssignedCounselorIdOrderByCreatedAtDesc(user.getId());
+        return ResponseEntity.ok(enrichLeads(leads));
     }
 
-    /** POST /api/student/counseling/book — student books a session */
-    @PostMapping("/api/student/counseling/book")
-    public ResponseEntity<?> bookSession(@RequestBody Map<String, Object> body, Authentication auth) {
+    /** GET /api/counselor/leads/today — today's follow-up leads */
+    @GetMapping("/api/counselor/leads/today")
+    public ResponseEntity<?> todayLeads(Authentication auth) {
         User user = getUser(auth);
-        CounselingSession s = new CounselingSession();
-        s.setStudentId(user.getId());
-        // Auto-assign to first available counselor (or keep 0 to let admin assign)
-        User counselor = userRepo.findByRole_RoleName("COUNSELOR").stream().findFirst().orElseThrow(() -> new RuntimeException("No counselor available."));
-        s.setCounselorId(counselor.getId());
-        s.setType(str(body, "type") != null ? str(body, "type") : "ROUTINE");
-        s.setNotes(str(body, "notes"));
-        s.setScheduledAt(LocalDateTime.parse(body.get("requestedDate").toString()));
-        sessionRepo.save(s);
-        return ResponseEntity.ok(Map.of("status", "success", "message", "Counseling session requested."));
+        List<Lead> leads = leadRepo.findByAssignedCounselorIdAndNextFollowupDate(user.getId(), LocalDate.now());
+        return ResponseEntity.ok(enrichLeads(leads));
+    }
+
+    /** PUT /api/counselor/leads/{id}/status — change pipeline status */
+    @PutMapping("/api/counselor/leads/{id}/status")
+    public ResponseEntity<?> updateStatus(@PathVariable Long id, @RequestBody Map<String, Object> body) {
+        Lead lead = leadRepo.findById(id).orElseThrow(() -> new RuntimeException("Lead not found"));
+        String status = str(body, "status");
+        lead.setStatus(status);
+        lead.setLastContactedAt(LocalDateTime.now());
+        if ("ENROLLED".equals(status) && lead.getConvertedAt() == null) {
+            lead.setConvertedAt(LocalDateTime.now());
+        }
+        if ("DEMO_BOOKED".equals(status) && body.get("demoScheduledAt") != null) {
+            lead.setDemoScheduledAt(LocalDateTime.parse(body.get("demoScheduledAt").toString()));
+        }
+        leadRepo.save(lead);
+        return ResponseEntity.ok(Map.of("status", "success", "message", "Lead status updated to " + status));
+    }
+
+    /** PUT /api/counselor/leads/{id}/followup — set next follow-up date */
+    @PutMapping("/api/counselor/leads/{id}/followup")
+    public ResponseEntity<?> setFollowup(@PathVariable Long id, @RequestBody Map<String, Object> body) {
+        Lead lead = leadRepo.findById(id).orElseThrow(() -> new RuntimeException("Lead not found"));
+        if (body.get("nextFollowupDate") != null) {
+            lead.setNextFollowupDate(LocalDate.parse(body.get("nextFollowupDate").toString()));
+        }
+        if (body.get("callbackScheduledAt") != null) {
+            lead.setCallbackScheduledAt(LocalDateTime.parse(body.get("callbackScheduledAt").toString()));
+        }
+        leadRepo.save(lead);
+        return ResponseEntity.ok(Map.of("status", "success", "message", "Follow-up scheduled."));
+    }
+
+    /** PUT /api/counselor/leads/{id} — general lead update (notes, priority, etc.) */
+    @PutMapping("/api/counselor/leads/{id}")
+    public ResponseEntity<?> updateLead(@PathVariable Long id, @RequestBody Map<String, Object> body) {
+        Lead lead = leadRepo.findById(id).orElseThrow(() -> new RuntimeException("Lead not found"));
+        if (body.containsKey("notes")) lead.setNotes(str(body, "notes"));
+        if (body.containsKey("priority")) lead.setPriority(str(body, "priority"));
+        if (body.containsKey("nextFollowupDate") && body.get("nextFollowupDate") != null) {
+            lead.setNextFollowupDate(LocalDate.parse(body.get("nextFollowupDate").toString()));
+        }
+        if (body.containsKey("whatsappNumber")) lead.setWhatsappNumber(str(body, "whatsappNumber"));
+        leadRepo.save(lead);
+        return ResponseEntity.ok(Map.of("status", "success", "message", "Lead updated."));
+    }
+
+    // ─────────────── CALL NOTES ─────────────────────────────
+
+    /** POST /api/counselor/leads/{id}/notes — log a call note */
+    @PostMapping("/api/counselor/leads/{id}/notes")
+    public ResponseEntity<?> addNote(@PathVariable Long id, @RequestBody Map<String, Object> body, Authentication auth) {
+        User user = getUser(auth);
+        Lead lead = leadRepo.findById(id).orElseThrow(() -> new RuntimeException("Lead not found"));
+
+        LeadNote note = new LeadNote();
+        note.setLeadId(id);
+        note.setCounselorId(user.getId());
+        note.setNoteText(str(body, "noteText"));
+        note.setCallOutcome(str(body, "callOutcome"));
+        if (body.get("callDurationMinutes") != null) {
+            note.setCallDurationMinutes(Integer.parseInt(body.get("callDurationMinutes").toString()));
+        }
+        noteRepo.save(note);
+
+        // Auto-update lead status & lastContacted
+        lead.setLastContactedAt(LocalDateTime.now());
+        if ("CONTACTED".equals(lead.getStatus()) || "NEW".equals(lead.getStatus())) {
+            if (str(body, "callOutcome") != null && !"NO_ANSWER".equals(str(body, "callOutcome"))
+                    && !"BUSY".equals(str(body, "callOutcome"))) {
+                lead.setStatus("CONTACTED");
+            }
+        }
+        leadRepo.save(lead);
+
+        return ResponseEntity.ok(Map.of("status", "success", "message", "Note logged successfully."));
+    }
+
+    /** GET /api/counselor/leads/{id}/notes — get all notes for a lead */
+    @GetMapping("/api/counselor/leads/{id}/notes")
+    public ResponseEntity<?> getNotes(@PathVariable Long id) {
+        List<LeadNote> notes = noteRepo.findByLeadIdOrderByCreatedAtDesc(id);
+        List<Map<String, Object>> result = new ArrayList<>();
+        for (LeadNote n : notes) {
+            Map<String, Object> dto = new LinkedHashMap<>();
+            dto.put("id", n.getId());
+            dto.put("noteText", n.getNoteText());
+            dto.put("callOutcome", n.getCallOutcome());
+            dto.put("callDurationMinutes", n.getCallDurationMinutes());
+            dto.put("createdAt", n.getCreatedAt());
+            userRepo.findById(n.getCounselorId()).ifPresent(u -> dto.put("counselorName", u.getName()));
+            result.add(dto);
+        }
+        return ResponseEntity.ok(result);
     }
 
     // ─────────────── HELPERS ─────────────────────────────
 
-    private List<Map<String, Object>> enrichSessions(List<CounselingSession> list) {
-        List<Map<String, Object>> res = new ArrayList<>();
-        for (CounselingSession s : list) {
+    private List<Map<String, Object>> enrichLeads(List<Lead> leads) {
+        List<Map<String, Object>> result = new ArrayList<>();
+        for (Lead l : leads) {
             Map<String, Object> dto = new LinkedHashMap<>();
-            dto.put("id", s.getId());
-            dto.put("studentId", s.getStudentId());
-            dto.put("counselorId", s.getCounselorId());
-            dto.put("scheduledAt", s.getScheduledAt());
-            dto.put("type", s.getType());
-            dto.put("status", s.getStatus());
-            dto.put("meetingLink", s.getMeetingLink());
-            dto.put("notes", s.getNotes());
-            dto.put("actionItems", s.getActionItems());
-            dto.put("nextSessionAt", s.getNextSessionAt());
-            
-            userRepo.findById(s.getStudentId()).ifPresent(u -> {
-                dto.put("studentName", u.getName());
-                dto.put("studentEmail", u.getEmail());
-            });
-            userRepo.findById(s.getCounselorId()).ifPresent(c -> dto.put("counselorName", c.getName()));
-            res.add(dto);
+            dto.put("id", l.getId());
+            dto.put("name", l.getName());
+            dto.put("email", l.getEmail());
+            dto.put("phone", l.getPhone());
+            dto.put("whatsappNumber", l.getWhatsappNumber() != null ? l.getWhatsappNumber() : l.getPhone());
+            dto.put("courseInterest", l.getCourseInterest());
+            dto.put("source", l.getSource());
+            dto.put("status", l.getStatus());
+            dto.put("priority", l.getPriority());
+            dto.put("nextFollowupDate", l.getNextFollowupDate());
+            dto.put("lastContactedAt", l.getLastContactedAt());
+            dto.put("demoScheduledAt", l.getDemoScheduledAt());
+            dto.put("callbackScheduledAt", l.getCallbackScheduledAt());
+            dto.put("notes", l.getNotes());
+            dto.put("createdAt", l.getCreatedAt());
+            dto.put("convertedAt", l.getConvertedAt());
+            dto.put("campaignId", l.getCampaignId());
+            if (l.getAssignedTo() != null) {
+                userRepo.findById(l.getAssignedTo()).ifPresent(u -> dto.put("marketerName", u.getName()));
+            }
+            result.add(dto);
         }
-        return res;
+        return result;
     }
 
     private User getUser(Authentication auth) {

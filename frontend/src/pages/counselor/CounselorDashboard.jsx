@@ -1,23 +1,14 @@
 import { useState, useEffect } from 'react';
 import api from '../../api/axiosConfig';
-import { FaUserMd, FaVideo, FaCheck, FaStickyNote, FaCalendarAlt } from 'react-icons/fa';
-import './CounselorDashboard.css';
 import QuickPunch from '../../components/QuickPunch/QuickPunch';
 import AttendanceRules from '../../components/AttendanceRules/AttendanceRules';
+import './CounselorDashboard.css';
 
 export default function CounselorDashboard() {
   const user = JSON.parse(localStorage.getItem("user") || "{}");
-  const [sessions, setSessions] = useState([]);
+  const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [stats, setStats] = useState({ pending: 0, completed: 0 });
-  const [showModal, setShowModal] = useState(false);
-  const [activeSession, setActiveSession] = useState(null);
-  const [msg, setMsg] = useState(null);
   const [nowTime, setNowTime] = useState(new Date());
-  
-  const [formData, setFormData] = useState({
-    status: '', meetingLink: '', notes: '', actionItems: '', nextSessionAt: ''
-  });
 
   useEffect(() => {
     const t = setInterval(() => setNowTime(new Date()), 60000);
@@ -31,167 +22,174 @@ export default function CounselorDashboard() {
     return "Good Evening";
   })();
 
-  const fetchSessions = async () => {
-    try {
-      setLoading(true);
-      const res = await api.get('/counselor/sessions');
-      setSessions(res.data.sessions || []);
-      setStats({
-        pending: res.data.pendingCount || 0,
-        completed: res.data.completedCount || 0
-      });
-    } catch (err) {
-      console.error(err);
-    } finally {
-      setLoading(false);
-    }
-  };
+  useEffect(() => {
+    api.get('/counselor/dashboard')
+      .then(r => setStats(r.data))
+      .catch(console.error)
+      .finally(() => setLoading(false));
+  }, []);
 
-  useEffect(() => { fetchSessions(); }, []);
+  const pipeline = stats ? [
+    { label: 'New',        count: stats.newLeads,    color: '#6366f1', bg: '#eef2ff' },
+    { label: 'Contacted',  count: stats.contacted,   color: '#0ea5e9', bg: '#e0f2fe' },
+    { label: 'Interested', count: stats.interested,  color: '#f59e0b', bg: '#fef3c7' },
+    { label: 'Demo Booked',count: stats.demoBooked,  color: '#8b5cf6', bg: '#f5f3ff' },
+    { label: 'Enrolled',   count: stats.enrolled,    color: '#10b981', bg: '#d1fae5' },
+    { label: 'Lost',       count: stats.lost,        color: '#ef4444', bg: '#fee2e2' },
+  ] : [];
 
-  const handleUpdate = async (e) => {
-    e.preventDefault();
-    setMsg(null);
-    try {
-      await api.put(`/counselor/sessions/${activeSession.id}`, formData);
-      setMsg({ type: 'ok', text: 'Session updated successfully!' });
-      setShowModal(false);
-      fetchSessions();
-    } catch (err) {
-      setMsg({ type: 'err', text: err.response?.data?.message || 'Update failed.' });
-    }
-  };
+  const priorityColor = (p) => p === 'HIGH' ? '#ef4444' : p === 'MEDIUM' ? '#f59e0b' : '#94a3b8';
 
-  const openModal = (s) => {
-    setActiveSession(s);
-    setFormData({
-      status: s.status,
-      meetingLink: s.meetingLink || '',
-      notes: s.notes || '',
-      actionItems: s.actionItems || '',
-      nextSessionAt: s.nextSessionAt ? s.nextSessionAt.slice(0, 16) : ''
-    });
-    setShowModal(true);
-  };
+  const waLink = (phone) => `https://wa.me/91${phone?.replace(/\D/g, '')}`;
 
   return (
-    <div className="cr-page">
-      {/* ── Hero Header ── */}
-      <header className="cr-hero">
-        <div className="cr-hero__inner">
-          <div className="cr-hero__left">
-            <div className="cr-greeting-chip">{greeting} 👋</div>
-            <h1 className="cr-hero__name">{user?.name || "Counselor"}</h1>
-            <p className="cr-hero__role">Academic & Wellness · EtMS Smart Learning</p>
-          </div>
+    <div className="crd-page">
 
-          <div className="cr-hero__right">
-            <div className="cr-live-clock">
-              <div className="cr-clock__time">
-                {nowTime.toLocaleTimeString('en-US', { hour: "2-digit", minute: "2-digit", hour12: true }).toUpperCase()}
+      {/* ── Hero ── */}
+      <header className="crd-hero">
+        <div className="crd-hero__inner">
+          <div className="crd-hero__left">
+            <span className="crd-chip">Lead Conversion Specialist</span>
+            <h1 className="crd-hero__name">{greeting}, {user?.name?.split(' ')[0] || 'Counselor'}!</h1>
+            <p className="crd-hero__sub">Your mission: turn every lead into an enrolled student.</p>
+          </div>
+          <div className="crd-hero__right">
+            <div className="crd-clock">
+              <div className="crd-clock__time">
+                {nowTime.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', hour12: true }).toUpperCase()}
               </div>
-              <div className="cr-clock__date">
-                {nowTime.toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" })}
+              <div className="crd-clock__date">
+                {nowTime.toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long' })}
               </div>
             </div>
           </div>
         </div>
       </header>
 
-      <div className="cr-content">
-        <div className="cr-attendance-section">
+      <div className="crd-content">
+
+        {/* ── Attendance ── */}
+        <div className="crd-attendance">
           <QuickPunch variant="horizontal" />
-          <div style={{ marginTop: '1rem' }}>
-            <AttendanceRules />
-          </div>
+          <div style={{ marginTop: '1rem' }}><AttendanceRules /></div>
         </div>
 
-        <div className="stats-row">
-          <div className="stat-card">
-            <div className="stat-icon bg-blue"><FaCalendarAlt /></div>
-            <div className="stat-details">
-              <h3>{stats.pending}</h3><p>Upcoming Sessions</p>
+        {/* ── KPI Cards ── */}
+        <div className="crd-kpi-row">
+          <div className="crd-kpi crd-kpi--blue">
+            <div className="crd-kpi__icon">📋</div>
+            <div className="crd-kpi__body">
+              <span className="crd-kpi__val">{loading ? '…' : stats?.totalAssigned ?? 0}</span>
+              <span className="crd-kpi__label">Leads Assigned</span>
             </div>
           </div>
-          <div className="stat-card">
-            <div className="stat-icon bg-green"><FaCheck /></div>
-            <div className="stat-details">
-              <h3>{stats.completed}</h3><p>Completed Sessions</p>
+          <div className="crd-kpi crd-kpi--green">
+            <div className="crd-kpi__icon">🎓</div>
+            <div className="crd-kpi__body">
+              <span className="crd-kpi__val">{loading ? '…' : stats?.enrolled ?? 0}</span>
+              <span className="crd-kpi__label">Enrolled</span>
+            </div>
+          </div>
+          <div className="crd-kpi crd-kpi--purple">
+            <div className="crd-kpi__icon">📈</div>
+            <div className="crd-kpi__body">
+              <span className="crd-kpi__val">{loading ? '…' : (stats?.conversionRate ?? 0) + '%'}</span>
+              <span className="crd-kpi__label">Conversion Rate</span>
+            </div>
+          </div>
+          <div className="crd-kpi crd-kpi--orange">
+            <div className="crd-kpi__icon">📞</div>
+            <div className="crd-kpi__body">
+              <span className="crd-kpi__val">{loading ? '…' : stats?.callsToday ?? 0}</span>
+              <span className="crd-kpi__label">Calls Today</span>
             </div>
           </div>
         </div>
 
-        {msg && <div className={`alert-msg ${msg.type === 'ok' ? 'alert-success' : 'alert-error'}`}>{msg.text}</div>}
+        {/* ── Pipeline Funnel ── */}
+        {!loading && stats && (
+          <div className="crd-section">
+            <h2 className="crd-section__title">My Pipeline</h2>
+            <div className="crd-pipeline">
+              {pipeline.map(stage => (
+                <div className="crd-stage" key={stage.label} style={{ borderTop: `3px solid ${stage.color}`, background: stage.bg }}>
+                  <span className="crd-stage__count" style={{ color: stage.color }}>{stage.count}</span>
+                  <span className="crd-stage__label">{stage.label}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
-        <div className="sessions-list">
-          {loading ? <div className="loading-state">Loading schedule...</div> :
-           sessions.length === 0 ? <p className="text-muted">No sessions assigned yet.</p> :
-           sessions.map(s => (
-             <div className={`session-card st-${s.status.toLowerCase()}`} key={s.id}>
-               <div className="scard-header">
-                 <div>
-                   <h3>{s.studentName}</h3>
-                   <span className="text-muted">{s.studentEmail}</span>
-                 </div>
-                 <span className={`status-badge st-${s.status.toLowerCase()}`}>{s.status}</span>
-               </div>
-               
-               <div className="scard-details">
-                 <p><strong>Type:</strong> {s.type}</p>
-                 <p><strong>Scheduled:</strong> {s.scheduledAt ? new Date(s.scheduledAt).toLocaleString() : 'Not Set'}</p>
-                 {s.meetingLink && <p><strong>Meet:</strong> <a href={s.meetingLink} target="_blank" rel="noreferrer">Join Link <FaVideo /></a></p>}
-                 {s.notes && <p><strong>Notes:</strong> {s.notes}</p>}
-                 {s.actionItems && <p><strong>Action Items:</strong> {s.actionItems}</p>}
-               </div>
-               
-               <div className="scard-actions">
-                 <button className="secondary-btn" onClick={() => openModal(s)}><FaStickyNote /> Log Notes & Update</button>
-               </div>
-             </div>
-           ))}
+        {/* ── Today's Follow-Ups ── */}
+        <div className="crd-section">
+          <div className="crd-section__header">
+            <h2 className="crd-section__title">Today's Follow-Ups</h2>
+            <span className="crd-badge crd-badge--red">
+              {loading ? '…' : (stats?.todayFollowups?.length ?? 0)} due today
+            </span>
+          </div>
+
+          {loading ? (
+            <div className="crd-skeleton-list">
+              {[1,2,3].map(i => <div key={i} className="crd-skeleton" />)}
+            </div>
+          ) : !stats?.todayFollowups?.length ? (
+            <div className="crd-empty">
+              <span className="crd-empty__icon">✅</span>
+              <p>No follow-ups due today. Great work!</p>
+            </div>
+          ) : (
+            <div className="crd-followup-list">
+              {stats.todayFollowups.map(lead => (
+                <div className="crd-followup-card" key={lead.id}>
+                  <div className="crd-fc__left">
+                    <div className="crd-fc__avatar" style={{ background: priorityColor(lead.priority) }}>
+                      {lead.name?.charAt(0).toUpperCase()}
+                    </div>
+                    <div className="crd-fc__info">
+                      <h3 className="crd-fc__name">{lead.name}</h3>
+                      <p className="crd-fc__course">{lead.courseInterest || 'Course not specified'}</p>
+                      <div className="crd-fc__meta">
+                        <span className={`crd-status crd-status--${lead.status?.toLowerCase().replace('_', '-')}`}>
+                          {lead.status?.replace('_', ' ')}
+                        </span>
+                        <span className="crd-priority" style={{ color: priorityColor(lead.priority) }}>
+                          {lead.priority === 'HIGH' ? '🔥' : lead.priority === 'MEDIUM' ? '⭐' : '❄️'} {lead.priority}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="crd-fc__actions">
+                    <a href={`tel:${lead.phone}`} className="crd-action-btn crd-action-btn--call" title="Call">
+                      📞
+                    </a>
+                    <a href={waLink(lead.whatsappNumber || lead.phone)} target="_blank" rel="noreferrer"
+                       className="crd-action-btn crd-action-btn--wa" title="WhatsApp">
+                      💬
+                    </a>
+                    <a href="/counselor/leads" className="crd-action-btn crd-action-btn--view" title="View Lead">
+                      →
+                    </a>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
+
+        {/* ── Quick Tips ── */}
+        <div className="crd-tips">
+          <h3 className="crd-tips__title">Pro Tips</h3>
+          <div className="crd-tips__list">
+            <div className="crd-tip">💡 Always log a note after every call — even missed ones.</div>
+            <div className="crd-tip">🎯 Set a follow-up date before closing any lead interaction.</div>
+            <div className="crd-tip">💬 WhatsApp works best after hours — use the quick button on each lead.</div>
+            <div className="crd-tip">🔥 Focus on HIGH priority leads first — they convert 3× faster.</div>
+          </div>
+        </div>
+
       </div>
-
-      {showModal && activeSession && (
-        <div className="modal-overlay">
-          <div className="modal-content">
-            <div className="modal-header">
-              <h2>📝 Update Session: {activeSession.studentName}</h2>
-              <button className="close-btn" onClick={() => setShowModal(false)}>&times;</button>
-            </div>
-            <form onSubmit={handleUpdate} className="modal-body">
-              <div className="form-group">
-                <label>Status</label>
-                <select value={formData.status} onChange={e => setFormData({...formData, status: e.target.value})}>
-                  <option value="SCHEDULED">Scheduled</option>
-                  <option value="COMPLETED">Completed</option>
-                  <option value="CANCELLED">Cancelled</option>
-                </select>
-              </div>
-              <div className="form-group">
-                <label>Meeting Link</label>
-                <input value={formData.meetingLink} onChange={e => setFormData({...formData, meetingLink: e.target.value})} placeholder="Zoom / GMeet link" />
-              </div>
-              <div className="form-group">
-                <label>Counselor Notes (Private)</label>
-                <textarea value={formData.notes} onChange={e => setFormData({...formData, notes: e.target.value})} placeholder="Session observations..."></textarea>
-              </div>
-              <div className="form-group">
-                <label>Action Items (Visible to Student)</label>
-                <textarea value={formData.actionItems} onChange={e => setFormData({...formData, actionItems: e.target.value})} placeholder="Tasks for the student..."></textarea>
-              </div>
-              <div className="form-group">
-                <label>Schedule Next Session (Optional)</label>
-                <input type="datetime-local" value={formData.nextSessionAt} onChange={e => setFormData({...formData, nextSessionAt: e.target.value})} />
-              </div>
-              <div className="modal-actions">
-                <button type="button" className="secondary-btn" onClick={() => setShowModal(false)}>Cancel</button>
-                <button type="submit" className="primary-btn">Save Updates</button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

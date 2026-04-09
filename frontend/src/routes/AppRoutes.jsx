@@ -88,15 +88,15 @@ import SuperAdminViolationsPage from "../pages/superadmin/ViolationsPage";
 /* ================= MARKETER ================= */
 import MarketerDashboard from "../pages/marketer/MarketerDashboard";
 import Leads from "../pages/marketer/Leads";
+import MarketerCampaigns from "../pages/marketer/MarketerCampaigns";
+import MarketerAnnouncements from "../pages/marketer/MarketerAnnouncements";
+import MarketerProfile from "../pages/marketer/MarketerProfile";
 
 /* ================= COUNSELOR ================= */
 import CounselorDashboard from "../pages/counselor/CounselorDashboard";
+import CounselorLeads from "../pages/counselor/CounselorLeads";
 import CounselorAnnouncements from "../pages/counselor/CounselorAnnouncements";
 import CounselorProfile from "../pages/counselor/CounselorProfile";
-
-/* ================= MARKETER ================= */
-import MarketerAnnouncements from "../pages/marketer/MarketerAnnouncements";
-import MarketerProfile from "../pages/marketer/MarketerProfile";
 
 export default function AppRoutes() {
   return (
@@ -254,16 +254,12 @@ export default function AppRoutes() {
         <Route path="dashboard"       element={<MarketerDashboard />} />
         <Route path="profile"         element={<MarketerProfile />} />
         <Route path="leads"           element={<Leads />} />
+        <Route path="campaigns"       element={<MarketerCampaigns />} />
         <Route path="time-tracking"   element={<UserTimeTracking />} />
-        <Route path="performance"     element={<MarketerDashboard />} />
         <Route path="announcements"   element={<MarketerAnnouncements />} />
-
-        {/* Marketing Hub Placeholders */}
-        <Route path="campaigns"    element={<div style={{padding:'20px'}}><h3>Campaigns</h3><p>Coming Soon</p></div>} />
-        <Route path="vouchers"     element={<div style={{padding:'20px'}}><h3>Vouchers</h3><p>Coming Soon</p></div>} />
-        <Route path="notifications" element={<NotificationsPage />} />
-        <Route path="leave"        element={<TrainerLeaves />} />
-        <Route path="app-review"   element={<AppReviewPage />} />
+        <Route path="notifications"   element={<NotificationsPage />} />
+        <Route path="leave"           element={<TrainerLeaves />} />
+        <Route path="app-review"      element={<AppReviewPage />} />
       </Route>
 
 
@@ -278,9 +274,8 @@ export default function AppRoutes() {
       >
         <Route path="dashboard"       element={<CounselorDashboard />} />
         <Route path="profile"         element={<CounselorProfile />} />
-        <Route path="sessions"        element={<CounselorDashboard />} />
+        <Route path="leads"           element={<CounselorLeads />} />
         <Route path="time-tracking"   element={<UserTimeTracking />} />
-        <Route path="messages"        element={<CounselorDashboard />} />
         <Route path="announcements"   element={<CounselorAnnouncements />} />
         <Route path="notifications"   element={<NotificationsPage />} />
         <Route path="leave"           element={<TrainerLeaves />} />
