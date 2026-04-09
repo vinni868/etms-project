@@ -36,6 +36,34 @@ public class MasterDataSeeder {
         seedStates();
         seedCities();
         seedCountries();
+        addMissingCityAliases(); // migration: add popular alternate names
+    }
+
+    /**
+     * Migration: adds popular alternate city names if not already present.
+     * Safe to run every startup — checks existence before insert.
+     */
+    private void addMissingCityAliases() {
+        // Only add city names that don't exist at all in the DB.
+        // Do NOT add "Bangalore" — DB already has "Bengaluru" (official name).
+        // Alias matching for Bangalore ↔ Bengaluru is handled on the frontend.
+        java.util.Map<String, String> aliases = new java.util.LinkedHashMap<>();
+        // Old names still widely used that may not be in DB
+        aliases.put("Bombay", "Maharashtra");
+        aliases.put("Calcutta", "West Bengal");
+        aliases.put("Madras", "Tamil Nadu");
+        aliases.put("Poona", "Maharashtra");
+
+        for (java.util.Map.Entry<String, String> entry : aliases.entrySet()) {
+            String name = entry.getKey();
+            String state = entry.getValue();
+            boolean exists = cityRepo.findAllNames().stream()
+                .anyMatch(c -> c.equalsIgnoreCase(name));
+            if (!exists) {
+                cityRepo.save(new City(name, state));
+                System.out.println("MASTER_DATA: Added alias city → " + name + " (" + state + ")");
+            }
+        }
     }
 
     // ─────────────────────────────────────────────────────────────────────────

@@ -30,12 +30,19 @@ public class MasterDataController {
         this.countryRepo = countryRepo;
     }
 
-    /** GET /api/public/master/cities — returns list of all city names sorted A-Z */
+    /**
+     * GET /api/public/master/cities — returns city names sorted A-Z.
+     * Optional ?state=Karnataka filters to only cities in that state.
+     */
     @GetMapping("/cities")
-    public ResponseEntity<List<String>> getCities() {
+    public ResponseEntity<List<String>> getCities(
+            @RequestParam(required = false) String state) {
+        List<String> cities = (state != null && !state.isBlank())
+            ? cityRepo.findNamesByState(state)
+            : cityRepo.findAllNames();
         return ResponseEntity.ok()
-            .header("Cache-Control", "public, max-age=86400") // cache 24h
-            .body(cityRepo.findAllNames());
+            .header("Cache-Control", "public, max-age=3600")
+            .body(cities);
     }
 
     /** GET /api/public/master/states — returns list of all Indian state/UT names sorted A-Z */

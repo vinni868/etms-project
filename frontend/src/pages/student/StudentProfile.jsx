@@ -92,6 +92,18 @@ function StudentProfile() {
     }).catch(() => {}); // non-critical — silently ignore
   }, [userEmail]);
 
+  // Keep city list in sync with selected country + state
+  useEffect(() => {
+    if (student.country === "India" && student.state) {
+      api.get(`/public/master/cities?state=${encodeURIComponent(student.state)}`)
+        .then(res => { if (res.data?.length > 0) setMasterCities(res.data); })
+        .catch(() => {});
+    } else if (student.country === "India" && !student.state) {
+      setMasterCities([]); // no state selected → clear list so "Select state first" shows
+    }
+    // non-India: city is a free-text input, masterCities not used
+  }, [student.country, student.state]);
+
   const fetchProfile = async () => {
     try {
       const res = await api.get(`/student/profile/${userEmail}`);
@@ -1208,24 +1220,79 @@ function StudentProfile() {
               </div>
             </div>
 
-            {/* City + State + Pincode */}
+            {/* Country → State → City (in order) */}
             <div className="spa-fields-grid spa-fields-grid--3">
+              {/* 1. Country */}
               <SearchableSelect
-                label="CITY"
-                value={student.city}
-                options={masterCities}
-                placeholder="Type to search city..."
-                onSelect={(val) => setStudent(prev => ({ ...prev, city: val }))}
-                onChange={(val) => setStudent(prev => ({ ...prev, city: val }))}
+                label="COUNTRY"
+                value={student.country}
+                options={masterCountries}
+                placeholder="Select country..."
+                onSelect={(val) => {
+                  // Reset state & city when country changes
+                  setStudent(prev => ({ ...prev, country: val, state: val === "India" ? prev.state : "", city: "" }));
+                  if (val !== "India") setMasterCities([]);
+                }}
+                onChange={(val) => setStudent(prev => ({ ...prev, country: val }))}
               />
-              <SearchableSelect
-                label="STATE"
-                value={student.state}
-                options={masterStates}
-                placeholder="Type to search state..."
-                onSelect={(val) => setStudent(prev => ({ ...prev, state: val }))}
-                onChange={(val) => setStudent(prev => ({ ...prev, state: val }))}
-              />
+
+              {/* 2. State */}
+              {student.country === "India" ? (
+                <SearchableSelect
+                  label="STATE"
+                  value={student.state}
+                  options={masterStates}
+                  placeholder="Select state..."
+                  onSelect={async (val) => {
+                    setStudent(prev => ({ ...prev, state: val, city: "" }));
+                    // Fetch cities for this state
+                    if (val) {
+                      try {
+                        const r = await api.get(`/public/master/cities?state=${encodeURIComponent(val)}`);
+                        setMasterCities(r.data || []);
+                      } catch { setMasterCities([]); }
+                    }
+                  }}
+                  onChange={(val) => setStudent(prev => ({ ...prev, state: val }))}
+                />
+              ) : (
+                <div className="spa-field">
+                  <label>STATE / PROVINCE</label>
+                  <input
+                    type="text"
+                    value={student.state}
+                    onChange={(e) => setStudent(prev => ({ ...prev, state: e.target.value }))}
+                    placeholder="Enter state or province..."
+                  />
+                </div>
+              )}
+
+              {/* 3. City */}
+              {student.country === "India" ? (
+                <SearchableSelect
+                  label="CITY"
+                  value={student.city}
+                  options={masterCities.length > 0 ? masterCities : masterCities}
+                  placeholder={student.state ? `Search city in ${student.state}...` : "Select state first, then city..."}
+                  onSelect={(val) => setStudent(prev => ({ ...prev, city: val }))}
+                  onChange={(val) => setStudent(prev => ({ ...prev, city: val }))}
+                  showAllOnFocus={true}
+                />
+              ) : (
+                <div className="spa-field">
+                  <label>CITY</label>
+                  <input
+                    type="text"
+                    value={student.city}
+                    onChange={(e) => setStudent(prev => ({ ...prev, city: e.target.value }))}
+                    placeholder="Enter city..."
+                  />
+                </div>
+              )}
+            </div>
+
+            {/* Pincode */}
+            <div className="spa-fields-grid spa-fields-grid--3">
               <div className="spa-field">
                 <label>PINCODE</label>
                 <input
@@ -1240,18 +1307,6 @@ function StudentProfile() {
                   <span className="spa-field-error">6 digits required</span>
                 )}
               </div>
-            </div>
-
-            {/* Country — full width */}
-            <div className="spa-fields-grid spa-fields-grid--1">
-              <SearchableSelect
-                label="COUNTRY"
-                value={student.country}
-                options={masterCountries}
-                placeholder="Type to search country..."
-                onSelect={(val) => setStudent(prev => ({ ...prev, country: val }))}
-                onChange={(val) => setStudent(prev => ({ ...prev, country: val }))}
-              />
             </div>
           </div>
         </div>
@@ -1341,13 +1396,43 @@ function DocUploadItem({ label, url, loading, onUpload }) {
 }
 
 /**
+ * Known aliases: typing these strings will surface the official city name.
+ * e.g. typing "bangalore" → shows "Bengaluru"
+ */
+const CITY_ALIASES = {
+  "Bengaluru":  ["bangalore", "bangaluru", "bengalore"],
+  "Mumbai":     ["bombay"],
+  "Kolkata":    ["calcutta"],
+  "Chennai":    ["madras"],
+  "Mysuru":     ["mysore"],
+  "Mangaluru":  ["mangalore"],
+  "Hubballi":   ["hubli", "huballi"],
+  "Belagavi":   ["belgaum"],
+  "Kalaburagi": ["gulbarga"],
+  "Shivamogga": ["shimoga"],
+  "Tumakuru":   ["tumkur"],
+  "Vijayapura": ["bijapur"],
+  "Davanagere": ["davangere"],
+  "Pune":       ["poona"],
+  "Varanasi":   ["benaras", "benares"],
+  "Prayagraj":  ["allahabad"],
+  "Vadodara":   ["baroda"],
+  "Thiruvananthapuram": ["trivandrum"],
+};
+
+function matchesAlias(option, query) {
+  const q = query.toLowerCase();
+  return (CITY_ALIASES[option] || []).some(a => a.includes(q));
+}
+
+/**
  * SearchableSelect — reusable searchable dropdown for City / State / Country.
- * - Typing filters the list from master DB
- * - Click an option to select it (fills the field)
- * - Typing custom text is allowed (stored as-is if not in list)
+ * - Typing filters with alias support (e.g. "bangalore" finds "Bengaluru")
+ * - showAllOnFocus: when true, shows all options on focus even without typing
+ * - Click to select; free-text is also allowed
  * - Clicking outside closes the dropdown
  */
-function SearchableSelect({ label, value, options, placeholder, onSelect, onChange }) {
+function SearchableSelect({ label, value, options, placeholder, onSelect, onChange, showAllOnFocus = false }) {
   const [query, setQuery] = useState(value || "");
   const [open, setOpen] = useState(false);
   const ref = useRef(null);
@@ -1362,15 +1447,18 @@ function SearchableSelect({ label, value, options, placeholder, onSelect, onChan
     return () => document.removeEventListener("mousedown", handler);
   }, []);
 
-  const filtered = query.length === 0
-    ? []
-    : options.filter(o => o.toLowerCase().includes(query.toLowerCase())).slice(0, 8);
+  const filtered = (() => {
+    if (query.length === 0) return showAllOnFocus ? options.slice(0, 15) : [];
+    return options
+      .filter(o => o.toLowerCase().includes(query.toLowerCase()) || matchesAlias(o, query))
+      .slice(0, 15);
+  })();
 
   const handleInput = (e) => {
     const val = e.target.value;
     setQuery(val);
     setOpen(true);
-    onChange(val); // allow free-text
+    onChange(val);
   };
 
   const handleSelect = (opt) => {
@@ -1387,7 +1475,7 @@ function SearchableSelect({ label, value, options, placeholder, onSelect, onChan
           type="text"
           value={query}
           onChange={handleInput}
-          onFocus={() => query.length > 0 && setOpen(true)}
+          onFocus={() => setOpen(true)}
           placeholder={placeholder}
           autoComplete="off"
         />

@@ -11,5 +11,8 @@ public interface CityRepository extends JpaRepository<City, Long> {
     @Query("SELECT c.name FROM City c ORDER BY c.name ASC")
     List<String> findAllNames();
 
+    @Query("SELECT c.name FROM City c WHERE c.stateName = :stateName ORDER BY c.name ASC")
+    List<String> findNamesByState(String stateName);
+
     long count();
 }
