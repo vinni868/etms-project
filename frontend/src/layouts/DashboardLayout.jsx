@@ -67,6 +67,13 @@ const NAV_CONFIG = {
       ]
     },
     {
+      group: "Identity & Compliance",
+      id: "superadmin-identity",
+      items: [
+        { to: "/superadmin/aadhaar-review", icon: "🪪", name: "Aadhaar Review", desc: "Approve & view all Aadhaar cards" },
+      ]
+    },
+    {
       group: "System Config",
       id: "config",
       items: [

@@ -1676,6 +1676,28 @@ public ResponseEntity<?> updateAdminAttendance(
         return ResponseEntity.ok(result);
     }
 
+    /** GET /api/admin/aadhaar-collected — all students with verified Aadhaar cards */
+    @GetMapping("/aadhaar-collected")
+    public ResponseEntity<?> verifiedAadhaarCards() {
+        List<Student> verified = studentRepository.findVerifiedAadhaarCards();
+        List<Map<String, Object>> result = new ArrayList<>();
+        for (Student s : verified) {
+            Map<String, Object> dto = new LinkedHashMap<>();
+            dto.put("studentId", s.getId());
+            dto.put("name", s.getName());
+            dto.put("email", s.getEmail());
+            dto.put("phone", s.getPhone());
+            dto.put("aadharCardUrl", s.getAadharCardUrl());
+            dto.put("aadharName", s.getAadharName());
+            dto.put("isAadharVerified", s.getIsAadharVerified());
+            dto.put("aadhaarVerificationSource", s.getAadhaarVerificationSource());
+            dto.put("aadharVerifiedAt", s.getAadharVerifiedAt() != null ? s.getAadharVerifiedAt().toString() : null);
+            dto.put("portalId", s.getStudentId());
+            result.add(dto);
+        }
+        return ResponseEntity.ok(result);
+    }
+
     /** PUT /api/admin/aadhaar-reviews/{studentId}/approve — mark Aadhaar verified manually */
     @PutMapping("/aadhaar-reviews/{studentId}/approve")
     public ResponseEntity<?> approveAadhaar(@PathVariable Long studentId) {

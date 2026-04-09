@@ -196,6 +196,7 @@ export default function AppRoutes() {
         <Route path="app-review"        element={<AppReviewPage />} />
         <Route path="reviews"           element={<AdminAppReviews />} />
         <Route path="violations"        element={<SuperAdminViolationsPage />} />
+        <Route path="aadhaar-review"    element={<AdminAadhaarReview />} />
       </Route>
 
       {/* ================= ADMIN ================= */}

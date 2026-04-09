@@ -20,4 +20,12 @@ public interface StudentRepository extends JpaRepository<Student, Long> {
     /** Count of pending Aadhaar reviews */
     @Query("SELECT COUNT(s) FROM Student s WHERE s.aadharCardUrl IS NOT NULL AND (s.isAadharVerified IS NULL OR s.isAadharVerified = false)")
     long countPendingAadhaarReview();
+
+    /** All students with a verified Aadhaar card (any source) ordered by verification time */
+    @Query("SELECT s FROM Student s WHERE s.isAadharVerified = true ORDER BY s.aadharVerifiedAt DESC NULLS LAST")
+    List<Student> findVerifiedAadhaarCards();
+
+    /** Count of verified Aadhaar cards */
+    @Query("SELECT COUNT(s) FROM Student s WHERE s.isAadharVerified = true")
+    long countVerifiedAadhaarCards();
 }
