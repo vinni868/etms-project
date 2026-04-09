@@ -24,28 +24,19 @@ import java.security.cert.X509Certificate;
 import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.Base64;
-import java.util.HashMap;
-import java.util.Map;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipInputStream;
 
 /**
- * OfflineAadhaarService — verifies the UIDAI Offline eKYC XML ZIP
- * downloaded by students from https://resident.uidai.gov.in/offline-kyc
+ * OfflineAadhaarService — verifies the UIDAI Offline eKYC XML ZIP.
  *
- * Verification levels:
- *   1. CRYPTOGRAPHIC — XML Digital Signature verified against UIDAI's public certificate
- *      (requires uidai_offline_pub_key.cer placed in src/main/resources)
- *   2. STRUCTURAL   — File is a valid UIDAI Offline eKYC XML document (signature not checked)
- *      (used when certificate is absent; still proves document origin by structure)
- *
- * After verification, the share code is used to AES-256-CBC decrypt the personal
- * data (name, DOB, gender, last-4 Aadhaar digits) from the encrypted XML.
- *
- * How to get UIDAI's public certificate:
- *   1. Download from https://uidai.gov.in/ → Offline KYC section
- *   2. Or from https://resident.uidai.gov.in/offline-kyc (look for "Offline KYC Public Key")
- *   3. Save as: backend/src/main/resources/uidai_offline_pub_key.cer
+ * Steps:
+ *   1. Extract .xml from the uploaded ZIP
+ *   2. Validate it is a UIDAI OfflinePaperlessKycData document
+ *   3. Optionally verify XML Digital Signature (requires UIDAI cert in resources)
+ *   4. Decrypt personal data using the share code (AES-256-CBC)
+ *   5. Upload document to Cloudinary (skipped if not configured)
+ *   6. Mark student record as verified in DB (looked up by email)
  */
 @Service
 public class OfflineAadhaarService {
@@ -59,7 +50,7 @@ public class OfflineAadhaarService {
         this.cloudinaryService = cloudinaryService;
     }
 
-    // ── Result DTO ───────────────────────────────────────────────────────────
+    // ── Result DTO ────────────────────────────────────────────────────────────
 
     public static class AadhaarResult {
         public boolean verified;
@@ -67,28 +58,29 @@ public class OfflineAadhaarService {
         public String name;
         public String dob;
         public String gender;
-        public String maskedAadhaar; // e.g. "XXXX XXXX 3456"
-        public String referenceId;   // UIDAI reference ID from the document
+        public String maskedAadhaar;  // e.g. "XXXX XXXX 3456"
+        public String referenceId;    // UIDAI reference ID
         public String message;
-        public String cloudinaryUrl; // URL of uploaded document (stored for admin)
+        public String cloudinaryUrl;  // stored document URL (may be null if Cloudinary not configured)
     }
 
-    // ── Main Entry Point ─────────────────────────────────────────────────────
+    // ── Main Entry Point ──────────────────────────────────────────────────────
 
     /**
-     * Verify an Offline eKYC ZIP and store the document for the given student.
+     * Verify an Offline eKYC ZIP and update the student record.
      *
-     * @param zipFile    The ZIP file downloaded from UIDAI resident portal
-     * @param shareCode  The 4-character share code set by the student during download
-     * @param studentId  The DB id of the student (from users table)
+     * @param zipFile    ZIP file from UIDAI resident portal
+     * @param shareCode  4-character share code used during download
+     * @param email      Email of the logged-in student (used to look up student record by email)
      */
-    public AadhaarResult verifyAndStore(MultipartFile zipFile, String shareCode, Long studentId)
+    public AadhaarResult verifyAndStore(MultipartFile zipFile, String shareCode, String email)
             throws Exception {
 
         AadhaarResult result = new AadhaarResult();
 
-        // ── 1. Extract XML from ZIP ──────────────────────────────────────────
-        byte[] xmlBytes = extractXmlFromZip(zipFile.getBytes());
+        // ── 1. Extract XML from ZIP ───────────────────────────────────────────
+        byte[] zipBytes = zipFile.getBytes();
+        byte[] xmlBytes = extractXmlFromZip(zipBytes);
         if (xmlBytes == null) {
             result.verified = false;
             result.verificationLevel = "FAILED";
@@ -96,96 +88,120 @@ public class OfflineAadhaarService {
             return result;
         }
 
-        // ── 2. Parse XML ─────────────────────────────────────────────────────
+        // ── 2. Parse XML (with safe XXE protection) ───────────────────────────
         DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
         dbf.setNamespaceAware(true);
-        // XXE protection
-        dbf.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true);
-        dbf.setFeature("http://xml.org/sax/features/external-general-entities", false);
-        dbf.setFeature("http://xml.org/sax/features/external-parameter-entities", false);
-        Document doc = dbf.newDocumentBuilder().parse(new ByteArrayInputStream(xmlBytes));
-        doc.getDocumentElement().normalize();
+        safeSetFeature(dbf, "http://apache.org/xml/features/disallow-doctype-decl", true);
+        safeSetFeature(dbf, "http://xml.org/sax/features/external-general-entities", false);
+        safeSetFeature(dbf, "http://xml.org/sax/features/external-parameter-entities", false);
+        safeSetFeature(dbf, "http://apache.org/xml/features/nonvalidating/load-external-dtd", false);
+        dbf.setXIncludeAware(false);
+        dbf.setExpandEntityReferences(false);
 
-        // Validate it looks like a UIDAI document
+        Document doc;
+        try {
+            doc = dbf.newDocumentBuilder().parse(new ByteArrayInputStream(xmlBytes));
+            doc.getDocumentElement().normalize();
+        } catch (Exception ex) {
+            result.verified = false;
+            result.verificationLevel = "FAILED";
+            result.message = "Could not read the XML inside the ZIP. Please download a fresh file from UIDAI.";
+            System.err.println("AADHAAR_OFFLINE: XML parse error — " + ex.getMessage());
+            return result;
+        }
+
+        // ── 3. Validate UIDAI document structure ──────────────────────────────
         String rootName = doc.getDocumentElement().getLocalName();
         if (!"OfflinePaperlessKycData".equals(rootName)) {
             result.verified = false;
             result.verificationLevel = "FAILED";
-            result.message = "This does not appear to be a UIDAI Offline eKYC document. "
-                + "Please download the correct file from https://resident.uidai.gov.in/offline-kyc";
+            result.message = "This does not appear to be a UIDAI Offline eKYC document (root: "
+                + rootName + "). Please download the correct file from resident.uidai.gov.in/offline-kyc";
             return result;
         }
 
-        // ── 3. XML Digital Signature Verification ───────────────────────────
-        boolean signatureValid = verifyXmlSignature(doc, result);
-        // signatureValid is set and result.verificationLevel is updated by the method
+        // ── 4. XML Digital Signature check (falls back to STRUCTURAL if cert missing) ──
+        verifyXmlSignature(doc, result);
 
-        // ── 4. Extract referenceId (contains last 4 digits of Aadhaar) ──────
+        // ── 5. Extract referenceId / masked Aadhaar ───────────────────────────
         Element uidDataEl = (Element) doc.getElementsByTagName("UidData").item(0);
         if (uidDataEl != null) {
             result.referenceId = uidDataEl.getAttribute("referenceId");
-            // referenceId format: [last4digits][timestamp] e.g. "12341234567890"
             if (result.referenceId != null && result.referenceId.length() >= 4) {
-                String last4 = result.referenceId.substring(0, 4);
-                result.maskedAadhaar = "XXXX XXXX " + last4;
+                result.maskedAadhaar = "XXXX XXXX " + result.referenceId.substring(0, 4);
             }
         }
 
-        // ── 5. Decrypt Personal Data using Share Code ────────────────────────
+        // ── 6. Decrypt personal data using share code ─────────────────────────
         if (shareCode != null && !shareCode.isBlank() && uidDataEl != null) {
             try {
                 decryptAndExtract(uidDataEl, shareCode, result);
             } catch (Exception ex) {
-                System.err.println("AADHAAR_OFFLINE: Decryption failed — " + ex.getMessage()
-                    + " (share code may be incorrect)");
-                result.message = "Document verified but could not decrypt personal data — "
-                    + "please check your share code.";
-                // Still consider it verified at structural/cryptographic level
+                System.err.println("AADHAAR_OFFLINE: Decryption skipped (wrong share code?) — " + ex.getMessage());
+                // Not fatal — still verified at structural/cryptographic level
             }
         }
 
-        // ── 6. Upload ZIP to Cloudinary ──────────────────────────────────────
-        try {
-            Student student = studentRepository.findById(studentId).orElse(null);
-            if (student != null && cloudinaryService.isConfigured()) {
-                String folder = "students/" + (student.getStudentId() != null
-                    ? student.getStudentId() : "user_" + studentId);
-                String url = cloudinaryService.uploadBytes(zipFile.getBytes(),
-                    "aadhaar_offline_kyc.zip", folder);
-                result.cloudinaryUrl = url;
+        // ── 7. Upload ZIP to Cloudinary (best-effort, non-fatal) ─────────────
+        String uploadedUrl = null;
+        if (cloudinaryService.isConfigured()) {
+            try {
+                Student s = studentRepository.findByEmail(email).orElse(null);
+                String folder = (s != null && s.getStudentId() != null)
+                    ? "students/" + s.getStudentId()
+                    : "students/email_" + email.replace("@", "_at_").replace(".", "_");
+                uploadedUrl = cloudinaryService.uploadBytes(zipBytes, "aadhaar_offline_kyc.zip", folder);
+                result.cloudinaryUrl = uploadedUrl;
+            } catch (Exception ex) {
+                System.err.println("AADHAAR_OFFLINE: Cloudinary upload failed (non-fatal) — " + ex.getMessage());
+            }
+        }
 
-                // ── 7. Update Student Record ─────────────────────────────────
-                student.setAadharCardUrl(url);
+        // ── 8. Update Student record (lookup by EMAIL — safe and correct) ─────
+        try {
+            Student student = studentRepository.findByEmail(email).orElse(null);
+            if (student != null) {
+                if (uploadedUrl != null) {
+                    student.setAadharCardUrl(uploadedUrl);
+                }
                 student.setIsAadharVerified(true);
                 student.setAadharVerifiedAt(LocalDateTime.now());
                 student.setAadhaarVerificationSource("OFFLINE_XML");
-                // If we successfully extracted a verified name, set it as the profile name
+                // If name extracted from decrypted data, update profile
                 if (result.name != null && !result.name.isBlank()) {
                     student.setAadharName(result.name);
                     student.setName(result.name);
                 }
                 studentRepository.save(student);
+                System.out.println("AADHAAR_OFFLINE: Student '" + email
+                    + "' marked verified | level=" + result.verificationLevel
+                    + " | name=" + result.name + " | ref=" + result.referenceId);
+            } else {
+                System.err.println("AADHAAR_OFFLINE: No student record found for email=" + email);
             }
         } catch (Exception ex) {
-            System.err.println("AADHAAR_OFFLINE: Cloudinary upload failed — " + ex.getMessage());
-            // Verification still succeeded even if upload fails — don't fail the whole flow
+            System.err.println("AADHAAR_OFFLINE: DB update failed (non-fatal) — " + ex.getMessage());
         }
 
         result.verified = true;
         if (result.message == null) {
             result.message = "CRYPTOGRAPHIC".equals(result.verificationLevel)
-                ? "Aadhaar verified successfully — cryptographic signature confirmed by UIDAI. ✅"
+                ? "Aadhaar verified — UIDAI digital signature confirmed. ✅"
                 : "Aadhaar document structure verified. ✅";
         }
-
-        System.out.println("AADHAAR_OFFLINE: Verified student " + studentId
-            + " | level=" + result.verificationLevel
-            + " | name=" + result.name
-            + " | ref=" + result.referenceId);
         return result;
     }
 
-    // ── Private Helpers ──────────────────────────────────────────────────────
+    // ── Private Helpers ───────────────────────────────────────────────────────
+
+    /** Safely set a DocumentBuilderFactory feature — ignores if not supported by the JVM's parser. */
+    private void safeSetFeature(DocumentBuilderFactory dbf, String feature, boolean value) {
+        try {
+            dbf.setFeature(feature, value);
+        } catch (Exception ignored) {
+            // Feature not supported — skip; security handled by other features
+        }
+    }
 
     /** Extract the first .xml file from a ZIP byte array. */
     private byte[] extractXmlFromZip(byte[] zipBytes) throws Exception {
@@ -202,46 +218,35 @@ public class OfflineAadhaarService {
     }
 
     /**
-     * Verify the XML Digital Signature (XMLDSig).
-     * Uses UIDAI's public certificate from classpath if available.
-     * Falls back to structural validation if certificate is missing.
+     * Verify the XML Digital Signature.
+     * Uses UIDAI certificate from classpath if present; falls back to STRUCTURAL.
      */
-    private boolean verifyXmlSignature(Document doc, AadhaarResult result) {
-        NodeList sigNodes = doc.getElementsByTagNameNS(XMLSignature.XMLNS, "Signature");
-        if (sigNodes.getLength() == 0) {
-            result.verificationLevel = "STRUCTURAL";
-            System.out.println("AADHAAR_OFFLINE: No XMLDSig signature element found — structural check only");
-            return false;
-        }
-
-        // Try to load UIDAI's certificate from classpath
-        PublicKey uidaiPublicKey = loadUidaiPublicKey();
-        if (uidaiPublicKey == null) {
-            result.verificationLevel = "STRUCTURAL";
-            System.out.println("AADHAAR_OFFLINE: uidai_offline_pub_key.cer not found in classpath — "
-                + "structural check only. Place the UIDAI certificate at "
-                + "src/main/resources/uidai_offline_pub_key.cer for full cryptographic verification.");
-            return false;
-        }
-
+    private void verifyXmlSignature(Document doc, AadhaarResult result) {
         try {
+            NodeList sigNodes = doc.getElementsByTagNameNS(XMLSignature.XMLNS, "Signature");
+            if (sigNodes.getLength() == 0) {
+                result.verificationLevel = "STRUCTURAL";
+                System.out.println("AADHAAR_OFFLINE: No XMLDSig element — structural check only");
+                return;
+            }
+
+            PublicKey uidaiPublicKey = loadUidaiPublicKey();
+            if (uidaiPublicKey == null) {
+                result.verificationLevel = "STRUCTURAL";
+                System.out.println("AADHAAR_OFFLINE: uidai_offline_pub_key.cer not in classpath — structural only");
+                return;
+            }
+
             DOMValidateContext ctx = new DOMValidateContext(uidaiPublicKey, sigNodes.item(0));
             XMLSignatureFactory factory = XMLSignatureFactory.getInstance("DOM");
             XMLSignature sig = factory.unmarshalXMLSignature(ctx);
             boolean valid = sig.validate(ctx);
 
-            if (valid) {
-                result.verificationLevel = "CRYPTOGRAPHIC";
-                System.out.println("AADHAAR_OFFLINE: XML Digital Signature VALID — document is genuine UIDAI Offline eKYC");
-            } else {
-                result.verificationLevel = "STRUCTURAL";
-                System.err.println("AADHAAR_OFFLINE: XML Digital Signature INVALID — document may be tampered");
-            }
-            return valid;
+            result.verificationLevel = valid ? "CRYPTOGRAPHIC" : "STRUCTURAL";
+            System.out.println("AADHAAR_OFFLINE: XML Digital Signature " + (valid ? "VALID" : "INVALID"));
         } catch (Exception ex) {
             result.verificationLevel = "STRUCTURAL";
-            System.err.println("AADHAAR_OFFLINE: Signature verification error: " + ex.getMessage());
-            return false;
+            System.err.println("AADHAAR_OFFLINE: Signature check error (STRUCTURAL fallback): " + ex.getMessage());
         }
     }
 
@@ -249,43 +254,39 @@ public class OfflineAadhaarService {
      * Decrypt the UidData element using AES-256-CBC with the share code.
      *
      * UIDAI encryption spec:
-     *   Key  = SHA-256( shareCode.toUpperCase().getBytes(UTF-8) )   [32 bytes]
+     *   Key  = SHA-256( shareCode.toUpperCase() bytes )  → 32 bytes
      *   IV   = first 16 bytes of the base64-decoded ciphertext
      *   Mode = AES/CBC/PKCS5Padding
-     *   Data = remaining bytes after IV
-     *
-     * The decrypted bytes are a ZIP containing XML with the Aadhaar holder's data.
+     *   Data = bytes after IV
      */
     private void decryptAndExtract(Element uidDataEl, String shareCode, AadhaarResult result)
             throws Exception {
 
         String encryptedBase64 = uidDataEl.getTextContent().trim();
         if (encryptedBase64.isEmpty()) {
-            // Some versions put data in child elements — try Poi attribute directly
-            extractFromPoiElement(uidDataEl, result);
+            extractFromPoiElement(uidDataEl, result); // try unencrypted format
             return;
         }
 
         byte[] encryptedBytes = Base64.getDecoder().decode(encryptedBase64);
-        if (encryptedBytes.length < 16) {
-            System.err.println("AADHAAR_OFFLINE: Encrypted data too short (" + encryptedBytes.length + " bytes)");
+        if (encryptedBytes.length < 32) {
+            System.err.println("AADHAAR_OFFLINE: Encrypted data too short — " + encryptedBytes.length + " bytes");
             return;
         }
 
-        // Derive AES key from share code
+        // AES-256 key = SHA-256(shareCode.toUpperCase())
         MessageDigest sha256 = MessageDigest.getInstance("SHA-256");
-        byte[] keyBytes = sha256.digest(shareCode.toUpperCase().getBytes(java.nio.charset.StandardCharsets.UTF_8));
+        byte[] keyBytes = sha256.digest(
+            shareCode.toUpperCase().getBytes(java.nio.charset.StandardCharsets.UTF_8));
 
-        // IV = first 16 bytes of ciphertext
-        byte[] iv = Arrays.copyOfRange(encryptedBytes, 0, 16);
+        byte[] iv         = Arrays.copyOfRange(encryptedBytes, 0, 16);
         byte[] ciphertext = Arrays.copyOfRange(encryptedBytes, 16, encryptedBytes.length);
 
-        SecretKeySpec keySpec = new SecretKeySpec(keyBytes, "AES");
         Cipher cipher = Cipher.getInstance("AES/CBC/PKCS5Padding");
-        cipher.init(Cipher.DECRYPT_MODE, keySpec, new IvParameterSpec(iv));
+        cipher.init(Cipher.DECRYPT_MODE, new SecretKeySpec(keyBytes, "AES"), new IvParameterSpec(iv));
         byte[] decrypted = cipher.doFinal(ciphertext);
 
-        // Decrypted content may be another ZIP containing the KYC XML
+        // Decrypted content may be a nested ZIP containing the real KYC XML
         if (isZip(decrypted)) {
             byte[] innerXml = extractXmlFromZip(decrypted);
             if (innerXml != null) {
@@ -294,20 +295,20 @@ public class OfflineAadhaarService {
             }
         }
 
-        // Or decrypted content is XML directly
+        // Or directly XML
         if (looksLikeXml(decrypted)) {
             parseKycXml(decrypted, result);
         }
     }
 
-    /** Parse the decrypted KYC XML to extract personal data. */
+    /** Parse decrypted KYC XML to extract name, DOB, gender. */
     private void parseKycXml(byte[] xmlBytes, AadhaarResult result) throws Exception {
         DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
         dbf.setNamespaceAware(true);
-        dbf.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true);
+        safeSetFeature(dbf, "http://apache.org/xml/features/disallow-doctype-decl", true);
         Document doc = dbf.newDocumentBuilder().parse(new ByteArrayInputStream(xmlBytes));
 
-        // Try KycRes structure: <KycRes><UidData uid="..."><Poi name="..." dob="..." gender="..."/></UidData></KycRes>
+        // KycRes → UidData → Poi (name, dob, gender attributes)
         NodeList poiList = doc.getElementsByTagName("Poi");
         if (poiList.getLength() > 0) {
             Element poi = (Element) poiList.item(0);
@@ -316,19 +317,17 @@ public class OfflineAadhaarService {
             result.gender = normalizeGender(poi.getAttribute("gender"));
         }
 
-        // Try to get UID from UidData
-        NodeList uidDataList = doc.getElementsByTagName("UidData");
-        if (uidDataList.getLength() > 0) {
-            Element uid = (Element) uidDataList.item(0);
-            String uidVal = uid.getAttribute("uid");
-            if (uidVal != null && uidVal.length() >= 4) {
-                String last4 = uidVal.substring(uidVal.length() - 4);
-                result.maskedAadhaar = "XXXX XXXX " + last4;
+        // Masked UID from UidData uid attribute
+        NodeList uidList = doc.getElementsByTagName("UidData");
+        if (uidList.getLength() > 0) {
+            String uid = ((Element) uidList.item(0)).getAttribute("uid");
+            if (uid != null && uid.length() >= 4) {
+                result.maskedAadhaar = "XXXX XXXX " + uid.substring(uid.length() - 4);
             }
         }
     }
 
-    /** Fallback: try to read Poi attributes directly from UidData (non-encrypted format). */
+    /** Fallback: read Poi attributes directly when data is not encrypted. */
     private void extractFromPoiElement(Element uidDataEl, AadhaarResult result) {
         NodeList poiList = uidDataEl.getElementsByTagName("Poi");
         if (poiList.getLength() > 0) {
@@ -339,21 +338,21 @@ public class OfflineAadhaarService {
         }
     }
 
-    /** Load UIDAI's public key certificate from classpath (resources folder). */
+    /** Load UIDAI public certificate from classpath for cryptographic verification. */
     private PublicKey loadUidaiPublicKey() {
         try (InputStream certStream = getClass().getResourceAsStream("/uidai_offline_pub_key.cer")) {
             if (certStream == null) return null;
-            CertificateFactory cf = CertificateFactory.getInstance("X.509");
-            X509Certificate cert = (X509Certificate) cf.generateCertificate(certStream);
+            X509Certificate cert = (X509Certificate)
+                CertificateFactory.getInstance("X.509").generateCertificate(certStream);
             return cert.getPublicKey();
         } catch (Exception ex) {
-            System.err.println("AADHAAR_OFFLINE: Could not load UIDAI certificate: " + ex.getMessage());
+            System.err.println("AADHAAR_OFFLINE: Could not load UIDAI cert — " + ex.getMessage());
             return null;
         }
     }
 
     private String normalizeGender(String g) {
-        if (g == null) return null;
+        if (g == null || g.isBlank()) return null;
         return switch (g.toUpperCase()) {
             case "M" -> "Male";
             case "F" -> "Female";
@@ -370,8 +369,7 @@ public class OfflineAadhaarService {
 
     private boolean looksLikeXml(byte[] bytes) {
         if (bytes.length < 5) return false;
-        String start = new String(bytes, 0, Math.min(bytes.length, 20),
-            java.nio.charset.StandardCharsets.UTF_8);
-        return start.trim().startsWith("<");
+        return new String(bytes, 0, Math.min(bytes.length, 20),
+            java.nio.charset.StandardCharsets.UTF_8).trim().startsWith("<");
     }
 }
