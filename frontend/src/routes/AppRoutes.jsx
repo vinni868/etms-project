@@ -74,6 +74,7 @@ import AdminProfile from "../pages/admin/AdminProfile";
 import StudentMapping from "../pages/admin/StudentMapping";
 import AdminAttendance from "../pages/admin/AdminAttendance";
 import AdminIdManagement from "../pages/admin/AdminIdManagement";
+import AdminAadhaarReview from "../pages/admin/AdminAadhaarReview";
 import AdminCreateUser from "../pages/admin/CreateUser";
 import QrDisplayPage from "../pages/admin/QrDisplayPage";
 import AdminFees from "../pages/admin/AdminFees";
@@ -221,6 +222,7 @@ export default function AppRoutes() {
         <Route path="time-tracking"  element={<UserTimeTracking />} />
         <Route path="qr-station"     element={<QrDisplayPage />} />
         <Route path="id-management"  element={<AdminIdManagement />} />
+        <Route path="aadhaar-review" element={<AdminAadhaarReview />} />
         <Route path="fees"           element={<AdminFees />} />
         <Route path="announcements"  element={<AdminAnnouncements />} />
         <Route path="profile"        element={<AdminProfile />} />

@@ -86,6 +86,7 @@ const NAV_CONFIG = {
         { to: "/admin/trainers", icon: <FaChalkboardTeacher />, name: "Trainers", desc: "Instructors and trainers" },
         { to: "/admin/create-user", icon: "👤+", name: "Provision", desc: "Create new user accounts" },
         { to: "/admin/id-management", icon: "🔢", name: "ID Control", desc: "Access card and ID generator" },
+        { to: "/admin/aadhaar-review", icon: "🪪", name: "Aadhaar Review", desc: "Verify scanned Aadhaar uploads" },
       ]
     },
     {

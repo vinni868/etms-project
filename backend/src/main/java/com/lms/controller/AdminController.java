@@ -6,6 +6,7 @@ import java.time.LocalDate;
 import java.time.LocalTime;
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.LinkedHashMap;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -77,6 +78,9 @@ public class AdminController {
 
     @Autowired
     private CloudinaryService cloudinaryService;
+
+    @Autowired
+    private StudentRepository studentRepository;
 
     // ================= DASHBOARD =================
     @GetMapping("/dashboard")
@@ -1648,6 +1652,66 @@ public ResponseEntity<?> updateAdminAttendance(
             e.printStackTrace();
             return ResponseEntity.internalServerError().build();
         }
+    }
+
+    // ─────────────── AADHAAR SCANNED COPY REVIEW ──────────────────────────────
+
+    /** GET /api/admin/aadhaar-reviews — all students pending manual Aadhaar verification */
+    @GetMapping("/aadhaar-reviews")
+    public ResponseEntity<?> pendingAadhaarReviews() {
+        List<Student> pending = studentRepository.findPendingAadhaarReview();
+        List<Map<String, Object>> result = new ArrayList<>();
+        for (Student s : pending) {
+            Map<String, Object> dto = new LinkedHashMap<>();
+            dto.put("studentId", s.getId());
+            dto.put("name", s.getName());
+            dto.put("email", s.getEmail());
+            dto.put("phone", s.getPhone());
+            dto.put("aadharCardUrl", s.getAadharCardUrl());
+            dto.put("isAadharVerified", s.getIsAadharVerified());
+            dto.put("aadhaarVerificationSource", s.getAadhaarVerificationSource());
+            dto.put("portalId", s.getStudentId());
+            result.add(dto);
+        }
+        return ResponseEntity.ok(result);
+    }
+
+    /** PUT /api/admin/aadhaar-reviews/{studentId}/approve — mark Aadhaar verified manually */
+    @PutMapping("/aadhaar-reviews/{studentId}/approve")
+    public ResponseEntity<?> approveAadhaar(@PathVariable Long studentId) {
+        return studentRepository.findById(studentId).map(s -> {
+            s.setIsAadharVerified(true);
+            s.setAadhaarVerifiedAt(java.time.LocalDateTime.now());
+            s.setAadhaarVerificationSource("ADMIN_MANUAL");
+            studentRepository.save(s);
+            // Notify student
+            userRepository.findByEmail(s.getEmail()).ifPresent(u ->
+                notificationService.createNotification(u.getId(),
+                    "✅ Aadhaar Verified",
+                    "Your Aadhaar card has been manually verified by the admin. Your identity is now confirmed.",
+                    "SYSTEM")
+            );
+            return ResponseEntity.ok(Map.of("status", "success", "message", "Aadhaar verified for " + s.getName()));
+        }).orElse(ResponseEntity.notFound().build());
+    }
+
+    /** PUT /api/admin/aadhaar-reviews/{studentId}/reject — reject and clear the uploaded Aadhaar */
+    @PutMapping("/aadhaar-reviews/{studentId}/reject")
+    public ResponseEntity<?> rejectAadhaar(@PathVariable Long studentId, @RequestBody Map<String, String> body) {
+        return studentRepository.findById(studentId).map(s -> {
+            s.setAadharCardUrl(null);
+            s.setIsAadharVerified(false);
+            s.setAadhaarVerificationSource(null);
+            studentRepository.save(s);
+            String reason = body.getOrDefault("reason", "Document was unclear or invalid.");
+            userRepository.findByEmail(s.getEmail()).ifPresent(u ->
+                notificationService.createNotification(u.getId(),
+                    "❌ Aadhaar Upload Rejected",
+                    "Your Aadhaar upload was rejected. Reason: " + reason + " — Please re-upload a clear scanned copy.",
+                    "SYSTEM")
+            );
+            return ResponseEntity.ok(Map.of("status", "success", "message", "Aadhaar rejected for " + s.getName()));
+        }).orElse(ResponseEntity.notFound().build());
     }
 
     @PutMapping("/update-profile")
