@@ -278,12 +278,134 @@
   text-decoration: underline;
 }
 
+/* ── Password Strength Bar ── */
+.etms-strength-bar-wrap {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 8px;
+}
+
+.etms-strength-bar {
+  display: flex;
+  gap: 4px;
+  flex: 1;
+}
+
+.etms-strength-segment {
+  height: 5px;
+  flex: 1;
+  border-radius: 99px;
+  transition: background 0.3s ease;
+}
+
+.etms-strength-label {
+  font-size: 12px;
+  font-weight: 700;
+  min-width: 72px;
+  text-align: right;
+  transition: color 0.3s;
+}
+
+/* ── Password Rules Checklist ── */
+.etms-pw-rules {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 14px 16px;
+  margin-top: 8px;
+  animation: etmsFadeIn 0.2s ease;
+}
+
+.etms-pw-rules-title {
+  font-size: 12px;
+  font-weight: 700;
+  color: #475569;
+  margin: 0 0 10px 0;
+}
+
+.etms-pw-rule {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: #94a3b8;
+  margin-bottom: 6px;
+  transition: color 0.2s;
+}
+
+.etms-pw-rule:last-child {
+  margin-bottom: 0;
+}
+
+.etms-pw-rule-icon {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 1.5px solid #cbd5e1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  font-weight: 800;
+  color: transparent;
+  flex-shrink: 0;
+  transition: all 0.2s;
+}
+
+.etms-pw-rule.passed {
+  color: #16a34a;
+}
+
+.etms-pw-rule.passed .etms-pw-rule-icon {
+  background: #16a34a;
+  border-color: #16a34a;
+  color: #fff;
+}
+
+/* ── Terms Checkbox ── */
+.etms-terms-wrap {
+  background: #f8fafc;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 14px 16px;
+}
+
+.etms-terms-label {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  cursor: pointer;
+  font-size: 13px;
+  color: #475569;
+  font-weight: 500;
+  line-height: 1.5;
+}
+
+.etms-terms-checkbox {
+  width: 18px;
+  height: 18px;
+  accent-color: #2563eb;
+  cursor: pointer;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+.etms-terms-label a {
+  color: #2563eb;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.etms-terms-label a:hover {
+  text-decoration: underline;
+}
+
 @media (max-width: 480px) {
   .etms-register-card {
     padding: 32px 24px;
     border-radius: 20px;
   }
-  
   .etms-register-header h1 {
     font-size: 22px;
   }

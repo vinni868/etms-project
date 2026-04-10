@@ -5,66 +5,62 @@ import "./Register.css";
 
 const LOGO_URL = "https://cdn-icons-png.flaticon.com/512/3429/3429153.png";
 
+// ── Password rules ──────────────────────────────────────
+const rules = [
+  { id: "len",     label: "At least 8 characters",             test: (p) => p.length >= 8 },
+  { id: "lower",   label: "Lowercase letters (a-z)",           test: (p) => /[a-z]/.test(p) },
+  { id: "upper",   label: "Uppercase letters (A-Z)",           test: (p) => /[A-Z]/.test(p) },
+  { id: "number",  label: "Numbers (0-9)",                     test: (p) => /[0-9]/.test(p) },
+  { id: "special", label: "Special character (!@#$%^&*)",      test: (p) => /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(p) },
+];
+
+function getStrength(password) {
+  const passed = rules.filter((r) => r.test(password)).length;
+  if (passed <= 1) return { level: 0, label: "Very Weak",  color: "#ef4444" };
+  if (passed === 2) return { level: 1, label: "Weak",       color: "#f97316" };
+  if (passed === 3) return { level: 2, label: "Fair",       color: "#eab308" };
+  if (passed === 4) return { level: 3, label: "Strong",     color: "#22c55e" };
+  return              { level: 4, label: "Very Strong", color: "#16a34a" };
+}
+
 function Register() {
-  const navigate = useNavigate();
-  const location = useLocation();
+  const navigate  = useNavigate();
+  const location  = useLocation();
 
-  // ── Detect verified email state ──────────────────────────────
-  const fromGoogle = location.state?.fromGoogle === true;
+  const fromGoogle      = location.state?.fromGoogle      === true;
   const manuallyVerified = location.state?.manuallyVerified === true;
-  const isVerified = fromGoogle || manuallyVerified;
-  
-  const initialEmail = location.state?.googleEmail || location.state?.verifiedEmail || "";
-  const initialName  = location.state?.googleName || "";
-  // ────────────────────────────────────────────────────────────────────────
+  const isVerified      = fromGoogle || manuallyVerified;
+  const initialEmail    = location.state?.googleEmail || location.state?.verifiedEmail || "";
+  const initialName     = location.state?.googleName  || "";
 
-  const [data, setData] = useState({
-    name: initialName,
-    email: initialEmail,
-    phone: "",
-    password: "",
-  });
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
-  const [success, setSuccess] = useState("");
+  const [data, setData] = useState({ name: initialName, email: initialEmail, phone: "", password: "" });
+  const [loading,      setLoading]      = useState(false);
+  const [error,        setError]        = useState("");
+  const [success,      setSuccess]      = useState("");
   const [showPassword, setShowPassword] = useState(false);
+  const [pwFocused,    setPwFocused]    = useState(false);
+  const [agreed,       setAgreed]       = useState(false);
 
-  // ── 1. Security Redirect: Enforce verified flow ──
+  const strength    = getStrength(data.password);
+  const allRulesMet = rules.every((r) => r.test(data.password));
+  const formValid   = allRulesMet && agreed && data.phone.length === 10;
+
   useEffect(() => {
-    if (!isVerified) {
-      // If user tries to access /register directly, send them back to /signup
-      navigate("/signup", { replace: true });
-    }
+    if (!isVerified) navigate("/signup", { replace: true });
   }, [isVerified, navigate]);
 
-  // ── 2. Sync initial data ──
   useEffect(() => {
-    if (isVerified) {
-      setData((prev) => ({
-        ...prev,
-        email: initialEmail,
-        name: initialName || prev.name,
-      }));
-    }
+    if (isVerified) setData((prev) => ({ ...prev, email: initialEmail, name: initialName || prev.name }));
   }, [isVerified, initialEmail, initialName]);
 
   const handleRegister = async (e) => {
     e.preventDefault();
+    if (!formValid) return;
     setLoading(true);
     setError("");
     setSuccess("");
-
-    if (data.phone.length < 10) {
-      setError("Please enter a valid 10-digit phone number.");
-      setLoading(false);
-      return;
-    }
-
     try {
-      await api.post("/auth/register", {
-        ...data,
-        role: "STUDENT",
-      });
+      await api.post("/auth/register", { ...data, role: "STUDENT" });
       setSuccess("Account created successfully. Redirecting to login...");
       setTimeout(() => navigate("/login"), 2000);
     } catch (err) {
@@ -74,11 +70,13 @@ function Register() {
     }
   };
 
-  if (!isVerified) return null; // Prevent flicker before redirect
+  if (!isVerified) return null;
 
   return (
     <div className="etms-register-container">
       <div className="etms-register-card">
+
+        {/* Header */}
         <div className="etms-register-header">
           <img src={LOGO_URL} alt="EtMS Logo" />
           <h1>Complete Profile</h1>
@@ -118,17 +116,20 @@ function Register() {
         {success && <div className="etms-alert success">{success}</div>}
 
         <form onSubmit={handleRegister} className="etms-register-form">
+
+          {/* Full Name */}
           <div className="etms-input-group">
             <label>Full Name</label>
             <input
               type="text"
-              placeholder="Enter your name"
+              placeholder="Enter your full name"
               required
               value={data.name}
               onChange={(e) => setData({ ...data, name: e.target.value })}
             />
           </div>
 
+          {/* Email */}
           <div className="etms-input-group">
             <label>
               Email Address
@@ -147,38 +148,28 @@ function Register() {
                 readOnly={isVerified}
                 className={isVerified ? "etms-email-locked" : ""}
               />
-              {isVerified && (
-                <span className="etms-lock-icon" title="Email verified and cannot be changed">
-                  🔒
-                </span>
-              )}
+              {isVerified && <span className="etms-lock-icon">🔒</span>}
             </div>
-            {isVerified && (
-              <p className="etms-email-hint">
-                Verified email is locked for security.
-              </p>
-            )}
+            {isVerified && <p className="etms-email-hint">Verified email is locked for security.</p>}
           </div>
 
+          {/* Phone */}
           <div className="etms-input-group">
             <label>Phone Number</label>
             <input
               type="tel"
-              placeholder="10-digit number"
+              placeholder="10-digit mobile number"
               required
               maxLength="10"
               value={data.phone}
-              onChange={(e) =>
-                setData({ ...data, phone: e.target.value.replace(/\D/g, "").slice(0, 10) })
-              }
+              onChange={(e) => setData({ ...data, phone: e.target.value.replace(/\D/g, "").slice(0, 10) })}
             />
             {data.phone && data.phone.length < 10 && (
-              <p className="etms-validation-error">
-                ⚠️ Exactly 10 digits required
-              </p>
+              <p className="etms-validation-error">⚠️ Exactly 10 digits required</p>
             )}
           </div>
 
+          {/* Password */}
           <div className="etms-input-group">
             <label>Create Password</label>
             <div className="etms-password-wrapper">
@@ -188,18 +179,69 @@ function Register() {
                 required
                 value={data.password}
                 onChange={(e) => setData({ ...data, password: e.target.value })}
+                onFocus={() => setPwFocused(true)}
+                onBlur={() => setPwFocused(false)}
               />
-              <button 
-                type="button" 
-                onClick={() => setShowPassword(!showPassword)}
-                className="etms-password-toggle"
-              >
+              <button type="button" onClick={() => setShowPassword(!showPassword)} className="etms-password-toggle">
                 {showPassword ? "Hide" : "Show"}
               </button>
             </div>
+
+            {/* Strength Bar */}
+            {data.password && (
+              <div className="etms-strength-bar-wrap">
+                <div className="etms-strength-bar">
+                  {[0,1,2,3,4].map((i) => (
+                    <div
+                      key={i}
+                      className="etms-strength-segment"
+                      style={{ background: i <= strength.level ? strength.color : "#e2e8f0" }}
+                    />
+                  ))}
+                </div>
+                <span className="etms-strength-label" style={{ color: strength.color }}>
+                  {strength.label}
+                </span>
+              </div>
+            )}
+
+            {/* Password Rules Checklist */}
+            {(pwFocused || data.password) && (
+              <div className="etms-pw-rules">
+                <p className="etms-pw-rules-title">Your password must contain:</p>
+                {rules.map((rule) => {
+                  const passed = rule.test(data.password);
+                  return (
+                    <div key={rule.id} className={`etms-pw-rule ${passed ? "passed" : ""}`}>
+                      <span className="etms-pw-rule-icon">{passed ? "✓" : "✓"}</span>
+                      <span>{rule.label}</span>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
           </div>
 
-          <button type="submit" className="etms-submit-btn" disabled={loading || (data.phone && data.phone.length < 10)}>
+          {/* Terms & Conditions Checkbox */}
+          <div className="etms-terms-wrap">
+            <label className="etms-terms-label">
+              <input
+                type="checkbox"
+                checked={agreed}
+                onChange={(e) => setAgreed(e.target.checked)}
+                className="etms-terms-checkbox"
+              />
+              <span>
+                By registering, you agree to AppTechno Careers{" "}
+                <a href="/#/terms" target="_blank" rel="noreferrer">Terms of Service</a>
+                {" "}and{" "}
+                <a href="/#/privacy" target="_blank" rel="noreferrer">Privacy Policy</a>.
+                Your data is handled securely and never shared with third parties.
+              </span>
+            </label>
+          </div>
+
+          <button type="submit" className="etms-submit-btn" disabled={loading || !formValid}>
             {loading ? "Processing..." : "Register Now"}
           </button>
         </form>
