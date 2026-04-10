@@ -278,6 +278,134 @@
   text-decoration: underline;
 }
 
+/* ── Phone Row ── */
+.etms-phone-row {
+  display: flex;
+  gap: 10px;
+  align-items: stretch;
+}
+
+.etms-phone-row input {
+  flex: 1;
+}
+
+.etms-otp-send-btn {
+  background: #2563eb;
+  color: #fff;
+  border: none;
+  border-radius: 12px;
+  padding: 0 16px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.2s;
+  font-family: 'Outfit', sans-serif;
+}
+
+.etms-otp-send-btn:hover:not(:disabled) {
+  background: #1d4ed8;
+  transform: translateY(-1px);
+}
+
+.etms-otp-send-btn:disabled {
+  background: #93c5fd;
+  cursor: not-allowed;
+}
+
+.etms-verified-tag {
+  font-size: 11px;
+  font-weight: 700;
+  color: #16a34a;
+  background: #dcfce7;
+  padding: 2px 8px;
+  border-radius: 6px;
+}
+
+/* ── OTP Section ── */
+.etms-otp-section {
+  background: #f0f9ff;
+  border: 1.5px solid #bae6fd;
+  border-radius: 14px;
+  padding: 16px;
+  margin-top: 8px;
+  animation: etmsFadeIn 0.3s ease;
+}
+
+.etms-otp-hint {
+  font-size: 13px;
+  color: #0369a1;
+  font-weight: 500;
+  margin: 0 0 14px 0;
+  text-align: center;
+}
+
+.etms-otp-boxes {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+  margin-bottom: 14px;
+}
+
+.etms-otp-box {
+  width: 46px;
+  height: 52px;
+  text-align: center;
+  font-size: 22px;
+  font-weight: 800;
+  border: 2px solid #e2e8f0;
+  border-radius: 12px;
+  background: #fff;
+  color: #1e293b;
+  transition: all 0.2s;
+  outline: none;
+  font-family: 'Outfit', sans-serif;
+}
+
+.etms-otp-box:focus {
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37,99,235,0.15);
+}
+
+.etms-otp-box.filled {
+  border-color: #16a34a;
+  background: #f0fdf4;
+  color: #15803d;
+}
+
+.etms-otp-verify-btn {
+  width: 100%;
+  padding: 12px;
+  background: linear-gradient(135deg, #16a34a, #15803d);
+  color: #fff;
+  border: none;
+  border-radius: 12px;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-family: 'Outfit', sans-serif;
+  margin-top: 4px;
+}
+
+.etms-otp-verify-btn:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(22,163,74,0.25);
+}
+
+.etms-otp-verify-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.etms-otp-note {
+  text-align: center;
+  font-size: 12px;
+  color: #94a3b8;
+  font-weight: 600;
+  margin-top: -10px;
+}
+
 /* ── Password Strength Bar ── */
 .etms-strength-bar-wrap {
   display: flex;

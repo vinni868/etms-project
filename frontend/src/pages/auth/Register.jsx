@@ -1,58 +1,119 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useNavigate, useLocation, Link } from "react-router-dom";
 import api from "../../api/axiosConfig";
 import "./Register.css";
 
 const LOGO_URL = "https://cdn-icons-png.flaticon.com/512/3429/3429153.png";
 
-// ── Password rules ──────────────────────────────────────
+// ── Password rules ──────────────────────────────────────────────────────────
 const rules = [
-  { id: "len",     label: "At least 8 characters",             test: (p) => p.length >= 8 },
-  { id: "lower",   label: "Lowercase letters (a-z)",           test: (p) => /[a-z]/.test(p) },
-  { id: "upper",   label: "Uppercase letters (A-Z)",           test: (p) => /[A-Z]/.test(p) },
-  { id: "number",  label: "Numbers (0-9)",                     test: (p) => /[0-9]/.test(p) },
-  { id: "special", label: "Special character (!@#$%^&*)",      test: (p) => /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?]/.test(p) },
+  { id: "len",     label: "At least 8 characters",        test: (p) => p.length >= 8 },
+  { id: "lower",   label: "Lowercase letters (a-z)",      test: (p) => /[a-z]/.test(p) },
+  { id: "upper",   label: "Uppercase letters (A-Z)",      test: (p) => /[A-Z]/.test(p) },
+  { id: "number",  label: "Numbers (0-9)",                test: (p) => /[0-9]/.test(p) },
+  { id: "special", label: "Special character (!@#$%^&*)", test: (p) => /[!@#$%^&*()\-_=+\[\]{};':"\\|,.<>\/?]/.test(p) },
 ];
 
-function getStrength(password) {
-  const passed = rules.filter((r) => r.test(password)).length;
-  if (passed <= 1) return { level: 0, label: "Very Weak",  color: "#ef4444" };
-  if (passed === 2) return { level: 1, label: "Weak",       color: "#f97316" };
-  if (passed === 3) return { level: 2, label: "Fair",       color: "#eab308" };
-  if (passed === 4) return { level: 3, label: "Strong",     color: "#22c55e" };
-  return              { level: 4, label: "Very Strong", color: "#16a34a" };
+function getStrength(pw) {
+  const n = rules.filter((r) => r.test(pw)).length;
+  if (n <= 1) return { level: 0, label: "Very Weak",  color: "#ef4444" };
+  if (n === 2) return { level: 1, label: "Weak",       color: "#f97316" };
+  if (n === 3) return { level: 2, label: "Fair",       color: "#eab308" };
+  if (n === 4) return { level: 3, label: "Strong",     color: "#22c55e" };
+  return             { level: 4, label: "Very Strong", color: "#16a34a" };
 }
 
 function Register() {
   const navigate  = useNavigate();
   const location  = useLocation();
 
-  const fromGoogle      = location.state?.fromGoogle      === true;
+  const fromGoogle       = location.state?.fromGoogle       === true;
   const manuallyVerified = location.state?.manuallyVerified === true;
-  const isVerified      = fromGoogle || manuallyVerified;
-  const initialEmail    = location.state?.googleEmail || location.state?.verifiedEmail || "";
-  const initialName     = location.state?.googleName  || "";
+  const isVerified       = fromGoogle || manuallyVerified;
+  const initialEmail     = location.state?.googleEmail || location.state?.verifiedEmail || "";
+  const initialName      = location.state?.googleName  || "";
 
   const [data, setData] = useState({ name: initialName, email: initialEmail, phone: "", password: "" });
-  const [loading,      setLoading]      = useState(false);
-  const [error,        setError]        = useState("");
-  const [success,      setSuccess]      = useState("");
-  const [showPassword, setShowPassword] = useState(false);
-  const [pwFocused,    setPwFocused]    = useState(false);
-  const [agreed,       setAgreed]       = useState(false);
+  const [loading,       setLoading]       = useState(false);
+  const [error,         setError]         = useState("");
+  const [success,       setSuccess]       = useState("");
+  const [showPassword,  setShowPassword]  = useState(false);
+  const [pwFocused,     setPwFocused]     = useState(false);
+  const [agreed,        setAgreed]        = useState(false);
+
+  // ── OTP state ──────────────────────────────────────────────────────────────
+  const [otpSent,       setOtpSent]       = useState(false);
+  const [otp,           setOtp]           = useState(["", "", "", "", "", ""]);
+  const [phoneVerified, setPhoneVerified] = useState(false);
+  const [sendingOtp,    setSendingOtp]    = useState(false);
+  const [verifyingOtp,  setVerifyingOtp]  = useState(false);
+  const [otpError,      setOtpError]      = useState("");
+  const [countdown,     setCountdown]     = useState(0);
+  const otpRefs = useRef([]);
 
   const strength    = getStrength(data.password);
   const allRulesMet = rules.every((r) => r.test(data.password));
-  const formValid   = allRulesMet && agreed && data.phone.length === 10;
+  const formValid   = allRulesMet && agreed && phoneVerified;
 
+  useEffect(() => { if (!isVerified) navigate("/signup", { replace: true }); }, [isVerified, navigate]);
   useEffect(() => {
-    if (!isVerified) navigate("/signup", { replace: true });
-  }, [isVerified, navigate]);
-
-  useEffect(() => {
-    if (isVerified) setData((prev) => ({ ...prev, email: initialEmail, name: initialName || prev.name }));
+    if (isVerified) setData((p) => ({ ...p, email: initialEmail, name: initialName || p.name }));
   }, [isVerified, initialEmail, initialName]);
 
+  // Countdown timer for resend OTP
+  useEffect(() => {
+    if (countdown <= 0) return;
+    const t = setTimeout(() => setCountdown((c) => c - 1), 1000);
+    return () => clearTimeout(t);
+  }, [countdown]);
+
+  // ── OTP handlers ────────────────────────────────────────────────────────────
+  const handleSendOtp = async () => {
+    if (data.phone.length !== 10) return;
+    setSendingOtp(true);
+    setOtpError("");
+    try {
+      await api.post("/auth/otp/send", { phone: data.phone });
+      setOtpSent(true);
+      setCountdown(60);
+      setOtp(["", "", "", "", "", ""]);
+      setTimeout(() => otpRefs.current[0]?.focus(), 100);
+    } catch (e) {
+      setOtpError(e.response?.data?.message || "Failed to send OTP. Try again.");
+    } finally {
+      setSendingOtp(false);
+    }
+  };
+
+  const handleOtpChange = (i, val) => {
+    if (!/^\d?$/.test(val)) return;
+    const next = [...otp];
+    next[i] = val;
+    setOtp(next);
+    if (val && i < 5) otpRefs.current[i + 1]?.focus();
+  };
+
+  const handleOtpKeyDown = (i, e) => {
+    if (e.key === "Backspace" && !otp[i] && i > 0) otpRefs.current[i - 1]?.focus();
+  };
+
+  const handleVerifyOtp = async () => {
+    const code = otp.join("");
+    if (code.length !== 6) return;
+    setVerifyingOtp(true);
+    setOtpError("");
+    try {
+      await api.post("/auth/otp/verify", { phone: data.phone, otp: code });
+      setPhoneVerified(true);
+      setOtpSent(false);
+    } catch (e) {
+      setOtpError(e.response?.data?.message || "Invalid OTP. Try again.");
+    } finally {
+      setVerifyingOtp(false);
+    }
+  };
+
+  // ── Registration submit ─────────────────────────────────────────────────────
   const handleRegister = async (e) => {
     e.preventDefault();
     if (!formValid) return;
@@ -61,7 +122,7 @@ function Register() {
     setSuccess("");
     try {
       await api.post("/auth/register", { ...data, role: "STUDENT" });
-      setSuccess("Account created successfully. Redirecting to login...");
+      setSuccess("Account created successfully! Redirecting to login...");
       setTimeout(() => navigate("/login"), 2000);
     } catch (err) {
       setError(err.response?.data?.message || "Registration failed. Please try again.");
@@ -78,7 +139,7 @@ function Register() {
 
         {/* Header */}
         <div className="etms-register-header">
-          <img src={LOGO_URL} alt="EtMS Logo" />
+          <img src={LOGO_URL} alt="AppTechno Logo" />
           <h1>Complete Profile</h1>
           <p>Provide a few more details to get started</p>
         </div>
@@ -102,7 +163,7 @@ function Register() {
         {manuallyVerified && (
           <div className="etms-manual-badge">
             <svg viewBox="0 0 24 24" className="etms-google-badge-icon" fill="none" stroke="currentColor" strokeWidth="2.5">
-              <path d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+              <path d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
             </svg>
             <span>Email Verified Successfully</span>
             <svg viewBox="0 0 24 24" fill="none" className="etms-check-icon">
@@ -120,13 +181,8 @@ function Register() {
           {/* Full Name */}
           <div className="etms-input-group">
             <label>Full Name</label>
-            <input
-              type="text"
-              placeholder="Enter your full name"
-              required
-              value={data.name}
-              onChange={(e) => setData({ ...data, name: e.target.value })}
-            />
+            <input type="text" placeholder="Enter your full name" required
+              value={data.name} onChange={(e) => setData({ ...data, name: e.target.value })} />
           </div>
 
           {/* Email */}
@@ -140,48 +196,81 @@ function Register() {
               )}
             </label>
             <div className={`etms-input-wrapper ${isVerified ? "locked" : ""}`}>
-              <input
-                type="email"
-                placeholder="name@email.com"
-                required
-                value={data.email}
-                readOnly={isVerified}
-                className={isVerified ? "etms-email-locked" : ""}
-              />
+              <input type="email" placeholder="name@email.com" required
+                value={data.email} readOnly={isVerified}
+                className={isVerified ? "etms-email-locked" : ""} />
               {isVerified && <span className="etms-lock-icon">🔒</span>}
             </div>
             {isVerified && <p className="etms-email-hint">Verified email is locked for security.</p>}
           </div>
 
-          {/* Phone */}
+          {/* Phone + OTP */}
           <div className="etms-input-group">
-            <label>Phone Number</label>
-            <input
-              type="tel"
-              placeholder="10-digit mobile number"
-              required
-              maxLength="10"
-              value={data.phone}
-              onChange={(e) => setData({ ...data, phone: e.target.value.replace(/\D/g, "").slice(0, 10) })}
-            />
-            {data.phone && data.phone.length < 10 && (
+            <label>
+              Phone Number
+              {phoneVerified && <span className="etms-verified-tag">✅ Verified</span>}
+            </label>
+
+            <div className="etms-phone-row">
+              <input type="tel" placeholder="10-digit mobile number" maxLength="10"
+                value={data.phone} disabled={phoneVerified}
+                onChange={(e) => {
+                  setData({ ...data, phone: e.target.value.replace(/\D/g, "").slice(0, 10) });
+                  setOtpSent(false);
+                  setPhoneVerified(false);
+                  setOtp(["", "", "", "", "", ""]);
+                  setOtpError("");
+                }} />
+              {!phoneVerified && (
+                <button type="button" className="etms-otp-send-btn"
+                  disabled={data.phone.length !== 10 || sendingOtp || countdown > 0}
+                  onClick={handleSendOtp}>
+                  {sendingOtp ? "Sending..." : countdown > 0 ? `Resend (${countdown}s)` : otpSent ? "Resend OTP" : "Send OTP"}
+                </button>
+              )}
+            </div>
+
+            {data.phone && data.phone.length < 10 && !phoneVerified && (
               <p className="etms-validation-error">⚠️ Exactly 10 digits required</p>
             )}
+
+            {/* OTP Input Boxes */}
+            {otpSent && !phoneVerified && (
+              <div className="etms-otp-section">
+                <p className="etms-otp-hint">
+                  📱 OTP sent to <strong>+91 {data.phone}</strong>. Enter below:
+                </p>
+                <div className="etms-otp-boxes">
+                  {otp.map((digit, i) => (
+                    <input key={i} type="text" inputMode="numeric" maxLength="1"
+                      value={digit}
+                      ref={(el) => (otpRefs.current[i] = el)}
+                      onChange={(e) => handleOtpChange(i, e.target.value)}
+                      onKeyDown={(e) => handleOtpKeyDown(i, e)}
+                      className={`etms-otp-box ${digit ? "filled" : ""}`} />
+                  ))}
+                </div>
+                {otpError && <p className="etms-validation-error">❌ {otpError}</p>}
+                <button type="button" className="etms-otp-verify-btn"
+                  disabled={otp.join("").length !== 6 || verifyingOtp}
+                  onClick={handleVerifyOtp}>
+                  {verifyingOtp ? "Verifying..." : "Verify OTP"}
+                </button>
+              </div>
+            )}
+
+            {otpError && !otpSent && <p className="etms-validation-error">❌ {otpError}</p>}
           </div>
 
           {/* Password */}
           <div className="etms-input-group">
             <label>Create Password</label>
             <div className="etms-password-wrapper">
-              <input
-                type={showPassword ? "text" : "password"}
-                placeholder="••••••••"
-                required
+              <input type={showPassword ? "text" : "password"} placeholder="••••••••" required
                 value={data.password}
                 onChange={(e) => setData({ ...data, password: e.target.value })}
                 onFocus={() => setPwFocused(true)}
-                onBlur={() => setPwFocused(false)}
-              />
+                onBlur={() => setPwFocused(false)} />
               <button type="button" onClick={() => setShowPassword(!showPassword)} className="etms-password-toggle">
                 {showPassword ? "Hide" : "Show"}
               </button>
@@ -192,11 +281,8 @@ function Register() {
               <div className="etms-strength-bar-wrap">
                 <div className="etms-strength-bar">
                   {[0,1,2,3,4].map((i) => (
-                    <div
-                      key={i}
-                      className="etms-strength-segment"
-                      style={{ background: i <= strength.level ? strength.color : "#e2e8f0" }}
-                    />
+                    <div key={i} className="etms-strength-segment"
+                      style={{ background: i <= strength.level ? strength.color : "#e2e8f0" }} />
                   ))}
                 </div>
                 <span className="etms-strength-label" style={{ color: strength.color }}>
@@ -205,7 +291,7 @@ function Register() {
               </div>
             )}
 
-            {/* Password Rules Checklist */}
+            {/* Rules checklist */}
             {(pwFocused || data.password) && (
               <div className="etms-pw-rules">
                 <p className="etms-pw-rules-title">Your password must contain:</p>
@@ -213,7 +299,7 @@ function Register() {
                   const passed = rule.test(data.password);
                   return (
                     <div key={rule.id} className={`etms-pw-rule ${passed ? "passed" : ""}`}>
-                      <span className="etms-pw-rule-icon">{passed ? "✓" : "✓"}</span>
+                      <span className="etms-pw-rule-icon">✓</span>
                       <span>{rule.label}</span>
                     </div>
                   );
@@ -222,15 +308,11 @@ function Register() {
             )}
           </div>
 
-          {/* Terms & Conditions Checkbox */}
+          {/* Terms */}
           <div className="etms-terms-wrap">
             <label className="etms-terms-label">
-              <input
-                type="checkbox"
-                checked={agreed}
-                onChange={(e) => setAgreed(e.target.checked)}
-                className="etms-terms-checkbox"
-              />
+              <input type="checkbox" checked={agreed} onChange={(e) => setAgreed(e.target.checked)}
+                className="etms-terms-checkbox" />
               <span>
                 By registering, you agree to AppTechno Careers{" "}
                 <a href="/#/terms" target="_blank" rel="noreferrer">Terms of Service</a>
@@ -242,8 +324,12 @@ function Register() {
           </div>
 
           <button type="submit" className="etms-submit-btn" disabled={loading || !formValid}>
-            {loading ? "Processing..." : "Register Now"}
+            {loading ? "Creating Account..." : "Register Now"}
           </button>
+
+          {!phoneVerified && (
+            <p className="etms-otp-note">📱 Phone verification required before registering</p>
+          )}
         </form>
 
         <div className="etms-register-footer">

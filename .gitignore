@@ -8,3 +8,4 @@ target/
 backend/uploads/
 .gemini/
 brain/
+/.metadata/
