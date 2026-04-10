@@ -87,6 +87,11 @@ public class CloudinaryService {
     }
 
     private void initGoogleDrive() throws Exception {
+        // Trim whitespace/newlines that may be injected by env var editors
+        driveCredentialsJson = driveCredentialsJson.trim();
+        driveCredentialsPath = driveCredentialsPath.trim();
+        driveFolderId = driveFolderId.trim();
+
         InputStream credStream;
         if (!driveCredentialsJson.isEmpty()) {
             credStream = new ByteArrayInputStream(driveCredentialsJson.getBytes());
