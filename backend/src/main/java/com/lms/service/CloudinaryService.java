@@ -155,6 +155,11 @@ public class CloudinaryService {
             && !driveFolderId.isEmpty();
     }
 
+    // Shared Drive IDs start with "0A" — regular folder IDs do not
+    private boolean isSharedDriveId(String id) {
+        return id != null && id.startsWith("0A");
+    }
+
     private String driveUpload(InputStream inputStream, String fileName, String mimeType, String subFolder)
             throws IOException {
         try {
@@ -172,20 +177,25 @@ public class CloudinaryService {
                 ? mimeType : "application/octet-stream";
             InputStreamContent mediaContent = new InputStreamContent(contentType, inputStream);
 
-            // supportsAllDrives=true is required for Shared Drives (Team Drives)
-            // Without this, service accounts get 403 storageQuotaExceeded
             com.google.api.services.drive.model.File uploaded = driveService.files()
                 .create(fileMetadata, mediaContent)
                 .setFields("id, name")
                 .setSupportsAllDrives(true)
                 .execute();
 
-            Permission permission = new Permission();
-            permission.setType("anyone");
-            permission.setRole("reader");
-            driveService.permissions().create(uploaded.getId(), permission)
-                .setSupportsAllDrives(true)
-                .execute();
+            // Try to make file publicly readable — non-fatal.
+            // Workspace Shared Drives with external sharing disabled will reject this,
+            // but the file is already uploaded successfully.
+            try {
+                Permission permission = new Permission();
+                permission.setType("anyone");
+                permission.setRole("reader");
+                driveService.permissions().create(uploaded.getId(), permission)
+                    .setSupportsAllDrives(true)
+                    .execute();
+            } catch (Exception permEx) {
+                System.err.println("GOOGLE_DRIVE: Could not set public permission (non-fatal): " + permEx.getMessage());
+            }
 
             String url = "https://drive.google.com/uc?export=view&id=" + uploaded.getId();
             System.out.println("GOOGLE_DRIVE: Uploaded '" + fileName + "' → " + url);
@@ -197,23 +207,32 @@ public class CloudinaryService {
     }
 
     private String getOrCreateSubfolder(String subFolderName) throws IOException {
+        boolean sharedDrive = isSharedDriveId(driveFolderId);
+
         String query = "name='" + subFolderName + "' and '"
             + driveFolderId + "' in parents"
             + " and mimeType='application/vnd.google-apps.folder'"
             + " and trashed=false";
 
-        FileList result = driveService.files().list()
+        Drive.Files.List listReq = driveService.files().list()
             .setQ(query)
             .setFields("files(id, name)")
             .setSupportsAllDrives(true)
-            .setIncludeItemsFromAllDrives(true)
-            .execute();
+            .setIncludeItemsFromAllDrives(true);
+
+        // For Shared Drive IDs, must specify corpora="drive" + driveId
+        if (sharedDrive) {
+            listReq.setCorpora("drive").setDriveId(driveFolderId);
+        }
+
+        FileList result = listReq.execute();
 
         List<com.google.api.services.drive.model.File> files = result.getFiles();
         if (files != null && !files.isEmpty()) {
             return files.get(0).getId();
         }
 
+        // Create subfolder inside the Shared Drive / parent folder
         com.google.api.services.drive.model.File folderMeta =
             new com.google.api.services.drive.model.File();
         folderMeta.setName(subFolderName);
